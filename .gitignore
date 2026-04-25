@@ -1,0 +1,12 @@
+# Uploaded images during runtime — keep the folder, ignore contents
+uploads/*
+!uploads/index.html
+!uploads/.gitkeep
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.bak
