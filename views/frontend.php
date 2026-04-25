@@ -16,7 +16,7 @@ if (!defined('YOURLS_ABSPATH')) {
 $general    = lfp_get_general();
 $appearance = lfp_get_appearance();
 $items      = lfp_get_items();
-$instagram  = lfp_get_instagram();
+$image_grid = lfp_get_image_grid();
 
 $site_title = $general['site_title'] !== '' ? $general['site_title'] : (defined('YOURLS_SITE') ? parse_url(YOURLS_SITE, PHP_URL_HOST) : 'Links');
 $site_desc  = (string) $general['site_description'];
@@ -198,36 +198,36 @@ HTML;
         </section>
     <?php endif; ?>
 
-    <?php if (!empty($instagram['enabled']) && !empty($instagram['items'])):
-        $resolved_ig = [];
-        foreach ($instagram['items'] as $entry) {
-            $r = lfp_resolve_instagram($entry);
-            if ($r !== null) $resolved_ig[] = $r;
+    <?php if (!empty($image_grid['enabled']) && !empty($image_grid['items'])):
+        $resolved_imgrid = [];
+        foreach ($image_grid['items'] as $entry) {
+            $r = lfp_resolve_image_grid($entry);
+            if ($r !== null) $resolved_imgrid[] = $r;
         }
-        $ig_visible = max(1, (int) ($instagram['visible_count'] ?? 3));
-        $ig_total   = count($resolved_ig);
-        $ig_overflow = $ig_total > $ig_visible;
+        $imgrid_visible = max(1, (int) ($image_grid['visible_count'] ?? 3));
+        $imgrid_total   = count($resolved_imgrid);
+        $imgrid_overflow = $imgrid_total > $imgrid_visible;
     ?>
-        <?php if (!empty($resolved_ig)): ?>
-        <div class="lfp-ig-wrap">
-            <section class="lfp-ig<?php echo $ig_overflow ? ' lfp-ig--collapsed' : ''; ?>" aria-label="Image gallery">
-                <?php foreach ($resolved_ig as $i => $tile):
-                    $hidden = $ig_overflow && $i >= $ig_visible;
+        <?php if (!empty($resolved_imgrid)): ?>
+        <div class="lfp-imgrid-wrap">
+            <section class="lfp-imgrid<?php echo $imgrid_overflow ? ' lfp-imgrid--collapsed' : ''; ?>" aria-label="Image gallery">
+                <?php foreach ($resolved_imgrid as $i => $tile):
+                    $hidden = $imgrid_overflow && $i >= $imgrid_visible;
                 ?>
-                    <a class="lfp-ig-tile lfp-ig-show-<?php echo yourls_esc_attr($tile['show_mode']); ?><?php echo $hidden ? ' is-hidden' : ''; ?>"
+                    <a class="lfp-imgrid-tile lfp-imgrid-show-<?php echo yourls_esc_attr($tile['show_mode']); ?><?php echo $hidden ? ' is-hidden' : ''; ?>"
                        href="<?php echo yourls_esc_url($tile['url']); ?>"
                        rel="noopener"
                        <?php if ($tile['title'] !== ''): ?>aria-label="<?php echo yourls_esc_attr($tile['title']); ?>"<?php endif; ?>>
                         <img src="<?php echo yourls_esc_url($tile['image']); ?>" alt="" loading="lazy">
                         <?php if ($tile['title'] !== '' && $tile['show_mode'] !== 'never'): ?>
-                            <span class="lfp-ig-overlay"><?php echo yourls_esc_html($tile['title']); ?></span>
+                            <span class="lfp-imgrid-overlay"><?php echo yourls_esc_html($tile['title']); ?></span>
                         <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
             </section>
-            <?php if ($ig_overflow): ?>
-                <button type="button" class="lfp-ig-more" data-lfp-ig-more>
-                    Show more <span class="lfp-ig-more-count">(<?php echo (int) ($ig_total - $ig_visible); ?>)</span>
+            <?php if ($imgrid_overflow): ?>
+                <button type="button" class="lfp-imgrid-more" data-lfp-imgrid-more>
+                    Show more <span class="lfp-imgrid-more-count">(<?php echo (int) ($imgrid_total - $imgrid_visible); ?>)</span>
                 </button>
             <?php endif; ?>
         </div>
@@ -311,13 +311,13 @@ HTML;
         </footer>
     <?php endif; ?>
 </main>
-<?php if (!empty($instagram['enabled']) && !empty($instagram['items'])): ?>
+<?php if (!empty($image_grid['enabled']) && !empty($image_grid['items'])): ?>
 <script>
-    document.querySelector('[data-lfp-ig-more]')?.addEventListener('click', (e) => {
+    document.querySelector('[data-lfp-imgrid-more]')?.addEventListener('click', (e) => {
         const btn = e.currentTarget;
-        const grid = btn.closest('.lfp-ig-wrap')?.querySelector('.lfp-ig');
+        const grid = btn.closest('.lfp-imgrid-wrap')?.querySelector('.lfp-imgrid');
         if (!grid) return;
-        grid.classList.remove('lfp-ig--collapsed');
+        grid.classList.remove('lfp-imgrid--collapsed');
         grid.querySelectorAll('.is-hidden').forEach((el) => el.classList.remove('is-hidden'));
         btn.remove();
     });

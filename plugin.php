@@ -19,7 +19,7 @@ const LFP_DIR = __DIR__;
 const LFP_OPT_ITEMS = 'lfp_items';
 const LFP_OPT_GENERAL = 'lfp_general';
 const LFP_OPT_APPEARANCE = 'lfp_appearance';
-const LFP_OPT_INSTAGRAM = 'lfp_instagram';
+const LFP_OPT_IMAGE_GRID = 'lfp_image_grid';
 const LFP_NONCE_ACTION = 'lfp_save_settings';
 
 /* ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ function lfp_default_appearance(): array
     ];
 }
 
-function lfp_default_instagram(): array
+function lfp_default_image_grid(): array
 {
     return [
         'enabled'       => false,
@@ -182,13 +182,28 @@ function lfp_get_items(): array
     return is_array($stored) ? $stored : [];
 }
 
-function lfp_get_instagram(): array
+function lfp_get_image_grid(): array
 {
-    $stored = yourls_get_option(LFP_OPT_INSTAGRAM, []);
+    $stored = yourls_get_option(LFP_OPT_IMAGE_GRID, false);
+
+    // Migrate from the v2.x storage key (lfp_instagram) to the renamed
+    // lfp_image_grid key. Once migrated the legacy option is deleted so
+    // the two never drift apart.
+    if ($stored === false) {
+        $legacy = yourls_get_option('lfp_instagram', false);
+        if (is_array($legacy)) {
+            yourls_update_option(LFP_OPT_IMAGE_GRID, $legacy);
+            if (function_exists('yourls_delete_option')) {
+                yourls_delete_option('lfp_instagram');
+            }
+            $stored = $legacy;
+        }
+    }
+
     if (!is_array($stored)) {
         $stored = [];
     }
-    $merged = array_merge(lfp_default_instagram(), $stored);
+    $merged = array_merge(lfp_default_image_grid(), $stored);
     if (!is_array($merged['items'] ?? null)) {
         $merged['items'] = [];
     }
@@ -711,19 +726,19 @@ function lfp_save_settings(): never
     ];
     yourls_update_option(LFP_OPT_APPEARANCE, $appearance);
 
-    // Instagram grid
-    $insta_json = (string) ($_POST['instagram_json'] ?? '[]');
-    $insta_raw  = json_decode($insta_json, true);
-    if (!is_array($insta_raw)) {
-        $insta_raw = [];
+    // Image grid
+    $imgrid_json = (string) ($_POST['image_grid_json'] ?? '[]');
+    $imgrid_raw  = json_decode($imgrid_json, true);
+    if (!is_array($imgrid_raw)) {
+        $imgrid_raw = [];
     }
-    $visible = max(1, min(60, (int) ($_POST['instagram_visible_count'] ?? 3)));
-    $instagram = [
-        'enabled'       => isset($_POST['instagram_enabled']),
+    $visible = max(1, min(60, (int) ($_POST['image_grid_visible_count'] ?? 3)));
+    $image_grid = [
+        'enabled'       => isset($_POST['image_grid_enabled']),
         'visible_count' => $visible,
-        'items'         => lfp_sanitize_instagram($insta_raw, $uploaded),
+        'items'         => lfp_sanitize_image_grid($imgrid_raw, $uploaded),
     ];
-    yourls_update_option(LFP_OPT_INSTAGRAM, $instagram);
+    yourls_update_option(LFP_OPT_IMAGE_GRID, $image_grid);
 
     $items_json = (string) ($_POST['items_json'] ?? '[]');
     $items = json_decode($items_json, true);
@@ -748,10 +763,10 @@ function lfp_reset_settings(): never
         case 'general':
             yourls_update_option(LFP_OPT_GENERAL, lfp_default_general());
             break;
-        case 'instagram':
-            $insta = lfp_get_instagram();
-            $insta['items'] = [];
-            yourls_update_option(LFP_OPT_INSTAGRAM, $insta);
+        case 'image_grid':
+            $img = lfp_get_image_grid();
+            $img['items'] = [];
+            yourls_update_option(LFP_OPT_IMAGE_GRID, $img);
             break;
         case 'appearance':
             yourls_update_option(LFP_OPT_APPEARANCE, lfp_default_appearance());
@@ -761,7 +776,7 @@ function lfp_reset_settings(): never
             yourls_update_option(LFP_OPT_GENERAL,   lfp_default_general());
             yourls_update_option(LFP_OPT_APPEARANCE, lfp_default_appearance());
             yourls_update_option(LFP_OPT_ITEMS,     []);
-            yourls_update_option(LFP_OPT_INSTAGRAM, lfp_default_instagram());
+            yourls_update_option(LFP_OPT_IMAGE_GRID, lfp_default_image_grid());
             break;
     }
 
@@ -817,7 +832,7 @@ function lfp_sanitize_size(string $value, string $default = ''): string
     return $default;
 }
 
-function lfp_sanitize_instagram(array $items, array $uploaded): array
+function lfp_sanitize_image_grid(array $items, array $uploaded): array
 {
     $result = [];
     foreach ($items as $item) {
@@ -830,7 +845,7 @@ function lfp_sanitize_instagram(array $items, array $uploaded): array
         }
         $source = ($item['source'] ?? 'url') === 'keyword' ? 'keyword' : 'url';
 
-        $image = $uploaded['ig_' . $id] ?? trim((string) ($item['image'] ?? ''));
+        $image = $uploaded['imgrid_' . $id] ?? trim((string) ($item['image'] ?? ''));
         // Bulk uploads and dialog uploads arrive as data: URLs in the items
         // JSON. Convert them to real files in uploads/ so the option blob
         // doesn't fill up with multi-megabyte base64 strings.
@@ -859,7 +874,7 @@ function lfp_sanitize_instagram(array $items, array $uploaded): array
             $clean['keyword'] = is_string($kw) ? $kw : '';
             // Tiles without a destination are kept (the user can fill the
             // URL/keyword in later); the public page filters them out via
-            // lfp_resolve_instagram() until both pieces are present.
+            // lfp_resolve_image_grid() until both pieces are present.
         } else {
             $clean['url'] = trim((string) ($item['url'] ?? ''));
         }
@@ -907,7 +922,7 @@ function lfp_save_data_url_image(string $data_url): ?string
     return lfp_uploads_url() . $filename;
 }
 
-function lfp_resolve_instagram(array $entry): ?array
+function lfp_resolve_image_grid(array $entry): ?array
 {
     $source = ($entry['source'] ?? 'url') === 'keyword' ? 'keyword' : 'url';
     $url = '';

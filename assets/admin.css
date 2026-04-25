@@ -9,7 +9,7 @@
 
 #lfp-form,
 #lfp-picker,
-#lfp-ig-dialog,
+#lfp-imgrid-dialog,
 #lfp-confirm {
     --lfp-bg:       #1f2937;
     --lfp-card:     #111827;
@@ -37,7 +37,7 @@
 @media (prefers-color-scheme: light) {
     #lfp-form,
     #lfp-picker,
-    #lfp-ig-dialog,
+    #lfp-imgrid-dialog,
     #lfp-confirm {
         --lfp-bg:       #ffffff;
         --lfp-card:     #ffffff;
@@ -97,7 +97,7 @@
 }
 
 /* Force [hidden] over our own flex/inline-flex defaults. */
-.lfp-ig-form [hidden],
+.lfp-imgrid-form [hidden],
 #lfp-form [hidden] {
     display: none !important;
 }
@@ -851,15 +851,15 @@
 
 /* ---------- 10. Instagram grid (admin) ---------- */
 
-.lfp-ig-grid {
+.lfp-imgrid-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin: 12px 0;
 }
 
-.lfp-ig-tile,
-.lfp-ig-add {
+.lfp-imgrid-tile,
+.lfp-imgrid-add {
     position: relative;
     aspect-ratio: 1 / 1;
     border: 1px solid var(--lfp-border);
@@ -869,13 +869,13 @@
     transition: opacity 160ms ease, border-color 160ms ease;
 }
 
-.lfp-ig-tile.is-dragging { opacity: 0.4; }
-.lfp-ig-tile.is-drop-target {
+.lfp-imgrid-tile.is-dragging { opacity: 0.4; }
+.lfp-imgrid-tile.is-drop-target {
     outline: 2px solid var(--lfp-accent);
     outline-offset: -2px;
 }
 
-.lfp-ig-tile.lfp-ig-needs-details::before {
+.lfp-imgrid-tile.lfp-imgrid-needs-details::before {
     content: 'needs link';
     position: absolute;
     top: 6px;
@@ -892,7 +892,7 @@
     pointer-events: none;
 }
 
-.lfp-ig-tile .lfp-handle {
+.lfp-imgrid-tile .lfp-handle {
     position: absolute;
     top: 6px;
     left: 6px;
@@ -904,7 +904,7 @@
     font-size: 0.85rem;
 }
 
-.lfp-ig-edit {
+.lfp-imgrid-edit {
     width: 100%;
     height: 100%;
     border: 0;
@@ -915,7 +915,7 @@
     display: block;
 }
 
-.lfp-ig-img {
+.lfp-imgrid-img {
     position: absolute;
     inset: 0;
     background-size: cover;
@@ -923,7 +923,7 @@
     background-color: var(--lfp-hover);
 }
 
-.lfp-ig-overlay {
+.lfp-imgrid-overlay {
     position: absolute;
     inset: auto 0 0 0;
     padding: 8px 10px;
@@ -935,9 +935,9 @@
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
-.lfp-ig-overlay.is-empty { display: none; }
+.lfp-imgrid-overlay.is-empty { display: none; }
 
-.lfp-ig-remove {
+.lfp-imgrid-remove {
     position: absolute;
     top: 6px;
     right: 6px;
@@ -950,12 +950,12 @@
     padding: 0;
 }
 
-.lfp-ig-remove:hover {
+.lfp-imgrid-remove:hover {
     background: var(--lfp-danger);
     color: #fff;
 }
 
-.lfp-ig-add {
+.lfp-imgrid-add {
     background: transparent;
     border: 2px dashed var(--lfp-border);
     cursor: pointer;
@@ -968,19 +968,19 @@
     transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
 }
 
-.lfp-ig-add:hover {
+.lfp-imgrid-add:hover {
     border-color: var(--lfp-accent);
     color: var(--lfp-accent);
     background: color-mix(in srgb, var(--lfp-accent) 6%, transparent);
 }
 
-.lfp-ig-add-icon { font-size: 2rem; line-height: 1; }
-.lfp-ig-add-label { font-size: 0.85rem; font-weight: 500; }
+.lfp-imgrid-add-icon { font-size: 2rem; line-height: 1; }
+.lfp-imgrid-add-label { font-size: 0.85rem; font-weight: 500; }
 
 /* ---------- 11. Dialogs (shared base) ---------- */
 
 #lfp-picker,
-#lfp-ig-dialog,
+#lfp-imgrid-dialog,
 #lfp-confirm {
     width: min(640px, 92vw);
     max-height: 90vh;
@@ -997,7 +997,7 @@
 #lfp-confirm { width: min(440px, 92vw); }
 
 #lfp-picker::backdrop,
-#lfp-ig-dialog::backdrop,
+#lfp-imgrid-dialog::backdrop,
 #lfp-confirm::backdrop {
     background: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(4px);
@@ -1098,13 +1098,13 @@
 }
 
 /* Instagram dialog body extends the same shell. */
-#lfp-ig-form {
+#lfp-imgrid-form {
     display: flex;
     flex-direction: column;
     max-height: 90vh;
 }
 
-.lfp-ig-form {
+.lfp-imgrid-form {
     padding: 18px;
     display: flex;
     flex-direction: column;
@@ -1112,14 +1112,14 @@
     overflow-y: auto;
 }
 
-.lfp-ig-image-block {
+.lfp-imgrid-image-block {
     display: grid;
     grid-template-columns: 96px 1fr;
     gap: 14px;
     align-items: start;
 }
 
-.lfp-ig-preview {
+.lfp-imgrid-preview {
     width: 96px;
     height: 96px;
     border-radius: var(--lfp-ctrl-r);
@@ -1129,19 +1129,19 @@
     border: 1px solid var(--lfp-border);
 }
 
-.lfp-ig-image-fields {
+.lfp-imgrid-image-fields {
     display: flex;
     flex-direction: column;
     gap: 6px;
     min-width: 0;
 }
 
-.lfp-ig-label {
+.lfp-imgrid-label {
     font-weight: 600;
     font-size: 0.9rem;
 }
 
-.lfp-ig-required { color: var(--lfp-danger); }
+.lfp-imgrid-required { color: var(--lfp-danger); }
 
 .lfp-keyword-pick {
     display: flex;
@@ -1166,7 +1166,7 @@
     white-space: nowrap;
 }
 
-.lfp-ig-foot {
+.lfp-imgrid-foot {
     display: flex;
     justify-content: flex-end;
     gap: 8px;

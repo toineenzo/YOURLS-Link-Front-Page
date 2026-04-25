@@ -741,7 +741,7 @@
             message: 'Site title, login path, footer toggles, About-me section and social-media buttons all revert to their defaults. Links, image grid and appearance are kept.',
             confirmLabel: 'Reset general settings',
         },
-        instagram: {
+        image_grid: {
             title: 'Remove all image grid tiles?',
             message: 'Every tile in the image grid is removed. The grid stays enabled or disabled exactly as it is now. Other tabs are untouched.',
             confirmLabel: 'Remove all tiles',
@@ -829,35 +829,35 @@
 
     /* -------------------------------------------------- Instagram grid */
 
-    const igGrid = document.getElementById('lfp-ig-grid');
-    const igJsonInput = document.getElementById('lfp-ig-json');
-    const tplIgTile = document.getElementById('lfp-tpl-ig-tile');
-    const tplIgAdd  = document.getElementById('lfp-tpl-ig-add');
-    const igDialog = document.getElementById('lfp-ig-dialog');
+    const imgGrid = document.getElementById('lfp-imgrid-grid');
+    const imgJsonInput = document.getElementById('lfp-imgrid-json');
+    const tplImgTile = document.getElementById('lfp-tpl-ig-tile');
+    const tplImgAdd  = document.getElementById('lfp-tpl-ig-add');
+    const imgDialog = document.getElementById('lfp-imgrid-dialog');
 
-    let igItems = Array.isArray(bootstrap.instagram) ? structuredClone(bootstrap.instagram) : [];
-    let igEditId = null; // null when adding, item.id when editing
-    let igDragId = null;
+    let imgItems = Array.isArray(bootstrap.imageGrid) ? structuredClone(bootstrap.imageGrid) : [];
+    let imgEditId = null; // null when adding, item.id when editing
+    let imgDragId = null;
 
-    const renderIg = () => {
-        if (!igGrid) return;
-        igGrid.replaceChildren();
-        for (const it of igItems) {
-            igGrid.appendChild(renderIgTile(it));
+    const renderImg = () => {
+        if (!imgGrid) return;
+        imgGrid.replaceChildren();
+        for (const it of imgItems) {
+            imgGrid.appendChild(renderImgTile(it));
         }
         // Add a single placeholder for the next empty cell
-        igGrid.appendChild(renderIgAdd());
+        imgGrid.appendChild(renderImgAdd());
     };
 
-    function renderIgTile(item) {
-        const node = tplIgTile.content.firstElementChild.cloneNode(true);
+    function renderImgTile(item) {
+        const node = tplImgTile.content.firstElementChild.cloneNode(true);
         node.dataset.id = item.id;
 
-        const imgSlot   = node.querySelector('[data-lfp-ig-img]');
-        const overlay   = node.querySelector('[data-lfp-ig-overlay]');
-        const titleEl   = node.querySelector('[data-lfp-ig-title]');
-        const editBtn   = node.querySelector('[data-lfp-ig-edit]');
-        const removeBtn = node.querySelector('[data-lfp-ig-remove]');
+        const imgSlot   = node.querySelector('[data-lfp-imgrid-img]');
+        const overlay   = node.querySelector('[data-lfp-imgrid-overlay]');
+        const titleEl   = node.querySelector('[data-lfp-imgrid-title]');
+        const editBtn   = node.querySelector('[data-lfp-imgrid-edit]');
+        const removeBtn = node.querySelector('[data-lfp-imgrid-remove]');
 
         if (item.image) imgSlot.style.backgroundImage = cssUrl(item.image);
         titleEl.textContent = item.title || '';
@@ -869,9 +869,9 @@
         // Bulk-uploaded tiles arrive without a destination URL — flag them
         // so the user knows which ones still need a click.
         const needsDetails = !item.url && !item.keyword;
-        if (needsDetails) node.classList.add('lfp-ig-needs-details');
+        if (needsDetails) node.classList.add('lfp-imgrid-needs-details');
 
-        editBtn.addEventListener('click', () => openIgDialog(item.id));
+        editBtn.addEventListener('click', () => openImgDialog(item.id));
         removeBtn.addEventListener('click', async () => {
             const ok = await lfpConfirm({
                 title: 'Remove image tile',
@@ -880,9 +880,9 @@
                 danger: true,
             });
             if (!ok) return;
-            const idx = igItems.findIndex((i) => i.id === item.id);
-            if (idx >= 0) igItems.splice(idx, 1);
-            renderIg();
+            const idx = imgItems.findIndex((i) => i.id === item.id);
+            if (idx >= 0) imgItems.splice(idx, 1);
+            renderImg();
         });
 
         // Drag-drop
@@ -893,18 +893,18 @@
         });
         node.addEventListener('dragstart', (e) => {
             if (!onHandle) { e.preventDefault(); return; }
-            igDragId = item.id;
+            imgDragId = item.id;
             node.classList.add('is-dragging');
             e.dataTransfer.effectAllowed = 'move';
         });
         node.addEventListener('dragend', () => {
             node.classList.remove('is-dragging');
             node.draggable = false;
-            igDragId = null;
-            igGrid.querySelectorAll('.is-drop-target').forEach((el) => el.classList.remove('is-drop-target'));
+            imgDragId = null;
+            imgGrid.querySelectorAll('.is-drop-target').forEach((el) => el.classList.remove('is-drop-target'));
         });
         node.addEventListener('dragover', (e) => {
-            if (!igDragId || igDragId === item.id) return;
+            if (!imgDragId || imgDragId === item.id) return;
             e.preventDefault();
             node.classList.add('is-drop-target');
         });
@@ -912,30 +912,30 @@
             node.classList.remove('is-drop-target');
         });
         node.addEventListener('drop', (e) => {
-            if (!igDragId || igDragId === item.id) return;
+            if (!imgDragId || imgDragId === item.id) return;
             e.preventDefault();
-            const srcIdx = igItems.findIndex((i) => i.id === igDragId);
-            const tgtIdx = igItems.findIndex((i) => i.id === item.id);
+            const srcIdx = imgItems.findIndex((i) => i.id === imgDragId);
+            const tgtIdx = imgItems.findIndex((i) => i.id === item.id);
             if (srcIdx < 0 || tgtIdx < 0) return;
-            const [moved] = igItems.splice(srcIdx, 1);
-            const re = igItems.findIndex((i) => i.id === item.id);
-            igItems.splice(re, 0, moved);
-            renderIg();
+            const [moved] = imgItems.splice(srcIdx, 1);
+            const re = imgItems.findIndex((i) => i.id === item.id);
+            imgItems.splice(re, 0, moved);
+            renderImg();
         });
 
         return node;
     }
 
-    function renderIgAdd() {
-        const btn = tplIgAdd.content.firstElementChild.cloneNode(true);
-        btn.addEventListener('click', () => openIgDialog(null));
+    function renderImgAdd() {
+        const btn = tplImgAdd.content.firstElementChild.cloneNode(true);
+        btn.addEventListener('click', () => openImgDialog(null));
         return btn;
     }
 
     /* -------- Bulk image upload */
 
-    const igBulkBtn = document.getElementById('lfp-ig-bulk');
-    const igBulkInput = document.getElementById('lfp-ig-bulk-input');
+    const imgBulkBtn = document.getElementById('lfp-imgrid-bulk');
+    const imgBulkInput = document.getElementById('lfp-imgrid-bulk-input');
 
     const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -944,19 +944,19 @@
         reader.readAsDataURL(file);
     });
 
-    igBulkBtn?.addEventListener('click', () => igBulkInput?.click());
+    imgBulkBtn?.addEventListener('click', () => imgBulkInput?.click());
 
-    igBulkInput?.addEventListener('change', async (e) => {
+    imgBulkInput?.addEventListener('change', async (e) => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
-        igBulkBtn.disabled = true;
-        igBulkBtn.textContent = `Reading ${files.length} image${files.length === 1 ? '' : 's'}…`;
+        imgBulkBtn.disabled = true;
+        imgBulkBtn.textContent = `Reading ${files.length} image${files.length === 1 ? '' : 's'}…`;
         try {
             for (const f of files) {
                 if (!f.type.startsWith('image/')) continue;
                 if (f.size > 5 * 1024 * 1024) continue; // matches the server-side limit
                 const image = await readFileAsDataUrl(f);
-                igItems.push({
+                imgItems.push({
                     id: uid('ig'),
                     source: 'url',
                     url: '',
@@ -967,130 +967,130 @@
                 });
             }
         } finally {
-            igBulkInput.value = ''; // allow re-selecting the same set
-            igBulkBtn.disabled = false;
-            igBulkBtn.innerHTML = '&#x2B73; Bulk upload images';
-            renderIg();
+            imgBulkInput.value = ''; // allow re-selecting the same set
+            imgBulkBtn.disabled = false;
+            imgBulkBtn.innerHTML = '&#x2B73; Bulk upload images';
+            renderImg();
         }
     });
 
     /* -------- Instagram dialog */
 
-    const igFields = {
-        imageUrl:    document.getElementById('lfp-ig-image-url'),
-        imageFile:   document.getElementById('lfp-ig-image-file'),
-        source:      document.getElementById('lfp-ig-source'),
-        url:         document.getElementById('lfp-ig-url'),
-        keywordDisp: document.getElementById('lfp-ig-keyword-display'),
-        title:       document.getElementById('lfp-ig-title-input'),
-        showMode:    document.getElementById('lfp-ig-show-mode'),
+    const imgFields = {
+        imageUrl:    document.getElementById('lfp-imgrid-image-url'),
+        imageFile:   document.getElementById('lfp-imgrid-image-file'),
+        source:      document.getElementById('lfp-imgrid-source'),
+        url:         document.getElementById('lfp-imgrid-url'),
+        keywordDisp: document.getElementById('lfp-imgrid-keyword-display'),
+        title:       document.getElementById('lfp-imgrid-title-input'),
+        showMode:    document.getElementById('lfp-imgrid-show-mode'),
     };
-    let igDialogState = {};
+    let imgDialogState = {};
 
-    const igPreview = document.getElementById('lfp-ig-preview');
+    const imgPreview = document.getElementById('lfp-imgrid-preview');
 
-    const updateIgPreview = () => {
-        if (!igPreview) return;
-        igPreview.style.backgroundImage = igDialogState.image ? cssUrl(igDialogState.image) : '';
+    const updateImgPreview = () => {
+        if (!imgPreview) return;
+        imgPreview.style.backgroundImage = imgDialogState.image ? cssUrl(imgDialogState.image) : '';
     };
 
     const isDataUrl = (v) => typeof v === 'string' && v.startsWith('data:');
 
-    function openIgDialog(id) {
-        igEditId = id;
-        igDialogState = id
-            ? structuredClone(igItems.find((i) => i.id === id) || {})
+    function openImgDialog(id) {
+        imgEditId = id;
+        imgDialogState = id
+            ? structuredClone(imgItems.find((i) => i.id === id) || {})
             : { id: uid('ig'), source: 'url', url: '', keyword: '', image: '', title: '', show_mode: 'always' };
 
         // Show uploaded files as "(uploaded file)" in the URL field instead
         // of a multi-line base64 data: URL. The preview tile shows the actual
         // image, which is what the user cares about.
-        if (isDataUrl(igDialogState.image)) {
-            igFields.imageUrl.value = '';
-            igFields.imageUrl.placeholder = '(uploaded image shown above — paste a URL to replace)';
+        if (isDataUrl(imgDialogState.image)) {
+            imgFields.imageUrl.value = '';
+            imgFields.imageUrl.placeholder = '(uploaded image shown above — paste a URL to replace)';
         } else {
-            igFields.imageUrl.value = igDialogState.image || '';
-            igFields.imageUrl.placeholder = 'https://example.com/photo.jpg';
+            imgFields.imageUrl.value = imgDialogState.image || '';
+            imgFields.imageUrl.placeholder = 'https://example.com/photo.jpg';
         }
-        igFields.imageFile.value = '';
-        igFields.source.value = igDialogState.source || 'url';
-        igFields.url.value = igDialogState.url || '';
-        igFields.keywordDisp.textContent = igDialogState.keyword || '—';
-        igFields.title.value = igDialogState.title || '';
-        igFields.showMode.value = igDialogState.show_mode || 'always';
-        updateIgSourceBlocks();
-        updateIgPreview();
-        document.getElementById('lfp-ig-dialog-title').textContent = id ? 'Edit image tile' : 'Add image tile';
+        imgFields.imageFile.value = '';
+        imgFields.source.value = imgDialogState.source || 'url';
+        imgFields.url.value = imgDialogState.url || '';
+        imgFields.keywordDisp.textContent = imgDialogState.keyword || '—';
+        imgFields.title.value = imgDialogState.title || '';
+        imgFields.showMode.value = imgDialogState.show_mode || 'always';
+        updateImgSourceBlocks();
+        updateImgPreview();
+        document.getElementById('lfp-imgrid-dialog-title').textContent = id ? 'Edit image tile' : 'Add image tile';
 
-        if (typeof igDialog.showModal === 'function') igDialog.showModal();
-        else igDialog.setAttribute('open', '');
+        if (typeof imgDialog.showModal === 'function') imgDialog.showModal();
+        else imgDialog.setAttribute('open', '');
     }
 
-    function updateIgSourceBlocks() {
-        const v = igFields.source.value;
-        document.querySelectorAll('[data-lfp-ig-block]').forEach((el) => {
+    function updateImgSourceBlocks() {
+        const v = imgFields.source.value;
+        document.querySelectorAll('[data-lfp-imgrid-block]').forEach((el) => {
             el.hidden = el.dataset.lfpIgBlock !== v;
         });
     }
 
-    if (igFields.source) {
-        igFields.source.addEventListener('change', updateIgSourceBlocks);
+    if (imgFields.source) {
+        imgFields.source.addEventListener('change', updateImgSourceBlocks);
     }
 
-    igFields.imageUrl?.addEventListener('input', (e) => {
-        igDialogState.image = e.target.value;
-        updateIgPreview();
+    imgFields.imageUrl?.addEventListener('input', (e) => {
+        imgDialogState.image = e.target.value;
+        updateImgPreview();
     });
 
-    igFields.imageFile?.addEventListener('change', async (e) => {
+    imgFields.imageFile?.addEventListener('change', async (e) => {
         const f = e.target.files && e.target.files[0];
         if (!f) return;
-        igDialogState.image = await readFileAsDataUrl(f);
+        imgDialogState.image = await readFileAsDataUrl(f);
         // Don't dump the base64 blob into the URL input; the preview shows
         // the picture instead.
-        igFields.imageUrl.value = '';
-        igFields.imageUrl.placeholder = '(uploaded image shown above — paste a URL to replace)';
-        updateIgPreview();
+        imgFields.imageUrl.value = '';
+        imgFields.imageUrl.placeholder = '(uploaded image shown above — paste a URL to replace)';
+        updateImgPreview();
     });
 
-    igFields.url?.addEventListener('input', (e) => {
-        igDialogState.url = e.target.value;
+    imgFields.url?.addEventListener('input', (e) => {
+        imgDialogState.url = e.target.value;
     });
 
-    igFields.title?.addEventListener('input', (e) => {
-        igDialogState.title = e.target.value;
+    imgFields.title?.addEventListener('input', (e) => {
+        imgDialogState.title = e.target.value;
     });
 
-    igFields.showMode?.addEventListener('change', (e) => {
-        igDialogState.show_mode = e.target.value;
+    imgFields.showMode?.addEventListener('change', (e) => {
+        imgDialogState.show_mode = e.target.value;
     });
 
-    document.getElementById('lfp-ig-pick')?.addEventListener('click', () => {
+    document.getElementById('lfp-imgrid-pick')?.addEventListener('click', () => {
         openPicker((kw) => {
-            igDialogState.keyword = kw;
-            igFields.keywordDisp.textContent = kw;
+            imgDialogState.keyword = kw;
+            imgFields.keywordDisp.textContent = kw;
         });
     });
 
-    document.getElementById('lfp-ig-cancel')?.addEventListener('click', () => {
-        igDialog.close();
+    document.getElementById('lfp-imgrid-cancel')?.addEventListener('click', () => {
+        imgDialog.close();
     });
 
-    document.getElementById('lfp-ig-save')?.addEventListener('click', () => {
-        const s = igDialogState;
-        s.source = igFields.source.value === 'keyword' ? 'keyword' : 'url';
+    document.getElementById('lfp-imgrid-save')?.addEventListener('click', () => {
+        const s = imgDialogState;
+        s.source = imgFields.source.value === 'keyword' ? 'keyword' : 'url';
         if (!s.image) { alert('Please add an image for the tile.'); return; }
         if (s.source === 'keyword' && !s.keyword) { alert('Pick a YOURLS shortlink.'); return; }
         if (s.source === 'url' && !s.url) { alert('Enter a URL.'); return; }
 
-        if (igEditId) {
-            const idx = igItems.findIndex((i) => i.id === igEditId);
-            if (idx >= 0) igItems[idx] = s;
+        if (imgEditId) {
+            const idx = imgItems.findIndex((i) => i.id === imgEditId);
+            if (idx >= 0) imgItems[idx] = s;
         } else {
-            igItems.push(s);
+            imgItems.push(s);
         }
-        igDialog.close();
-        renderIg();
+        imgDialog.close();
+        renderImg();
     });
 
     /* -------------------------------------------------- Image preview for header/bg */
@@ -1155,11 +1155,11 @@
         // server-side handler keeps any data: URL as-is and the browser is
         // happy rendering them, but they bloat the option blob — only keep
         // them when the user uploaded a file (recognisable by data: prefix).
-        if (igJsonInput) {
+        if (imgJsonInput) {
             // Keep tiles that have an image, even if URL / keyword is still
             // empty (bulk-uploaded items the user hasn't filled in yet). The
-            // public renderer filters incomplete tiles via lfp_resolve_instagram.
-            const cleanIg = igItems
+            // public renderer filters incomplete tiles via lfp_resolve_image_grid.
+            const cleanIg = imgItems
                 .filter((i) => i.image)
                 .map((i) => ({
                     id: i.id,
@@ -1170,13 +1170,13 @@
                     title: i.title || '',
                     show_mode: ['always', 'hover', 'never'].includes(i.show_mode) ? i.show_mode : 'always',
                 }));
-            igJsonInput.value = JSON.stringify(cleanIg);
+            imgJsonInput.value = JSON.stringify(cleanIg);
         }
     });
 
     /* -------------------------------------------------- Init */
     renderTree();
     renderSocials();
-    renderIg();
+    renderImg();
     enhanceFileInputs(document);
 })();

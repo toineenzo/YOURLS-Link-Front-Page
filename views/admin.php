@@ -14,7 +14,7 @@ if (!defined('YOURLS_ABSPATH')) {
 $general    = lfp_get_general();
 $appearance = lfp_get_appearance();
 $items      = lfp_get_items();
-$instagram  = lfp_get_instagram();
+$image_grid = lfp_get_image_grid();
 $google_fonts = lfp_get_google_fonts();
 $all_links  = lfp_get_all_yourls_links();
 
@@ -30,7 +30,7 @@ $bootstrap = [
     'items'      => $items,
     'socials'    => $general['about_socials'] ?? [],
     'platforms'  => $platform_icons,
-    'instagram'  => $instagram['items'] ?? [],
+    'imageGrid'  => $image_grid['items'] ?? [],
     'googleFonts'=> $google_fonts,
     'allLinks'   => array_map(static fn($row): array => [
         'keyword' => (string) ($row->keyword ?? ''),
@@ -77,7 +77,7 @@ $bootstrap = [
             </svg>
             <span class="lfp-tab-label">General</span>
         </button>
-        <button type="button" class="lfp-tab" data-tab="instagram" role="tab">
+        <button type="button" class="lfp-tab" data-tab="image_grid" role="tab">
             <svg class="lfp-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -473,35 +473,35 @@ $bootstrap = [
     </section>
 
     <!-- ========================= IMAGE GRID TAB ========================== -->
-    <section class="lfp-pane" data-pane="instagram">
+    <section class="lfp-pane" data-pane="image_grid">
         <p>A 3-column gallery of clickable images — perfect for mirroring your Instagram, Pinterest, TikTok, or any social feed where you say "link in bio". Each tile points to the URL or YOURLS shortlink that the matching post promotes.</p>
 
         <div class="lfp-row">
             <label class="lfp-checkbox">
-                <input type="checkbox" name="instagram_enabled" value="1" <?php echo !empty($instagram['enabled']) ? 'checked' : ''; ?>>
+                <input type="checkbox" name="image_grid_enabled" value="1" <?php echo !empty($image_grid['enabled']) ? 'checked' : ''; ?>>
                 <span>Show the image grid above the link list</span>
             </label>
         </div>
 
         <div class="lfp-grid">
             <div class="lfp-field">
-                <label for="lfp-ig-visible">Tiles visible by default</label>
-                <input type="number" id="lfp-ig-visible" name="instagram_visible_count" min="1" max="60" value="<?php echo yourls_esc_attr((string) ($instagram['visible_count'] ?? 3)); ?>">
+                <label for="lfp-imgrid-visible">Tiles visible by default</label>
+                <input type="number" id="lfp-imgrid-visible" name="image_grid_visible_count" min="1" max="60" value="<?php echo yourls_esc_attr((string) ($image_grid['visible_count'] ?? 3)); ?>">
                 <small>If you have more tiles than this, a "Show more" button appears on the public page so visitors can reveal the rest. Default 3 (one full row in the 3-column grid).</small>
             </div>
         </div>
 
         <div class="lfp-toolbar lfp-toolbar-tight">
-            <button type="button" class="lfp-btn" id="lfp-ig-bulk">&#x2B73; Bulk upload images</button>
-            <input type="file" id="lfp-ig-bulk-input" accept="image/*" multiple hidden>
+            <button type="button" class="lfp-btn" id="lfp-imgrid-bulk">&#x2B73; Bulk upload images</button>
+            <input type="file" id="lfp-imgrid-bulk-input" accept="image/*" multiple hidden>
             <span class="lfp-toolbar-hint">Pick multiple files at once. Each image becomes a tile; fill in URL / title later by clicking the tile.</span>
         </div>
 
-        <div id="lfp-ig-grid" class="lfp-ig-grid"></div>
-        <input type="hidden" name="instagram_json" id="lfp-ig-json" value="">
+        <div id="lfp-imgrid-grid" class="lfp-imgrid-grid"></div>
+        <input type="hidden" name="image_grid_json" id="lfp-imgrid-json" value="">
 
         <div class="lfp-pane-actions">
-            <button type="button" class="lfp-btn lfp-btn-danger" data-lfp-reset="instagram">Remove all tiles</button>
+            <button type="button" class="lfp-btn lfp-btn-danger" data-lfp-reset="image_grid">Remove all tiles</button>
         </div>
     </section>
 
@@ -616,73 +616,73 @@ $bootstrap = [
 </template>
 
 <template id="lfp-tpl-ig-tile">
-    <div class="lfp-ig-tile" draggable="true">
+    <div class="lfp-imgrid-tile" draggable="true">
         <span class="lfp-handle" title="Drag to reorder">&#x2630;</span>
-        <button type="button" class="lfp-ig-edit" data-lfp-ig-edit aria-label="Edit tile">
-            <span class="lfp-ig-img" data-lfp-ig-img></span>
-            <span class="lfp-ig-overlay" data-lfp-ig-overlay>
-                <span class="lfp-ig-title" data-lfp-ig-title></span>
+        <button type="button" class="lfp-imgrid-edit" data-lfp-imgrid-edit aria-label="Edit tile">
+            <span class="lfp-imgrid-img" data-lfp-imgrid-img></span>
+            <span class="lfp-imgrid-overlay" data-lfp-imgrid-overlay>
+                <span class="lfp-imgrid-title" data-lfp-imgrid-title></span>
             </span>
         </button>
-        <button type="button" class="lfp-icon-btn lfp-icon-danger lfp-ig-remove" data-lfp-ig-remove title="Remove">&times;</button>
+        <button type="button" class="lfp-icon-btn lfp-icon-danger lfp-imgrid-remove" data-lfp-imgrid-remove title="Remove">&times;</button>
     </div>
 </template>
 
 <template id="lfp-tpl-ig-add">
-    <button type="button" class="lfp-ig-add" data-lfp-ig-add aria-label="Add tile">
-        <span class="lfp-ig-add-icon">&#43;</span>
-        <span class="lfp-ig-add-label">Add tile</span>
+    <button type="button" class="lfp-imgrid-add" data-lfp-imgrid-add aria-label="Add tile">
+        <span class="lfp-imgrid-add-icon">&#43;</span>
+        <span class="lfp-imgrid-add-label">Add tile</span>
     </button>
 </template>
 
-<dialog id="lfp-ig-dialog">
-    <form method="dialog" id="lfp-ig-form">
+<dialog id="lfp-imgrid-dialog">
+    <form method="dialog" id="lfp-imgrid-form">
         <header class="lfp-picker-head">
-            <h3 id="lfp-ig-dialog-title">Add image tile</h3>
+            <h3 id="lfp-imgrid-dialog-title">Add image tile</h3>
             <button type="submit" class="lfp-icon-btn" value="cancel" aria-label="Close">&times;</button>
         </header>
 
-        <div class="lfp-ig-form">
-            <div class="lfp-ig-image-block">
-                <div class="lfp-ig-preview" id="lfp-ig-preview" aria-hidden="true"></div>
-                <div class="lfp-ig-image-fields">
-                    <label class="lfp-ig-label">Image <span class="lfp-ig-required">*</span></label>
-                    <input type="url" id="lfp-ig-image-url" placeholder="https://example.com/photo.jpg">
-                    <input type="file" id="lfp-ig-image-file" accept="image/*">
+        <div class="lfp-imgrid-form">
+            <div class="lfp-imgrid-image-block">
+                <div class="lfp-imgrid-preview" id="lfp-imgrid-preview" aria-hidden="true"></div>
+                <div class="lfp-imgrid-image-fields">
+                    <label class="lfp-imgrid-label">Image <span class="lfp-imgrid-required">*</span></label>
+                    <input type="url" id="lfp-imgrid-image-url" placeholder="https://example.com/photo.jpg">
+                    <input type="file" id="lfp-imgrid-image-file" accept="image/*">
                     <small>Paste a URL or upload a file — this is the picture shown in the grid.</small>
                 </div>
             </div>
 
             <div class="lfp-field">
-                <label for="lfp-ig-source">Link source</label>
-                <select id="lfp-ig-source">
+                <label for="lfp-imgrid-source">Link source</label>
+                <select id="lfp-imgrid-source">
                     <option value="url">URL</option>
                     <option value="keyword">YOURLS keyword</option>
                 </select>
             </div>
 
-            <div class="lfp-field" data-lfp-ig-block="url">
-                <label for="lfp-ig-url">URL</label>
-                <input type="url" id="lfp-ig-url" placeholder="https://example.com/blog-post">
+            <div class="lfp-field" data-lfp-imgrid-block="url">
+                <label for="lfp-imgrid-url">URL</label>
+                <input type="url" id="lfp-imgrid-url" placeholder="https://example.com/blog-post">
             </div>
 
-            <div class="lfp-field" data-lfp-ig-block="keyword" hidden>
+            <div class="lfp-field" data-lfp-imgrid-block="keyword" hidden>
                 <label>YOURLS shortlink</label>
                 <div class="lfp-keyword-pick">
-                    <code id="lfp-ig-keyword-display">—</code>
-                    <button type="button" class="lfp-btn" id="lfp-ig-pick">Pick a shortlink…</button>
+                    <code id="lfp-imgrid-keyword-display">—</code>
+                    <button type="button" class="lfp-btn" id="lfp-imgrid-pick">Pick a shortlink…</button>
                 </div>
                 <small>Resolves through <code>yourls_link()</code> at click time so YOURLS click stats still increment.</small>
             </div>
 
             <div class="lfp-field">
-                <label for="lfp-ig-title-input">Optional title (overlay)</label>
-                <input type="text" id="lfp-ig-title-input" placeholder="e.g. New blog post">
+                <label for="lfp-imgrid-title-input">Optional title (overlay)</label>
+                <input type="text" id="lfp-imgrid-title-input" placeholder="e.g. New blog post">
             </div>
 
             <div class="lfp-field">
-                <label for="lfp-ig-show-mode">Show title</label>
-                <select id="lfp-ig-show-mode">
+                <label for="lfp-imgrid-show-mode">Show title</label>
+                <select id="lfp-imgrid-show-mode">
                     <option value="always">Always visible</option>
                     <option value="hover">Only on hover</option>
                     <option value="never">Never (hide title)</option>
@@ -690,9 +690,9 @@ $bootstrap = [
             </div>
         </div>
 
-        <footer class="lfp-ig-foot">
-            <button type="button" class="lfp-btn" id="lfp-ig-cancel">Cancel</button>
-            <button type="button" class="lfp-btn lfp-btn-primary" id="lfp-ig-save">Save tile</button>
+        <footer class="lfp-imgrid-foot">
+            <button type="button" class="lfp-btn" id="lfp-imgrid-cancel">Cancel</button>
+            <button type="button" class="lfp-btn lfp-btn-primary" id="lfp-imgrid-save">Save tile</button>
         </footer>
     </form>
 </dialog>
@@ -706,7 +706,7 @@ $bootstrap = [
         <div class="lfp-confirm-body">
             <p id="lfp-confirm-message"></p>
         </div>
-        <footer class="lfp-ig-foot">
+        <footer class="lfp-imgrid-foot">
             <button type="button" class="lfp-btn" id="lfp-confirm-cancel">Cancel</button>
             <button type="button" class="lfp-btn lfp-btn-primary" id="lfp-confirm-ok">Confirm</button>
         </footer>
