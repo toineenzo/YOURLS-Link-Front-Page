@@ -522,12 +522,24 @@ function lfp_sanitize_instagram(array $items, array $uploaded): array
             continue;
         }
         $source = ($item['source'] ?? 'url') === 'keyword' ? 'keyword' : 'url';
+
+        $image = $uploaded['ig_' . $id] ?? trim((string) ($item['image'] ?? ''));
+        // Bulk uploads and dialog uploads arrive as data: URLs in the items
+        // JSON. Convert them to real files in uploads/ so the option blob
+        // doesn't fill up with multi-megabyte base64 strings.
+        if (str_starts_with($image, 'data:image/')) {
+            $saved = lfp_save_data_url_image($image);
+            if ($saved !== null) {
+                $image = $saved;
+            }
+        }
+
         $clean = [
             'id'        => $id,
             'source'    => $source,
             'url'       => '',
             'keyword'   => '',
-            'image'     => $uploaded['ig_' . $id] ?? trim((string) ($item['image'] ?? '')),
+            'image'     => $image,
             'title'     => trim((string) ($item['title'] ?? '')),
             'show_mode' => 'always',
         ];
@@ -538,15 +550,11 @@ function lfp_sanitize_instagram(array $items, array $uploaded): array
         if ($source === 'keyword') {
             $kw = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) ($item['keyword'] ?? ''));
             $clean['keyword'] = is_string($kw) ? $kw : '';
-            if ($clean['keyword'] === '') {
-                continue;
-            }
+            // Tiles without a destination are kept (the user can fill the
+            // URL/keyword in later); the public page filters them out via
+            // lfp_resolve_instagram() until both pieces are present.
         } else {
-            $url = trim((string) ($item['url'] ?? ''));
-            if ($url === '') {
-                continue;
-            }
-            $clean['url'] = $url;
+            $clean['url'] = trim((string) ($item['url'] ?? ''));
         }
         if ($clean['image'] === '') {
             continue; // grid items always need an image
@@ -554,6 +562,42 @@ function lfp_sanitize_instagram(array $items, array $uploaded): array
         $result[] = $clean;
     }
     return $result;
+}
+
+/**
+ * Decode a data: URL produced by FileReader.readAsDataURL and persist it as
+ * a real file under uploads/. Returns the public URL or null on failure.
+ */
+function lfp_save_data_url_image(string $data_url): ?string
+{
+    if (preg_match('#^data:(image/(jpeg|png|gif|webp|svg\+xml));base64,(.+)$#', $data_url, $m) !== 1) {
+        return null;
+    }
+    $mime = $m[1];
+    $bin  = base64_decode($m[3], true);
+    if ($bin === false || $bin === '' || strlen($bin) > 5 * 1024 * 1024) {
+        return null;
+    }
+    $ext_map = [
+        'image/jpeg'    => 'jpg',
+        'image/png'     => 'png',
+        'image/gif'     => 'gif',
+        'image/webp'    => 'webp',
+        'image/svg+xml' => 'svg',
+    ];
+    $ext = $ext_map[$mime] ?? 'bin';
+
+    try {
+        $filename = bin2hex(random_bytes(8)) . '.' . $ext;
+    } catch (\Throwable) {
+        $filename = uniqid('lfp_', true) . '.' . $ext;
+    }
+    $dest = lfp_uploads_dir() . '/' . $filename;
+    if (file_put_contents($dest, $bin) === false) {
+        return null;
+    }
+    @chmod($dest, 0644);
+    return lfp_uploads_url() . $filename;
 }
 
 function lfp_resolve_instagram(array $entry): ?array

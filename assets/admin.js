@@ -662,6 +662,11 @@
             overlay.classList.add('is-empty');
         }
 
+        // Bulk-uploaded tiles arrive without a destination URL — flag them
+        // so the user knows which ones still need a click.
+        const needsDetails = !item.url && !item.keyword;
+        if (needsDetails) node.classList.add('lfp-ig-needs-details');
+
         editBtn.addEventListener('click', () => openIgDialog(item.id));
         removeBtn.addEventListener('click', () => {
             if (!confirm('Remove this tile?')) return;
@@ -716,6 +721,48 @@
         btn.addEventListener('click', () => openIgDialog(null));
         return btn;
     }
+
+    /* -------- Bulk image upload */
+
+    const igBulkBtn = document.getElementById('lfp-ig-bulk');
+    const igBulkInput = document.getElementById('lfp-ig-bulk-input');
+
+    const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.addEventListener('load', (ev) => resolve(String(ev.target.result)));
+        reader.addEventListener('error', () => reject(reader.error));
+        reader.readAsDataURL(file);
+    });
+
+    igBulkBtn?.addEventListener('click', () => igBulkInput?.click());
+
+    igBulkInput?.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        igBulkBtn.disabled = true;
+        igBulkBtn.textContent = `Reading ${files.length} image${files.length === 1 ? '' : 's'}…`;
+        try {
+            for (const f of files) {
+                if (!f.type.startsWith('image/')) continue;
+                if (f.size > 5 * 1024 * 1024) continue; // matches the server-side limit
+                const image = await readFileAsDataUrl(f);
+                igItems.push({
+                    id: uid('ig'),
+                    source: 'url',
+                    url: '',
+                    keyword: '',
+                    image,
+                    title: '',
+                    show_mode: 'always',
+                });
+            }
+        } finally {
+            igBulkInput.value = ''; // allow re-selecting the same set
+            igBulkBtn.disabled = false;
+            igBulkBtn.innerHTML = '&#x2B73; Bulk upload images';
+            renderIg();
+        }
+    });
 
     /* -------- Instagram dialog */
 
@@ -880,11 +927,11 @@
         // happy rendering them, but they bloat the option blob — only keep
         // them when the user uploaded a file (recognisable by data: prefix).
         if (igJsonInput) {
+            // Keep tiles that have an image, even if URL / keyword is still
+            // empty (bulk-uploaded items the user hasn't filled in yet). The
+            // public renderer filters incomplete tiles via lfp_resolve_instagram.
             const cleanIg = igItems
-                .filter((i) => i.image && (
-                    (i.source === 'keyword' && i.keyword) ||
-                    (i.source !== 'keyword' && i.url)
-                ))
+                .filter((i) => i.image)
                 .map((i) => ({
                     id: i.id,
                     source: i.source === 'keyword' ? 'keyword' : 'url',

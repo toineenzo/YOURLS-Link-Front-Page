@@ -375,6 +375,12 @@ $bootstrap = [
             </label>
         </div>
 
+        <div class="lfp-toolbar lfp-toolbar-tight">
+            <button type="button" class="lfp-btn" id="lfp-ig-bulk">&#x2B73; Bulk upload images</button>
+            <input type="file" id="lfp-ig-bulk-input" accept="image/*" multiple hidden>
+            <span class="lfp-toolbar-hint">Pick multiple files at once. Each image becomes a tile; fill in URL / title later by clicking the tile.</span>
+        </div>
+
         <div id="lfp-ig-grid" class="lfp-ig-grid"></div>
         <input type="hidden" name="instagram_json" id="lfp-ig-json" value="">
     </section>
