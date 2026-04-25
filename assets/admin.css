@@ -9,7 +9,8 @@
 
 #lfp-form,
 #lfp-picker,
-#lfp-ig-dialog {
+#lfp-ig-dialog,
+#lfp-confirm {
     --lfp-bg:       #1f2937;
     --lfp-card:     #111827;
     --lfp-elev:     #2d3748;
@@ -36,7 +37,8 @@
 @media (prefers-color-scheme: light) {
     #lfp-form,
     #lfp-picker,
-    #lfp-ig-dialog {
+    #lfp-ig-dialog,
+    #lfp-confirm {
         --lfp-bg:       #ffffff;
         --lfp-card:     #ffffff;
         --lfp-elev:     #f9fafb;
