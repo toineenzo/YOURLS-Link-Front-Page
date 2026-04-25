@@ -110,6 +110,10 @@ $bootstrap = [
         <details class="lfp-empty-template" hidden>
             <summary>No items yet</summary>
         </details>
+
+        <div class="lfp-pane-actions">
+            <button type="button" class="lfp-btn lfp-btn-danger" data-lfp-reset="links">Remove all links</button>
+        </div>
     </section>
 
     <!-- =========================== GENERAL TAB =========================== -->
@@ -228,6 +232,10 @@ $bootstrap = [
                 <small>Appended to the footer on the public page. <strong>HTML is rendered as-is</strong>; no sanitization, so don't paste anything you don't trust.</small>
             </div>
         </fieldset>
+
+        <div class="lfp-pane-actions">
+            <button type="button" class="lfp-btn lfp-btn-danger" data-lfp-reset="general">Reset general settings</button>
+        </div>
     </section>
 
     <!-- ========================= APPEARANCE TAB ========================== -->
@@ -458,6 +466,10 @@ $bootstrap = [
                 <small>Inserted at the bottom of the inline style block on the public page.</small>
             </div>
         </fieldset>
+
+        <div class="lfp-pane-actions">
+            <button type="button" class="lfp-btn lfp-btn-danger" data-lfp-reset="appearance">Reset appearance</button>
+        </div>
     </section>
 
     <!-- ========================= IMAGE GRID TAB ========================== -->
@@ -479,12 +491,21 @@ $bootstrap = [
 
         <div id="lfp-ig-grid" class="lfp-ig-grid"></div>
         <input type="hidden" name="instagram_json" id="lfp-ig-json" value="">
+
+        <div class="lfp-pane-actions">
+            <button type="button" class="lfp-btn lfp-btn-danger" data-lfp-reset="instagram">Remove all tiles</button>
+        </div>
     </section>
 
     <div class="lfp-actions">
         <button type="submit" class="lfp-btn lfp-btn-primary">Save settings</button>
-        <button type="button" class="lfp-btn lfp-btn-danger" id="lfp-reset">Reset to defaults</button>
     </div>
+</form>
+
+<form id="lfp-reset-form" method="post" action="<?php echo yourls_esc_attr(yourls_admin_url('plugins.php?page=lfp')); ?>" hidden>
+    <?php yourls_nonce_field(LFP_NONCE_ACTION); ?>
+    <input type="hidden" name="lfp_action"   value="reset">
+    <input type="hidden" name="reset_scope"  value="">
 </form>
 
 <footer class="lfp-pluginfoot">

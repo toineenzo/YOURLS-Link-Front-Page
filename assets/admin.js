@@ -724,17 +724,48 @@
 
     /* -------------------------------------------------- Reset */
 
-    document.getElementById('lfp-reset').addEventListener('click', async () => {
-        const ok = await lfpConfirm({
-            title: 'Reset all settings to defaults?',
-            message: 'This will remove every configured link, category, image-grid tile and About-me social. Appearance and General preferences also revert to defaults. This cannot be undone.',
-            confirmLabel: 'Reset everything',
-            danger: true,
+    /* Per-tab reset buttons. Each button knows which scope it targets via
+       data-lfp-reset, gets a scope-specific confirm message, and submits
+       through the dedicated #lfp-reset-form (kept outside the main settings
+       form so the user's other unsaved fields don't get persisted along
+       with the reset). */
+    const resetForm  = document.getElementById('lfp-reset-form');
+    const resetCopy  = {
+        links: {
+            title: 'Remove all links?',
+            message: 'This empties the homepage link list — every configured link and category is removed. Other settings (general, image grid, appearance) are kept.',
+            confirmLabel: 'Remove all links',
+        },
+        general: {
+            title: 'Reset general settings?',
+            message: 'Site title, login path, footer toggles, About-me section and social-media buttons all revert to their defaults. Links, image grid and appearance are kept.',
+            confirmLabel: 'Reset general settings',
+        },
+        instagram: {
+            title: 'Remove all image grid tiles?',
+            message: 'Every tile in the image grid is removed. The grid stays enabled or disabled exactly as it is now. Other tabs are untouched.',
+            confirmLabel: 'Remove all tiles',
+        },
+        appearance: {
+            title: 'Reset appearance?',
+            message: 'Colors, spacing, typography, background image and custom CSS all revert to defaults. Links, general settings and the image grid are kept.',
+            confirmLabel: 'Reset appearance',
+        },
+    };
+
+    document.querySelectorAll('[data-lfp-reset]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const scope = btn.dataset.lfpReset || 'all';
+            const copy  = resetCopy[scope] || {
+                title: 'Reset?',
+                message: 'Are you sure?',
+                confirmLabel: 'Reset',
+            };
+            const ok = await lfpConfirm({ ...copy, danger: true });
+            if (!ok || !resetForm) return;
+            resetForm.querySelector('input[name="reset_scope"]').value = scope;
+            resetForm.submit();
         });
-        if (!ok) return;
-        const actionInput = form.querySelector('input[name="lfp_action"]');
-        actionInput.value = 'reset';
-        form.submit();
     });
 
     /* -------------------------------------------------- Font picker */

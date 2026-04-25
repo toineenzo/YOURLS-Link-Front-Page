@@ -1185,6 +1185,16 @@
     border-top: 1px solid var(--lfp-border);
 }
 
+/* Per-tab reset action sits at the bottom of each tab pane, separated
+   from the content above by a thin rule so it reads as "danger zone". */
+.lfp-pane-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--lfp-border);
+}
+
 .lfp-pluginfoot {
     margin-top: 28px;
     padding-top: 16px;

@@ -736,10 +736,32 @@ function lfp_save_settings(): never
 
 function lfp_reset_settings(): never
 {
-    yourls_update_option(LFP_OPT_GENERAL, lfp_default_general());
-    yourls_update_option(LFP_OPT_APPEARANCE, lfp_default_appearance());
-    yourls_update_option(LFP_OPT_ITEMS, []);
-    yourls_update_option(LFP_OPT_INSTAGRAM, lfp_default_instagram());
+    $scope = (string) ($_POST['reset_scope'] ?? 'all');
+
+    switch ($scope) {
+        case 'links':
+            yourls_update_option(LFP_OPT_ITEMS, []);
+            break;
+        case 'general':
+            yourls_update_option(LFP_OPT_GENERAL, lfp_default_general());
+            break;
+        case 'instagram':
+            $insta = lfp_get_instagram();
+            $insta['items'] = [];
+            yourls_update_option(LFP_OPT_INSTAGRAM, $insta);
+            break;
+        case 'appearance':
+            yourls_update_option(LFP_OPT_APPEARANCE, lfp_default_appearance());
+            break;
+        case 'all':
+        default:
+            yourls_update_option(LFP_OPT_GENERAL,   lfp_default_general());
+            yourls_update_option(LFP_OPT_APPEARANCE, lfp_default_appearance());
+            yourls_update_option(LFP_OPT_ITEMS,     []);
+            yourls_update_option(LFP_OPT_INSTAGRAM, lfp_default_instagram());
+            break;
+    }
+
     yourls_redirect(yourls_admin_url('plugins.php?page=lfp&saved=1'), 302);
     exit;
 }
