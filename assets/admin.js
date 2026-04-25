@@ -595,6 +595,228 @@
         form.submit();
     });
 
+    /* -------------------------------------------------- Font picker */
+
+    const fontSource = document.getElementById('lfp-font-source');
+    const fontSearch = document.getElementById('lfp-font-search');
+    const fontGoogleSel = document.getElementById('lfp-font-google');
+
+    const updateFontBlocks = () => {
+        const value = fontSource.value;
+        document.querySelectorAll('[data-lfp-fontblock]').forEach((el) => {
+            el.style.display = el.dataset.lfpFontblock === value ? '' : 'none';
+        });
+    };
+    if (fontSource) {
+        fontSource.addEventListener('change', updateFontBlocks);
+        updateFontBlocks();
+    }
+
+    if (fontSearch && fontGoogleSel) {
+        fontSearch.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase().trim();
+            for (const opt of fontGoogleSel.options) {
+                const family = opt.value.toLowerCase();
+                const cat = (opt.dataset.category || '').toLowerCase();
+                opt.hidden = q !== '' && !family.includes(q) && !cat.includes(q);
+            }
+        });
+    }
+
+    /* -------------------------------------------------- Instagram grid */
+
+    const igGrid = document.getElementById('lfp-ig-grid');
+    const igJsonInput = document.getElementById('lfp-ig-json');
+    const tplIgTile = document.getElementById('lfp-tpl-ig-tile');
+    const tplIgAdd  = document.getElementById('lfp-tpl-ig-add');
+    const igDialog = document.getElementById('lfp-ig-dialog');
+
+    let igItems = Array.isArray(bootstrap.instagram) ? structuredClone(bootstrap.instagram) : [];
+    let igEditId = null; // null when adding, item.id when editing
+    let igDragId = null;
+
+    const renderIg = () => {
+        if (!igGrid) return;
+        igGrid.replaceChildren();
+        for (const it of igItems) {
+            igGrid.appendChild(renderIgTile(it));
+        }
+        // Add a single placeholder for the next empty cell
+        igGrid.appendChild(renderIgAdd());
+    };
+
+    function renderIgTile(item) {
+        const node = tplIgTile.content.firstElementChild.cloneNode(true);
+        node.dataset.id = item.id;
+
+        const imgSlot   = node.querySelector('[data-lfp-ig-img]');
+        const overlay   = node.querySelector('[data-lfp-ig-overlay]');
+        const titleEl   = node.querySelector('[data-lfp-ig-title]');
+        const editBtn   = node.querySelector('[data-lfp-ig-edit]');
+        const removeBtn = node.querySelector('[data-lfp-ig-remove]');
+
+        if (item.image) imgSlot.style.backgroundImage = cssUrl(item.image);
+        titleEl.textContent = item.title || '';
+        overlay.dataset.show = item.show_mode || 'always';
+        if (!item.title || (item.show_mode === 'never')) {
+            overlay.classList.add('is-empty');
+        }
+
+        editBtn.addEventListener('click', () => openIgDialog(item.id));
+        removeBtn.addEventListener('click', () => {
+            if (!confirm('Remove this tile?')) return;
+            const idx = igItems.findIndex((i) => i.id === item.id);
+            if (idx >= 0) igItems.splice(idx, 1);
+            renderIg();
+        });
+
+        // Drag-drop
+        let onHandle = false;
+        node.addEventListener('mousedown', (e) => {
+            onHandle = !!e.target.closest('.lfp-handle');
+            node.draggable = onHandle;
+        });
+        node.addEventListener('dragstart', (e) => {
+            if (!onHandle) { e.preventDefault(); return; }
+            igDragId = item.id;
+            node.classList.add('is-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        node.addEventListener('dragend', () => {
+            node.classList.remove('is-dragging');
+            node.draggable = false;
+            igDragId = null;
+            igGrid.querySelectorAll('.is-drop-target').forEach((el) => el.classList.remove('is-drop-target'));
+        });
+        node.addEventListener('dragover', (e) => {
+            if (!igDragId || igDragId === item.id) return;
+            e.preventDefault();
+            node.classList.add('is-drop-target');
+        });
+        node.addEventListener('dragleave', () => {
+            node.classList.remove('is-drop-target');
+        });
+        node.addEventListener('drop', (e) => {
+            if (!igDragId || igDragId === item.id) return;
+            e.preventDefault();
+            const srcIdx = igItems.findIndex((i) => i.id === igDragId);
+            const tgtIdx = igItems.findIndex((i) => i.id === item.id);
+            if (srcIdx < 0 || tgtIdx < 0) return;
+            const [moved] = igItems.splice(srcIdx, 1);
+            const re = igItems.findIndex((i) => i.id === item.id);
+            igItems.splice(re, 0, moved);
+            renderIg();
+        });
+
+        return node;
+    }
+
+    function renderIgAdd() {
+        const btn = tplIgAdd.content.firstElementChild.cloneNode(true);
+        btn.addEventListener('click', () => openIgDialog(null));
+        return btn;
+    }
+
+    /* -------- Instagram dialog */
+
+    const igFields = {
+        imageUrl:    document.getElementById('lfp-ig-image-url'),
+        imageFile:   document.getElementById('lfp-ig-image-file'),
+        source:      document.getElementById('lfp-ig-source'),
+        url:         document.getElementById('lfp-ig-url'),
+        keywordDisp: document.getElementById('lfp-ig-keyword-display'),
+        title:       document.getElementById('lfp-ig-title-input'),
+        showMode:    document.getElementById('lfp-ig-show-mode'),
+    };
+    let igDialogState = {};
+
+    function openIgDialog(id) {
+        igEditId = id;
+        igDialogState = id
+            ? structuredClone(igItems.find((i) => i.id === id) || {})
+            : { id: uid('ig'), source: 'url', url: '', keyword: '', image: '', title: '', show_mode: 'always' };
+
+        igFields.imageUrl.value = igDialogState.image || '';
+        igFields.imageFile.value = '';
+        igFields.source.value = igDialogState.source || 'url';
+        igFields.url.value = igDialogState.url || '';
+        igFields.keywordDisp.textContent = igDialogState.keyword || '—';
+        igFields.title.value = igDialogState.title || '';
+        igFields.showMode.value = igDialogState.show_mode || 'always';
+        updateIgSourceBlocks();
+        document.getElementById('lfp-ig-dialog-title').textContent = id ? 'Edit Instagram tile' : 'Add Instagram tile';
+
+        if (typeof igDialog.showModal === 'function') igDialog.showModal();
+        else igDialog.setAttribute('open', '');
+    }
+
+    function updateIgSourceBlocks() {
+        const v = igFields.source.value;
+        document.querySelectorAll('[data-lfp-ig-block]').forEach((el) => {
+            el.hidden = el.dataset.lfpIgBlock !== v;
+        });
+    }
+
+    if (igFields.source) {
+        igFields.source.addEventListener('change', updateIgSourceBlocks);
+    }
+
+    igFields.imageUrl?.addEventListener('input', (e) => {
+        igDialogState.image = e.target.value;
+    });
+
+    igFields.imageFile?.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        // Read as data URL so the live grid preview works before form submit.
+        const reader = new FileReader();
+        reader.addEventListener('load', (ev) => {
+            igDialogState.image = String(ev.target.result);
+            igFields.imageUrl.value = igDialogState.image;
+        });
+        reader.readAsDataURL(f);
+    });
+
+    igFields.url?.addEventListener('input', (e) => {
+        igDialogState.url = e.target.value;
+    });
+
+    igFields.title?.addEventListener('input', (e) => {
+        igDialogState.title = e.target.value;
+    });
+
+    igFields.showMode?.addEventListener('change', (e) => {
+        igDialogState.show_mode = e.target.value;
+    });
+
+    document.getElementById('lfp-ig-pick')?.addEventListener('click', () => {
+        openPicker((kw) => {
+            igDialogState.keyword = kw;
+            igFields.keywordDisp.textContent = kw;
+        });
+    });
+
+    document.getElementById('lfp-ig-cancel')?.addEventListener('click', () => {
+        igDialog.close();
+    });
+
+    document.getElementById('lfp-ig-save')?.addEventListener('click', () => {
+        const s = igDialogState;
+        s.source = igFields.source.value === 'keyword' ? 'keyword' : 'url';
+        if (!s.image) { alert('Please add an image for the tile.'); return; }
+        if (s.source === 'keyword' && !s.keyword) { alert('Pick a YOURLS shortlink.'); return; }
+        if (s.source === 'url' && !s.url) { alert('Enter a URL.'); return; }
+
+        if (igEditId) {
+            const idx = igItems.findIndex((i) => i.id === igEditId);
+            if (idx >= 0) igItems[idx] = s;
+        } else {
+            igItems.push(s);
+        }
+        igDialog.close();
+        renderIg();
+    });
+
     /* -------------------------------------------------- Image preview for header/bg */
 
     document.querySelectorAll('.lfp-pane:not([data-pane="links"]) [data-lfp-image-file]').forEach((fileInput) => {
@@ -652,9 +874,32 @@
                 label: s.label || '',
             }));
         socialsJsonInput.value = JSON.stringify(cleanSocials);
+
+        // Drop transient data: URL inputs only carry data: previews. The
+        // server-side handler keeps any data: URL as-is and the browser is
+        // happy rendering them, but they bloat the option blob — only keep
+        // them when the user uploaded a file (recognisable by data: prefix).
+        if (igJsonInput) {
+            const cleanIg = igItems
+                .filter((i) => i.image && (
+                    (i.source === 'keyword' && i.keyword) ||
+                    (i.source !== 'keyword' && i.url)
+                ))
+                .map((i) => ({
+                    id: i.id,
+                    source: i.source === 'keyword' ? 'keyword' : 'url',
+                    url: i.url || '',
+                    keyword: i.keyword || '',
+                    image: i.image || '',
+                    title: i.title || '',
+                    show_mode: ['always', 'hover', 'never'].includes(i.show_mode) ? i.show_mode : 'always',
+                }));
+            igJsonInput.value = JSON.stringify(cleanIg);
+        }
     });
 
     /* -------------------------------------------------- Init */
     renderTree();
     renderSocials();
+    renderIg();
 })();

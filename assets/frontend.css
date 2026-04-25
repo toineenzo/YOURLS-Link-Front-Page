@@ -8,7 +8,21 @@
     --lfp-card-hover: #334155;
     --lfp-accent: #3b82f6;
     --lfp-radius: 16px;
+    --lfp-page-max: 640px;
+    --lfp-pad-top: 56px;
+    --lfp-pad-bot: 80px;
+    --lfp-pad-x: 20px;
+    --lfp-card-gap: 14px;
+    --lfp-card-py: 14px;
+    --lfp-card-px: 18px;
+    --lfp-icon: 44px;
+    --lfp-photo: 120px;
     --lfp-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --lfp-title-size: 1.75rem;
+    --lfp-subtitle-size: 1rem;
+    --lfp-cat-title-size: 1.15rem;
+    --lfp-link-title-size: 1rem;
+    --lfp-body-size: 0.95rem;
 }
 
 * {
@@ -32,9 +46,9 @@ body {
 }
 
 .lfp-page {
-    max-width: 640px;
+    max-width: var(--lfp-page-max);
     margin: 0 auto;
-    padding: 56px 20px 80px;
+    padding: var(--lfp-pad-top) var(--lfp-pad-x) var(--lfp-pad-bot);
     display: flex;
     flex-direction: column;
     gap: 28px;
@@ -58,7 +72,7 @@ body {
 
 .lfp-title {
     margin: 0;
-    font-size: 1.75rem;
+    font-size: var(--lfp-title-size);
     font-weight: 700;
     letter-spacing: -0.01em;
 }
@@ -66,14 +80,14 @@ body {
 .lfp-subtitle {
     margin: 0;
     color: var(--lfp-muted);
-    font-size: 1rem;
+    font-size: var(--lfp-subtitle-size);
     max-width: 36ch;
 }
 
 .lfp-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--lfp-card-gap);
 }
 
 /* ----------------------------------- About section */
@@ -88,8 +102,8 @@ body {
 }
 
 .lfp-about-photo {
-    width: 120px;
-    height: 120px;
+    width: var(--lfp-photo);
+    height: var(--lfp-photo);
     border-radius: 999px;
     object-fit: cover;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
@@ -153,7 +167,7 @@ body {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 18px;
+    padding: var(--lfp-card-py) var(--lfp-card-px);
     background: var(--lfp-card);
     color: inherit;
     border-radius: var(--lfp-radius);
@@ -175,8 +189,8 @@ body {
 
 .lfp-link-image {
     flex: 0 0 auto;
-    width: 44px;
-    height: 44px;
+    width: var(--lfp-icon);
+    height: var(--lfp-icon);
     border-radius: calc(var(--lfp-radius) * 0.6);
     overflow: hidden;
     background: color-mix(in srgb, var(--lfp-fg) 8%, transparent);
@@ -199,6 +213,7 @@ body {
 
 .lfp-link-title {
     font-weight: 600;
+    font-size: var(--lfp-link-title-size);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -207,7 +222,7 @@ body {
 .lfp-link-desc {
     margin: 0;
     color: var(--lfp-muted);
-    font-size: 0.9rem;
+    font-size: var(--lfp-body-size);
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -265,7 +280,7 @@ body {
 
 .lfp-category-title {
     margin: 0;
-    font-size: 1.15rem;
+    font-size: var(--lfp-cat-title-size);
     font-weight: 700;
     letter-spacing: -0.005em;
 }
@@ -273,13 +288,77 @@ body {
 .lfp-category-desc {
     margin: 0;
     color: var(--lfp-muted);
-    font-size: 0.92rem;
+    font-size: var(--lfp-body-size);
 }
 
 .lfp-category-links {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+/* ----------------------------------- Instagram grid */
+
+.lfp-ig {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lfp-ig-tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--lfp-card);
+    text-decoration: none;
+    color: #fff;
+    display: block;
+}
+
+.lfp-ig-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 240ms ease, filter 240ms ease;
+}
+
+.lfp-ig-tile:hover img,
+.lfp-ig-tile:focus-visible img {
+    transform: scale(1.04);
+    filter: brightness(0.85);
+}
+
+.lfp-ig-overlay {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
+    pointer-events: none;
+    text-align: left;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.lfp-ig-show-hover .lfp-ig-overlay {
+    opacity: 0;
+    transition: opacity 200ms ease;
+}
+
+.lfp-ig-show-hover:hover .lfp-ig-overlay,
+.lfp-ig-show-hover:focus-visible .lfp-ig-overlay {
+    opacity: 1;
+}
+
+@media (max-width: 480px) {
+    .lfp-ig {
+        gap: 2px;
+    }
 }
 
 /* ----------------------------------- Empty / footer */

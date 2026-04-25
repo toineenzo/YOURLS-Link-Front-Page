@@ -16,20 +16,56 @@ if (!defined('YOURLS_ABSPATH')) {
 $general    = lfp_get_general();
 $appearance = lfp_get_appearance();
 $items      = lfp_get_items();
+$instagram  = lfp_get_instagram();
 
 $site_title = $general['site_title'] !== '' ? $general['site_title'] : (defined('YOURLS_SITE') ? parse_url(YOURLS_SITE, PHP_URL_HOST) : 'Links');
 $site_desc  = (string) $general['site_description'];
 $site_logo  = (string) $general['site_logo'];
 
+/* ------- Resolve font stack based on the chosen source */
+$font_source = (string) ($appearance['font_source'] ?? 'system');
+$font_assets = '';
+$font_stack  = (string) $appearance['font_family'];
+
+if ($font_source === 'google' && trim((string) $appearance['font_google']) !== '') {
+    $family   = (string) $appearance['font_google'];
+    $weights  = (string) ($appearance['font_google_weights'] ?? '400;600;700');
+    $weights  = trim($weights) === '' ? '400' : $weights;
+    $href     = 'https://fonts.googleapis.com/css2?family=' . str_replace('%2B', '+', urlencode($family)) . ':wght@' . urlencode($weights) . '&display=swap';
+    $font_assets .= '<link rel="preconnect" href="https://fonts.googleapis.com">'
+                  . '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+                  . '<link href="' . yourls_esc_attr($href) . '" rel="stylesheet">';
+    $font_stack = '"' . str_replace('"', '', $family) . '", ' . $font_stack;
+} elseif ($font_source === 'custom' && trim((string) $appearance['font_custom_url']) !== '') {
+    $custom_url    = yourls_esc_url((string) $appearance['font_custom_url']);
+    $custom_format = preg_replace('/[^a-z0-9]/i', '', (string) $appearance['font_custom_format']) ?: 'woff2';
+    $font_assets .= '<style>@font-face{font-family:"LFPCustom";src:url("' . $custom_url . '") format("' . $custom_format . '");font-display:swap;}</style>';
+    $font_stack   = '"LFPCustom", ' . $font_stack;
+}
+
 $css_vars = [
-    '--lfp-bg'         => $appearance['background_color'],
-    '--lfp-fg'         => $appearance['text_color'],
-    '--lfp-muted'      => $appearance['muted_color'],
-    '--lfp-card'       => $appearance['card_background'],
-    '--lfp-card-hover' => $appearance['card_hover'],
-    '--lfp-accent'     => $appearance['accent_color'],
-    '--lfp-radius'     => $appearance['border_radius'] . 'px',
-    '--lfp-font'       => $appearance['font_family'],
+    '--lfp-bg'              => $appearance['background_color'],
+    '--lfp-fg'              => $appearance['text_color'],
+    '--lfp-muted'           => $appearance['muted_color'],
+    '--lfp-card'            => $appearance['card_background'],
+    '--lfp-card-hover'      => $appearance['card_hover'],
+    '--lfp-accent'          => $appearance['accent_color'],
+    '--lfp-radius'          => $appearance['border_radius'] . 'px',
+    '--lfp-page-max'        => $appearance['page_max_width'] . 'px',
+    '--lfp-pad-top'         => $appearance['page_padding_top'] . 'px',
+    '--lfp-pad-bot'         => $appearance['page_padding_bottom'] . 'px',
+    '--lfp-pad-x'           => $appearance['page_padding_x'] . 'px',
+    '--lfp-card-gap'        => $appearance['card_gap'] . 'px',
+    '--lfp-card-py'         => $appearance['card_padding_y'] . 'px',
+    '--lfp-card-px'         => $appearance['card_padding_x'] . 'px',
+    '--lfp-icon'            => $appearance['icon_size'] . 'px',
+    '--lfp-photo'           => $appearance['about_photo_size'] . 'px',
+    '--lfp-font'            => $font_stack,
+    '--lfp-title-size'      => $appearance['title_size'],
+    '--lfp-subtitle-size'   => $appearance['subtitle_size'],
+    '--lfp-cat-title-size'  => $appearance['category_title_size'],
+    '--lfp-link-title-size' => $appearance['link_title_size'],
+    '--lfp-body-size'       => $appearance['body_size'],
 ];
 
 $style_lines = [];
@@ -96,6 +132,7 @@ HTML;
     <meta property="og:image" content="<?php echo yourls_esc_attr($site_logo); ?>">
     <link rel="icon" href="<?php echo yourls_esc_attr($site_logo); ?>">
     <?php endif; ?>
+    <?php echo $font_assets; ?>
     <link rel="stylesheet" href="<?php echo yourls_esc_attr(lfp_plugin_url('assets/frontend.css?v=' . LFP_VERSION)); ?>">
     <style>
         :root { <?php echo implode(' ', $style_lines); ?> }
@@ -151,6 +188,30 @@ HTML;
                 </ul>
             <?php endif; ?>
         </section>
+    <?php endif; ?>
+
+    <?php if (!empty($instagram['enabled']) && !empty($instagram['items'])):
+        $resolved_ig = [];
+        foreach ($instagram['items'] as $entry) {
+            $r = lfp_resolve_instagram($entry);
+            if ($r !== null) $resolved_ig[] = $r;
+        }
+    ?>
+        <?php if (!empty($resolved_ig)): ?>
+        <section class="lfp-ig" aria-label="Instagram feed">
+            <?php foreach ($resolved_ig as $tile): ?>
+                <a class="lfp-ig-tile lfp-ig-show-<?php echo yourls_esc_attr($tile['show_mode']); ?>"
+                   href="<?php echo yourls_esc_url($tile['url']); ?>"
+                   rel="noopener"
+                   <?php if ($tile['title'] !== ''): ?>aria-label="<?php echo yourls_esc_attr($tile['title']); ?>"<?php endif; ?>>
+                    <img src="<?php echo yourls_esc_url($tile['image']); ?>" alt="" loading="lazy">
+                    <?php if ($tile['title'] !== '' && $tile['show_mode'] !== 'never'): ?>
+                        <span class="lfp-ig-overlay"><?php echo yourls_esc_html($tile['title']); ?></span>
+                    <?php endif; ?>
+                </a>
+            <?php endforeach; ?>
+        </section>
+        <?php endif; ?>
     <?php endif; ?>
 
     <section class="lfp-list">

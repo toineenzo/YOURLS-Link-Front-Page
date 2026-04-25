@@ -14,6 +14,8 @@ if (!defined('YOURLS_ABSPATH')) {
 $general    = lfp_get_general();
 $appearance = lfp_get_appearance();
 $items      = lfp_get_items();
+$instagram  = lfp_get_instagram();
+$google_fonts = lfp_get_google_fonts();
 $all_links  = lfp_get_all_yourls_links();
 
 $asset_v = '?v=' . LFP_VERSION;
@@ -25,10 +27,12 @@ foreach ($platforms as $key => $p) {
 }
 
 $bootstrap = [
-    'items'    => $items,
-    'socials'  => $general['about_socials'] ?? [],
-    'platforms'=> $platform_icons,
-    'allLinks' => array_map(static fn($row): array => [
+    'items'      => $items,
+    'socials'    => $general['about_socials'] ?? [],
+    'platforms'  => $platform_icons,
+    'instagram'  => $instagram['items'] ?? [],
+    'googleFonts'=> $google_fonts,
+    'allLinks'   => array_map(static fn($row): array => [
         'keyword' => (string) ($row->keyword ?? ''),
         'url'     => (string) ($row->url ?? ''),
         'title'   => (string) ($row->title ?? ''),
@@ -53,6 +57,7 @@ $bootstrap = [
     <div class="lfp-tabs" role="tablist">
         <button type="button" class="lfp-tab is-active" data-tab="links" role="tab">Links</button>
         <button type="button" class="lfp-tab" data-tab="general" role="tab">General</button>
+        <button type="button" class="lfp-tab" data-tab="instagram" role="tab">Instagram</button>
         <button type="button" class="lfp-tab" data-tab="appearance" role="tab">Appearance</button>
     </div>
 
@@ -185,57 +190,193 @@ $bootstrap = [
 
     <!-- ========================= APPEARANCE TAB ========================== -->
     <section class="lfp-pane" data-pane="appearance">
-        <div class="lfp-grid lfp-grid-3">
-            <div class="lfp-field">
-                <label for="lfp-bg">Background color</label>
-                <input type="color" id="lfp-bg" name="background_color" value="<?php echo yourls_esc_attr($appearance['background_color']); ?>">
+
+        <fieldset class="lfp-fieldset">
+            <legend>Colors</legend>
+            <div class="lfp-grid lfp-grid-3">
+                <div class="lfp-field">
+                    <label for="lfp-bg">Background</label>
+                    <input type="color" id="lfp-bg" name="background_color" value="<?php echo yourls_esc_attr($appearance['background_color']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-fg">Text</label>
+                    <input type="color" id="lfp-fg" name="text_color" value="<?php echo yourls_esc_attr($appearance['text_color']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-muted">Muted text</label>
+                    <input type="color" id="lfp-muted" name="muted_color" value="<?php echo yourls_esc_attr($appearance['muted_color']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-card">Card</label>
+                    <input type="color" id="lfp-card" name="card_background" value="<?php echo yourls_esc_attr($appearance['card_background']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-cardhover">Card hover</label>
+                    <input type="color" id="lfp-cardhover" name="card_hover" value="<?php echo yourls_esc_attr($appearance['card_hover']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-accent">Accent</label>
+                    <input type="color" id="lfp-accent" name="accent_color" value="<?php echo yourls_esc_attr($appearance['accent_color']); ?>">
+                </div>
             </div>
             <div class="lfp-field">
-                <label for="lfp-fg">Text color</label>
-                <input type="color" id="lfp-fg" name="text_color" value="<?php echo yourls_esc_attr($appearance['text_color']); ?>">
+                <label>Background image (optional)</label>
+                <div class="lfp-image-input">
+                    <input type="url" name="background_image" value="<?php echo yourls_esc_attr($appearance['background_image']); ?>" placeholder="https://example.com/bg.jpg" data-lfp-image-url>
+                    <input type="file" name="background_image" accept="image/*" data-lfp-image-file>
+                </div>
             </div>
+        </fieldset>
+
+        <fieldset class="lfp-fieldset">
+            <legend>Spacing &amp; sizing (px)</legend>
+            <div class="lfp-grid lfp-grid-3">
+                <div class="lfp-field">
+                    <label for="lfp-radius">Border radius</label>
+                    <input type="number" id="lfp-radius" name="border_radius" min="0" max="64" value="<?php echo yourls_esc_attr($appearance['border_radius']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-pmw">Page max width</label>
+                    <input type="number" id="lfp-pmw" name="page_max_width" min="280" max="1600" value="<?php echo yourls_esc_attr($appearance['page_max_width']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-pad-x">Page side padding</label>
+                    <input type="number" id="lfp-pad-x" name="page_padding_x" min="0" max="400" value="<?php echo yourls_esc_attr($appearance['page_padding_x']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-pad-top">Page top padding</label>
+                    <input type="number" id="lfp-pad-top" name="page_padding_top" min="0" max="400" value="<?php echo yourls_esc_attr($appearance['page_padding_top']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-pad-bot">Page bottom padding</label>
+                    <input type="number" id="lfp-pad-bot" name="page_padding_bottom" min="0" max="400" value="<?php echo yourls_esc_attr($appearance['page_padding_bottom']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-cardgap">Gap between cards</label>
+                    <input type="number" id="lfp-cardgap" name="card_gap" min="0" max="80" value="<?php echo yourls_esc_attr($appearance['card_gap']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-cardpy">Card padding Y</label>
+                    <input type="number" id="lfp-cardpy" name="card_padding_y" min="0" max="80" value="<?php echo yourls_esc_attr($appearance['card_padding_y']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-cardpx">Card padding X</label>
+                    <input type="number" id="lfp-cardpx" name="card_padding_x" min="0" max="80" value="<?php echo yourls_esc_attr($appearance['card_padding_x']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-iconsz">Link icon size</label>
+                    <input type="number" id="lfp-iconsz" name="icon_size" min="0" max="160" value="<?php echo yourls_esc_attr($appearance['icon_size']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-photosz">About photo size</label>
+                    <input type="number" id="lfp-photosz" name="about_photo_size" min="40" max="400" value="<?php echo yourls_esc_attr($appearance['about_photo_size']); ?>">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="lfp-fieldset">
+            <legend>Typography</legend>
+
+            <div class="lfp-grid">
+                <div class="lfp-field">
+                    <label>Font source</label>
+                    <select name="font_source" id="lfp-font-source">
+                        <option value="system" <?php echo $appearance['font_source'] === 'system' ? 'selected' : ''; ?>>System default (CSS font-family stack)</option>
+                        <option value="google" <?php echo $appearance['font_source'] === 'google' ? 'selected' : ''; ?>>Google Fonts</option>
+                        <option value="custom" <?php echo $appearance['font_source'] === 'custom' ? 'selected' : ''; ?>>Custom upload</option>
+                    </select>
+                </div>
+                <div class="lfp-field">
+                    <label>Weights to load (Google)</label>
+                    <input type="text" name="font_google_weights" value="<?php echo yourls_esc_attr($appearance['font_google_weights']); ?>" placeholder="400;600;700">
+                    <small>Semicolon-separated list. Used only when font source is Google Fonts.</small>
+                </div>
+            </div>
+
+            <div class="lfp-field" data-lfp-fontblock="system">
+                <label for="lfp-font">Font family stack</label>
+                <input type="text" id="lfp-font" name="font_family" value="<?php echo yourls_esc_attr($appearance['font_family']); ?>" placeholder="system-ui, -apple-system, sans-serif">
+                <small>Standard CSS <code>font-family</code> value.</small>
+            </div>
+
+            <div class="lfp-field" data-lfp-fontblock="google">
+                <label for="lfp-font-google">Google Font</label>
+                <div class="lfp-font-picker">
+                    <input type="text" id="lfp-font-search" placeholder="Search Google Fonts…" autocomplete="off">
+                    <select id="lfp-font-google" name="font_google" size="6">
+                        <?php foreach ($google_fonts as $f): ?>
+                            <option value="<?php echo yourls_esc_attr($f['family']); ?>"
+                                    data-category="<?php echo yourls_esc_attr($f['category']); ?>"
+                                    <?php echo $appearance['font_google'] === $f['family'] ? 'selected' : ''; ?>>
+                                <?php echo yourls_esc_html($f['family']); ?>
+                                <?php echo ' (' . yourls_esc_html($f['category']) . ')'; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <small>Loaded from <code>fonts.googleapis.com</code> when the page is shown.</small>
+            </div>
+
+            <div class="lfp-field" data-lfp-fontblock="custom">
+                <label>Custom font file</label>
+                <div class="lfp-image-input">
+                    <input type="file" name="font_custom_file" accept=".woff2,.woff,.ttf,.otf">
+                    <?php if (!empty($appearance['font_custom_url'])): ?>
+                        <small>Currently using: <code><?php echo yourls_esc_html(basename(parse_url($appearance['font_custom_url'], PHP_URL_PATH) ?: $appearance['font_custom_url'])); ?></code> (<?php echo yourls_esc_html($appearance['font_custom_format']); ?>)</small>
+                    <?php endif; ?>
+                </div>
+                <input type="hidden" name="font_custom_url"    value="<?php echo yourls_esc_attr($appearance['font_custom_url']); ?>">
+                <input type="hidden" name="font_custom_format" value="<?php echo yourls_esc_attr($appearance['font_custom_format']); ?>">
+                <small>Accepts <code>.woff2</code>, <code>.woff</code>, <code>.ttf</code>, <code>.otf</code> (max 5&nbsp;MB).</small>
+            </div>
+
+            <div class="lfp-grid lfp-grid-3">
+                <div class="lfp-field">
+                    <label for="lfp-tsize">Site title size</label>
+                    <input type="text" id="lfp-tsize" name="title_size" value="<?php echo yourls_esc_attr($appearance['title_size']); ?>" placeholder="1.75rem">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-ssize">Subtitle size</label>
+                    <input type="text" id="lfp-ssize" name="subtitle_size" value="<?php echo yourls_esc_attr($appearance['subtitle_size']); ?>" placeholder="1rem">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-csize">Category title size</label>
+                    <input type="text" id="lfp-csize" name="category_title_size" value="<?php echo yourls_esc_attr($appearance['category_title_size']); ?>" placeholder="1.15rem">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-lsize">Link title size</label>
+                    <input type="text" id="lfp-lsize" name="link_title_size" value="<?php echo yourls_esc_attr($appearance['link_title_size']); ?>" placeholder="1rem">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-bsize">Body / description</label>
+                    <input type="text" id="lfp-bsize" name="body_size" value="<?php echo yourls_esc_attr($appearance['body_size']); ?>" placeholder="0.95rem">
+                </div>
+            </div>
+            <small class="lfp-hint">All size fields accept <code>px</code>, <code>%</code>, <code>em</code>, <code>rem</code>, <code>vh</code>, <code>vw</code>, and CSS functions like <code>clamp(1rem, 4vw, 2rem)</code> or <code>calc(1rem + 2vw)</code>.</small>
+        </fieldset>
+
+        <fieldset class="lfp-fieldset">
+            <legend>Custom CSS</legend>
             <div class="lfp-field">
-                <label for="lfp-muted">Muted text</label>
-                <input type="color" id="lfp-muted" name="muted_color" value="<?php echo yourls_esc_attr($appearance['muted_color']); ?>">
+                <textarea id="lfp-customcss" name="custom_css" rows="6" class="lfp-mono" spellcheck="false"><?php echo yourls_esc_html($appearance['custom_css']); ?></textarea>
+                <small>Inserted at the bottom of the inline style block on the public page.</small>
             </div>
-            <div class="lfp-field">
-                <label for="lfp-card">Card background</label>
-                <input type="color" id="lfp-card" name="card_background" value="<?php echo yourls_esc_attr($appearance['card_background']); ?>">
-            </div>
-            <div class="lfp-field">
-                <label for="lfp-cardhover">Card hover</label>
-                <input type="color" id="lfp-cardhover" name="card_hover" value="<?php echo yourls_esc_attr($appearance['card_hover']); ?>">
-            </div>
-            <div class="lfp-field">
-                <label for="lfp-accent">Accent</label>
-                <input type="color" id="lfp-accent" name="accent_color" value="<?php echo yourls_esc_attr($appearance['accent_color']); ?>">
-            </div>
+        </fieldset>
+    </section>
+
+    <!-- ========================= INSTAGRAM TAB =========================== -->
+    <section class="lfp-pane" data-pane="instagram">
+        <p>Mirror your Instagram feed grid: a 3-column gallery of clickable images. Use this for "link in bio" posts — each tile points to the URL or YOURLS shortlink that the matching Instagram post says to visit.</p>
+
+        <div class="lfp-row">
+            <label class="lfp-checkbox">
+                <input type="checkbox" name="instagram_enabled" value="1" <?php echo !empty($instagram['enabled']) ? 'checked' : ''; ?>>
+                <span>Show Instagram feed grid above the link list</span>
+            </label>
         </div>
 
-        <div class="lfp-grid">
-            <div class="lfp-field">
-                <label for="lfp-radius">Border radius (px)</label>
-                <input type="number" id="lfp-radius" name="border_radius" min="0" max="64" value="<?php echo yourls_esc_attr($appearance['border_radius']); ?>">
-            </div>
-            <div class="lfp-field">
-                <label for="lfp-font">Font family</label>
-                <input type="text" id="lfp-font" name="font_family" value="<?php echo yourls_esc_attr($appearance['font_family']); ?>">
-            </div>
-        </div>
-
-        <div class="lfp-field">
-            <label>Background image (optional)</label>
-            <div class="lfp-image-input">
-                <input type="url" name="background_image" value="<?php echo yourls_esc_attr($appearance['background_image']); ?>" placeholder="https://example.com/bg.jpg" data-lfp-image-url>
-                <input type="file" name="background_image" accept="image/*" data-lfp-image-file>
-            </div>
-        </div>
-
-        <div class="lfp-field">
-            <label for="lfp-customcss">Custom CSS</label>
-            <textarea id="lfp-customcss" name="custom_css" rows="6" class="lfp-mono" spellcheck="false"><?php echo yourls_esc_html($appearance['custom_css']); ?></textarea>
-            <small>Inserted at the bottom of the inline style block on the public page.</small>
-        </div>
+        <div id="lfp-ig-grid" class="lfp-ig-grid"></div>
+        <input type="hidden" name="instagram_json" id="lfp-ig-json" value="">
     </section>
 
     <div class="lfp-actions">
@@ -336,6 +477,85 @@ $bootstrap = [
         <button type="button" class="lfp-icon-btn lfp-icon-danger" data-lfp-social-remove title="Remove">&times;</button>
     </div>
 </template>
+
+<template id="lfp-tpl-ig-tile">
+    <div class="lfp-ig-tile" draggable="true">
+        <span class="lfp-handle" title="Drag to reorder">&#x2630;</span>
+        <button type="button" class="lfp-ig-edit" data-lfp-ig-edit aria-label="Edit tile">
+            <span class="lfp-ig-img" data-lfp-ig-img></span>
+            <span class="lfp-ig-overlay" data-lfp-ig-overlay>
+                <span class="lfp-ig-title" data-lfp-ig-title></span>
+            </span>
+        </button>
+        <button type="button" class="lfp-icon-btn lfp-icon-danger lfp-ig-remove" data-lfp-ig-remove title="Remove">&times;</button>
+    </div>
+</template>
+
+<template id="lfp-tpl-ig-add">
+    <button type="button" class="lfp-ig-add" data-lfp-ig-add aria-label="Add tile">
+        <span class="lfp-ig-add-icon">&#43;</span>
+        <span class="lfp-ig-add-label">Add tile</span>
+    </button>
+</template>
+
+<dialog id="lfp-ig-dialog">
+    <form method="dialog" id="lfp-ig-form">
+        <header class="lfp-picker-head">
+            <h3 id="lfp-ig-dialog-title">Add Instagram tile</h3>
+            <button type="submit" class="lfp-icon-btn" value="cancel" aria-label="Close">&times;</button>
+        </header>
+        <div class="lfp-ig-form">
+            <div class="lfp-field">
+                <label>Image</label>
+                <div class="lfp-image-input">
+                    <input type="url" id="lfp-ig-image-url" placeholder="https://example.com/photo.jpg">
+                    <input type="file" id="lfp-ig-image-file" accept="image/*">
+                </div>
+                <small>Required. URL or upload — the picture shown in the grid.</small>
+            </div>
+
+            <div class="lfp-grid">
+                <div class="lfp-field">
+                    <label>Link source</label>
+                    <select id="lfp-ig-source">
+                        <option value="url">URL</option>
+                        <option value="keyword">YOURLS keyword</option>
+                    </select>
+                </div>
+                <div class="lfp-field" data-lfp-ig-block="url">
+                    <label>URL</label>
+                    <input type="url" id="lfp-ig-url" placeholder="https://...">
+                </div>
+                <div class="lfp-field" data-lfp-ig-block="keyword" hidden>
+                    <label>YOURLS shortlink</label>
+                    <div class="lfp-prefix-input">
+                        <span><?php echo yourls_esc_html(trim(YOURLS_SITE, '/')); ?>/</span>
+                        <code id="lfp-ig-keyword-display">—</code>
+                        <button type="button" class="lfp-btn lfp-btn-tight" id="lfp-ig-pick">Pick…</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lfp-field">
+                <label>Optional title (overlay)</label>
+                <input type="text" id="lfp-ig-title-input" placeholder="e.g. New blog post">
+            </div>
+
+            <div class="lfp-field">
+                <label>Show title</label>
+                <select id="lfp-ig-show-mode">
+                    <option value="always">Always visible</option>
+                    <option value="hover">Only on hover</option>
+                    <option value="never">Never (hide title)</option>
+                </select>
+            </div>
+        </div>
+        <footer class="lfp-picker-foot lfp-ig-foot">
+            <button type="button" class="lfp-btn" id="lfp-ig-cancel">Cancel</button>
+            <button type="button" class="lfp-btn lfp-btn-primary" id="lfp-ig-save">Save tile</button>
+        </footer>
+    </form>
+</dialog>
 
 <dialog id="lfp-picker">
     <form method="dialog">

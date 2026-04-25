@@ -3,7 +3,7 @@
 Plugin Name: Link Front Page
 Plugin URI: https://github.com/toineenzo/YOURLS-Link-Front-Page
 Description: Show selected shortlinks as a Linktree-style link list on the YOURLS homepage. Group links into category boxes, reorder by drag and drop, and customize each entry with an image, title and description.
-Version: 1.1.0
+Version: 1.2.0
 Author: Toine Rademacher (toineenzo)
 Author URI: https://toine.click
 */
@@ -14,11 +14,12 @@ if (!defined('YOURLS_ABSPATH')) {
     die();
 }
 
-const LFP_VERSION = '1.1.0';
+const LFP_VERSION = '1.2.0';
 const LFP_DIR = __DIR__;
 const LFP_OPT_ITEMS = 'lfp_items';
 const LFP_OPT_GENERAL = 'lfp_general';
 const LFP_OPT_APPEARANCE = 'lfp_appearance';
+const LFP_OPT_INSTAGRAM = 'lfp_instagram';
 const LFP_NONCE_ACTION = 'lfp_save_settings';
 
 /* ---------------------------------------------------------------------------
@@ -76,16 +77,49 @@ function lfp_default_general(): array
 function lfp_default_appearance(): array
 {
     return [
-        'background_color' => '#0f172a',
-        'background_image' => '',
-        'text_color'       => '#f1f5f9',
-        'muted_color'      => '#94a3b8',
-        'card_background'  => '#1e293b',
-        'card_hover'       => '#334155',
-        'accent_color'     => '#3b82f6',
-        'border_radius'    => '16',
-        'font_family'      => "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-        'custom_css'       => '',
+        // Colors
+        'background_color'    => '#0f172a',
+        'background_image'    => '',
+        'text_color'          => '#f1f5f9',
+        'muted_color'         => '#94a3b8',
+        'card_background'     => '#1e293b',
+        'card_hover'          => '#334155',
+        'accent_color'        => '#3b82f6',
+
+        // Sizing & spacing
+        'border_radius'       => '16',
+        'page_max_width'      => '640',
+        'page_padding_top'    => '56',
+        'page_padding_bottom' => '80',
+        'page_padding_x'      => '20',
+        'card_gap'            => '14',
+        'card_padding_y'      => '14',
+        'card_padding_x'      => '18',
+        'icon_size'           => '44',
+        'about_photo_size'    => '120',
+
+        // Typography
+        'font_source'         => 'system',  // 'system' | 'google' | 'custom'
+        'font_family'         => "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+        'font_google'         => '',
+        'font_google_weights' => '400;600;700',
+        'font_custom_url'     => '',
+        'font_custom_format'  => '',
+        'title_size'          => '1.75rem',
+        'subtitle_size'       => '1rem',
+        'category_title_size' => '1.15rem',
+        'link_title_size'     => '1rem',
+        'body_size'           => '0.95rem',
+
+        'custom_css'          => '',
+    ];
+}
+
+function lfp_default_instagram(): array
+{
+    return [
+        'enabled' => false,
+        'items'   => [],
     ];
 }
 
@@ -122,6 +156,29 @@ function lfp_get_items(): array
 {
     $stored = yourls_get_option(LFP_OPT_ITEMS, []);
     return is_array($stored) ? $stored : [];
+}
+
+function lfp_get_instagram(): array
+{
+    $stored = yourls_get_option(LFP_OPT_INSTAGRAM, []);
+    if (!is_array($stored)) {
+        $stored = [];
+    }
+    $merged = array_merge(lfp_default_instagram(), $stored);
+    if (!is_array($merged['items'] ?? null)) {
+        $merged['items'] = [];
+    }
+    return $merged;
+}
+
+function lfp_get_google_fonts(): array
+{
+    static $fonts = null;
+    if ($fonts === null) {
+        $loaded = require LFP_DIR . '/includes/google-fonts.php';
+        $fonts  = is_array($loaded) ? $loaded : [];
+    }
+    return $fonts;
 }
 
 /* ---------------------------------------------------------------------------
@@ -327,19 +384,61 @@ function lfp_save_settings(): never
     ];
     yourls_update_option(LFP_OPT_GENERAL, $general);
 
+    $font_source_raw = (string) ($_POST['font_source'] ?? 'system');
+    $font_source = in_array($font_source_raw, ['system', 'google', 'custom'], true) ? $font_source_raw : 'system';
+
+    $custom_font = lfp_process_uploaded_font();
+    $existing_appearance = lfp_get_appearance();
+    $custom_url    = $custom_font['url']    ?? trim((string) ($_POST['font_custom_url']    ?? $existing_appearance['font_custom_url']));
+    $custom_format = $custom_font['format'] ?? trim((string) ($_POST['font_custom_format'] ?? $existing_appearance['font_custom_format']));
+
     $appearance = [
-        'background_color' => lfp_sanitize_color((string) ($_POST['background_color'] ?? '#0f172a')),
-        'background_image' => $uploaded['background_image'] ?? trim((string) ($_POST['background_image'] ?? '')),
-        'text_color'       => lfp_sanitize_color((string) ($_POST['text_color'] ?? '#f1f5f9')),
-        'muted_color'      => lfp_sanitize_color((string) ($_POST['muted_color'] ?? '#94a3b8')),
-        'card_background'  => lfp_sanitize_color((string) ($_POST['card_background'] ?? '#1e293b')),
-        'card_hover'       => lfp_sanitize_color((string) ($_POST['card_hover'] ?? '#334155')),
-        'accent_color'     => lfp_sanitize_color((string) ($_POST['accent_color'] ?? '#3b82f6')),
-        'border_radius'    => (string) max(0, min(64, (int) ($_POST['border_radius'] ?? 16))),
-        'font_family'      => trim((string) ($_POST['font_family'] ?? '')),
-        'custom_css'       => (string) ($_POST['custom_css'] ?? ''),
+        'background_color'    => lfp_sanitize_color((string) ($_POST['background_color'] ?? '#0f172a')),
+        'background_image'    => $uploaded['background_image'] ?? trim((string) ($_POST['background_image'] ?? '')),
+        'text_color'          => lfp_sanitize_color((string) ($_POST['text_color'] ?? '#f1f5f9')),
+        'muted_color'         => lfp_sanitize_color((string) ($_POST['muted_color'] ?? '#94a3b8')),
+        'card_background'     => lfp_sanitize_color((string) ($_POST['card_background'] ?? '#1e293b')),
+        'card_hover'          => lfp_sanitize_color((string) ($_POST['card_hover'] ?? '#334155')),
+        'accent_color'        => lfp_sanitize_color((string) ($_POST['accent_color'] ?? '#3b82f6')),
+
+        'border_radius'       => (string) max(0, min(64,   (int) ($_POST['border_radius']       ?? 16))),
+        'page_max_width'      => (string) max(280, min(1600,(int) ($_POST['page_max_width']      ?? 640))),
+        'page_padding_top'    => (string) max(0, min(400,  (int) ($_POST['page_padding_top']    ?? 56))),
+        'page_padding_bottom' => (string) max(0, min(400,  (int) ($_POST['page_padding_bottom'] ?? 80))),
+        'page_padding_x'      => (string) max(0, min(400,  (int) ($_POST['page_padding_x']      ?? 20))),
+        'card_gap'            => (string) max(0, min(80,   (int) ($_POST['card_gap']            ?? 14))),
+        'card_padding_y'      => (string) max(0, min(80,   (int) ($_POST['card_padding_y']      ?? 14))),
+        'card_padding_x'      => (string) max(0, min(80,   (int) ($_POST['card_padding_x']      ?? 18))),
+        'icon_size'           => (string) max(0, min(160,  (int) ($_POST['icon_size']           ?? 44))),
+        'about_photo_size'    => (string) max(40, min(400, (int) ($_POST['about_photo_size']    ?? 120))),
+
+        'font_source'         => $font_source,
+        'font_family'         => trim((string) ($_POST['font_family'] ?? '')),
+        'font_google'         => trim((string) ($_POST['font_google'] ?? '')),
+        'font_google_weights' => trim((string) ($_POST['font_google_weights'] ?? '400;600;700')),
+        'font_custom_url'     => $custom_url,
+        'font_custom_format'  => $custom_format,
+        'title_size'          => lfp_sanitize_size((string) ($_POST['title_size']          ?? '1.75rem'),  '1.75rem'),
+        'subtitle_size'       => lfp_sanitize_size((string) ($_POST['subtitle_size']       ?? '1rem'),     '1rem'),
+        'category_title_size' => lfp_sanitize_size((string) ($_POST['category_title_size'] ?? '1.15rem'),  '1.15rem'),
+        'link_title_size'     => lfp_sanitize_size((string) ($_POST['link_title_size']     ?? '1rem'),     '1rem'),
+        'body_size'           => lfp_sanitize_size((string) ($_POST['body_size']           ?? '0.95rem'),  '0.95rem'),
+
+        'custom_css'          => (string) ($_POST['custom_css'] ?? ''),
     ];
     yourls_update_option(LFP_OPT_APPEARANCE, $appearance);
+
+    // Instagram grid
+    $insta_json = (string) ($_POST['instagram_json'] ?? '[]');
+    $insta_raw  = json_decode($insta_json, true);
+    if (!is_array($insta_raw)) {
+        $insta_raw = [];
+    }
+    $instagram = [
+        'enabled' => isset($_POST['instagram_enabled']),
+        'items'   => lfp_sanitize_instagram($insta_raw, $uploaded),
+    ];
+    yourls_update_option(LFP_OPT_INSTAGRAM, $instagram);
 
     $items_json = (string) ($_POST['items_json'] ?? '[]');
     $items = json_decode($items_json, true);
@@ -358,6 +457,7 @@ function lfp_reset_settings(): never
     yourls_update_option(LFP_OPT_GENERAL, lfp_default_general());
     yourls_update_option(LFP_OPT_APPEARANCE, lfp_default_appearance());
     yourls_update_option(LFP_OPT_ITEMS, []);
+    yourls_update_option(LFP_OPT_INSTAGRAM, lfp_default_instagram());
     yourls_redirect(yourls_admin_url('plugins.php?page=lfp&saved=1'), 302);
     exit;
 }
@@ -384,6 +484,161 @@ function lfp_sanitize_id(string $id): string
 {
     $clean = preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
     return is_string($clean) ? $clean : '';
+}
+
+/**
+ * Validate a CSS length value: accepts plain numbers (interpreted as px),
+ * px / % / em / rem / vh / vw / vmin / vmax / ch / ex, and the calc() /
+ * clamp() / min() / max() functional forms. Falls back to $default on
+ * anything else so we never inject hostile CSS.
+ */
+function lfp_sanitize_size(string $value, string $default = ''): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return $default;
+    }
+    if (preg_match('/^-?\d+(\.\d+)?$/', $value) === 1) {
+        return $value . 'px';
+    }
+    if (preg_match('/^-?\d+(\.\d+)?(px|%|em|rem|vh|vw|vmin|vmax|ch|ex|pt|pc|cm|mm|in)$/i', $value) === 1) {
+        return $value;
+    }
+    if (preg_match('/^(clamp|calc|min|max)\([^;{}<>]+\)$/i', $value) === 1) {
+        return $value;
+    }
+    return $default;
+}
+
+function lfp_sanitize_instagram(array $items, array $uploaded): array
+{
+    $result = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $id = lfp_sanitize_id((string) ($item['id'] ?? ''));
+        if ($id === '') {
+            continue;
+        }
+        $source = ($item['source'] ?? 'url') === 'keyword' ? 'keyword' : 'url';
+        $clean = [
+            'id'        => $id,
+            'source'    => $source,
+            'url'       => '',
+            'keyword'   => '',
+            'image'     => $uploaded['ig_' . $id] ?? trim((string) ($item['image'] ?? '')),
+            'title'     => trim((string) ($item['title'] ?? '')),
+            'show_mode' => 'always',
+        ];
+        $mode = (string) ($item['show_mode'] ?? 'always');
+        if (in_array($mode, ['always', 'hover', 'never'], true)) {
+            $clean['show_mode'] = $mode;
+        }
+        if ($source === 'keyword') {
+            $kw = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) ($item['keyword'] ?? ''));
+            $clean['keyword'] = is_string($kw) ? $kw : '';
+            if ($clean['keyword'] === '') {
+                continue;
+            }
+        } else {
+            $url = trim((string) ($item['url'] ?? ''));
+            if ($url === '') {
+                continue;
+            }
+            $clean['url'] = $url;
+        }
+        if ($clean['image'] === '') {
+            continue; // grid items always need an image
+        }
+        $result[] = $clean;
+    }
+    return $result;
+}
+
+function lfp_resolve_instagram(array $entry): ?array
+{
+    $source = ($entry['source'] ?? 'url') === 'keyword' ? 'keyword' : 'url';
+    $url = '';
+    if ($source === 'keyword') {
+        $keyword = (string) ($entry['keyword'] ?? '');
+        if ($keyword === '' || !yourls_keyword_is_taken($keyword)) {
+            return null;
+        }
+        $url = yourls_link($keyword);
+    } else {
+        $url = trim((string) ($entry['url'] ?? ''));
+        if ($url === '') {
+            return null;
+        }
+    }
+    $image = trim((string) ($entry['image'] ?? ''));
+    if ($image === '') {
+        return null;
+    }
+    return [
+        'id'        => (string) ($entry['id'] ?? ''),
+        'url'       => $url,
+        'image'     => $image,
+        'title'     => trim((string) ($entry['title'] ?? '')),
+        'show_mode' => in_array($entry['show_mode'] ?? 'always', ['always', 'hover', 'never'], true)
+            ? (string) $entry['show_mode']
+            : 'always',
+    ];
+}
+
+/**
+ * Process a custom font upload (input name="font_custom_file"). Accepts
+ * woff2 / woff / ttf / otf, stores under uploads/fonts/, returns
+ * ['url' => ..., 'format' => ...] or null when no upload happened.
+ */
+function lfp_process_uploaded_font(): ?array
+{
+    if (empty($_FILES['font_custom_file']) || !is_array($_FILES['font_custom_file'])) {
+        return null;
+    }
+    $file = $_FILES['font_custom_file'];
+    $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($error !== UPLOAD_ERR_OK) {
+        return null;
+    }
+    $size = (int) ($file['size'] ?? 0);
+    if ($size <= 0 || $size > 5 * 1024 * 1024) {
+        return null;
+    }
+    $tmp = (string) ($file['tmp_name'] ?? '');
+    if (!is_uploaded_file($tmp)) {
+        return null;
+    }
+
+    $name = (string) ($file['name'] ?? '');
+    $ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+    $valid = ['woff2' => 'woff2', 'woff' => 'woff', 'ttf' => 'truetype', 'otf' => 'opentype'];
+    if (!isset($valid[$ext])) {
+        return null;
+    }
+
+    $fonts_dir = lfp_uploads_dir() . '/fonts';
+    if (!is_dir($fonts_dir)) {
+        @mkdir($fonts_dir, 0755, true);
+        @file_put_contents($fonts_dir . '/index.html', '');
+    }
+
+    try {
+        $filename = bin2hex(random_bytes(8)) . '.' . $ext;
+    } catch (\Throwable) {
+        $filename = uniqid('lfp_', true) . '.' . $ext;
+    }
+    $dest = $fonts_dir . '/' . $filename;
+    if (!move_uploaded_file($tmp, $dest)) {
+        return null;
+    }
+    @chmod($dest, 0644);
+
+    return [
+        'url'    => lfp_uploads_url() . 'fonts/' . $filename,
+        'format' => $valid[$ext],
+    ];
 }
 
 function lfp_sanitize_items(array $items, array $uploaded): array
