@@ -1,16 +1,78 @@
-/* Link Front Page — admin stylesheet */
+/* =============================================================
+   Link Front Page — admin stylesheet
+   Refactored for v2: design tokens, consistent control sizing,
+   shared dialog/card patterns, robust against Sleeky-backend's
+   global `input` / `select` / `nav` overrides.
+   ============================================================= */
 
-/*
- * Defensive resets to neutralise theme rules that target generic selectors
- * (Sleeky and other YOURLS admin themes style `nav`, `aside`, `header`,
- * `footer`, `main`, etc. globally with position: fixed). Everything in our
- * settings page must stay in normal flow.
- */
+/* ---------- 1. Design tokens (scoped) ---------- */
+
+#lfp-form,
+#lfp-picker,
+#lfp-ig-dialog {
+    --lfp-bg:       #1f2937;
+    --lfp-card:     #111827;
+    --lfp-elev:     #2d3748;
+    --lfp-fg:       #f3f4f6;
+    --lfp-muted:    #9ca3af;
+    --lfp-border:   #374151;
+    --lfp-hover:    #2d3748;
+    --lfp-accent:   #3b82f6;
+    --lfp-accent-2: #1d4ed8;
+    --lfp-danger:   #ef4444;
+    --lfp-warn:     #f59e0b;
+
+    --lfp-ctrl-h:    38px;
+    --lfp-ctrl-r:    6px;
+    --lfp-ctrl-px:   12px;
+    --lfp-card-r:    10px;
+    --lfp-card-pad:  18px;
+    --lfp-section:   18px;
+
+    --lfp-shadow-sm: 0 1px 2px rgba(0,0,0,0.18);
+    --lfp-shadow-md: 0 8px 24px rgba(0,0,0,0.32);
+}
+
+@media (prefers-color-scheme: light) {
+    #lfp-form,
+    #lfp-picker,
+    #lfp-ig-dialog {
+        --lfp-bg:       #ffffff;
+        --lfp-card:     #ffffff;
+        --lfp-elev:     #f9fafb;
+        --lfp-fg:       #111827;
+        --lfp-muted:    #6b7280;
+        --lfp-border:   #e5e7eb;
+        --lfp-hover:    #f3f4f6;
+    }
+}
+
+/* Backwards-compatible aliases for legacy class hooks. */
+#lfp-form {
+    --lfp-a-bg:     var(--lfp-bg);
+    --lfp-a-fg:     var(--lfp-fg);
+    --lfp-a-muted:  var(--lfp-muted);
+    --lfp-a-border: var(--lfp-border);
+    --lfp-a-hover:  var(--lfp-hover);
+    --lfp-a-accent: var(--lfp-accent);
+    --lfp-a-danger: var(--lfp-danger);
+    --lfp-a-radius: var(--lfp-card-r);
+}
+
+/* ---------- 2. Page chrome ---------- */
+
+#lfp-form {
+    margin-top: 16px;
+    color: var(--lfp-fg);
+    font-size: 0.95rem;
+}
+
 #lfp-form,
 #lfp-form * {
     box-sizing: border-box;
 }
 
+/* Defensive resets — Sleeky-backend styles bare nav/header/footer. */
 #lfp-form > header,
 #lfp-form > footer,
 #lfp-form main,
@@ -21,10 +83,7 @@
     background: transparent;
     width: auto;
     height: auto;
-    top: auto;
-    left: auto;
-    right: auto;
-    bottom: auto;
+    top: auto; left: auto; right: auto; bottom: auto;
     z-index: auto;
     float: none;
 }
@@ -35,43 +94,10 @@
     float: none;
 }
 
-/* Picker dialog should also escape any global theme styling */
-#lfp-picker,
-#lfp-picker * {
-    box-sizing: border-box;
-}
-
-#lfp-form {
-    --lfp-a-bg: #ffffff;
-    --lfp-a-fg: #1f2937;
-    --lfp-a-muted: #6b7280;
-    --lfp-a-border: #e5e7eb;
-    --lfp-a-hover: #f3f4f6;
-    --lfp-a-accent: #2563eb;
-    --lfp-a-danger: #dc2626;
-    --lfp-a-radius: 8px;
-
-    margin-top: 16px;
-    color: var(--lfp-a-fg);
-    position: relative;
-}
-
-@media (prefers-color-scheme: dark) {
-    #lfp-form {
-        --lfp-a-bg: #1f2937;
-        --lfp-a-fg: #f3f4f6;
-        --lfp-a-muted: #9ca3af;
-        --lfp-a-border: #374151;
-        --lfp-a-hover: #374151;
-    }
-}
-
-.lfp-notice {
-    margin: 12px 0;
-    padding: 10px 14px;
-    background: color-mix(in srgb, var(--lfp-a-accent, #2563eb) 12%, transparent);
-    border-left: 3px solid var(--lfp-a-accent, #2563eb);
-    border-radius: 4px;
+/* Force [hidden] over our own flex/inline-flex defaults. */
+.lfp-ig-form [hidden],
+#lfp-form [hidden] {
+    display: none !important;
 }
 
 .lfp-pagehead {
@@ -80,55 +106,67 @@
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .lfp-pagehead h2 {
     margin: 0 0 6px;
+    font-size: 1.4rem;
+    line-height: 1.2;
 }
 
 .lfp-pagehead p {
     margin: 0;
     max-width: 70ch;
+    color: var(--lfp-muted);
 }
 
-.lfp-btn-ghost {
-    flex: 0 0 auto;
-    align-self: center;
-    text-decoration: none;
-    color: var(--lfp-a-accent);
-    border-color: var(--lfp-a-accent);
-    background: color-mix(in srgb, var(--lfp-a-accent) 8%, transparent);
+.lfp-notice {
+    margin: 12px 0;
+    padding: 10px 14px;
+    background: color-mix(in srgb, var(--lfp-accent) 12%, transparent);
+    border-left: 3px solid var(--lfp-accent);
+    border-radius: 4px;
+    color: var(--lfp-fg);
 }
 
-.lfp-btn-ghost:hover {
-    background: color-mix(in srgb, var(--lfp-a-accent) 16%, transparent);
-}
-
-/* -------- Tabs */
+/* ---------- 3. Tabs ---------- */
 
 .lfp-tabs {
     display: flex;
-    gap: 4px;
-    border-bottom: 1px solid var(--lfp-a-border);
-    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 2px;
+    border-bottom: 1px solid var(--lfp-border);
+    margin: 0 0 18px;
 }
 
 .lfp-tab {
+    appearance: none;
     background: transparent;
     border: 0;
     padding: 10px 14px;
-    cursor: pointer;
-    color: var(--lfp-a-muted);
-    font-weight: 500;
-    border-bottom: 2px solid transparent;
     margin-bottom: -1px;
+    cursor: pointer;
+    color: var(--lfp-muted);
+    font-weight: 500;
     font-size: 0.95rem;
+    line-height: 1;
+    border-bottom: 2px solid transparent;
     display: inline-flex !important;
     flex-direction: row !important;
     align-items: center !important;
     gap: 8px;
-    line-height: 1;
+    transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.lfp-tab:hover {
+    color: var(--lfp-fg);
+    background: var(--lfp-hover);
+}
+
+.lfp-tab.is-active {
+    color: var(--lfp-accent);
+    border-bottom-color: var(--lfp-accent);
 }
 
 .lfp-tab .lfp-tab-icon {
@@ -143,101 +181,115 @@
     line-height: 1;
 }
 
-.lfp-tab:hover {
-    color: var(--lfp-a-fg);
-}
-
-.lfp-tab.is-active {
-    color: var(--lfp-a-accent);
-    border-bottom-color: var(--lfp-a-accent);
-}
-
 .lfp-pane {
     display: none;
-    padding: 8px 0;
+    padding: 4px 0;
 }
 
 .lfp-pane.is-active {
     display: block;
 }
 
-/* -------- Form layout */
+/* ---------- 4. Form controls (the critical fix) ---------- */
 
-.lfp-row {
-    margin: 12px 0;
+/*
+ * Sleeky-backend forces: input { padding: 10px; border: none !important;
+ * background: #313131 !important } and select { width: 150px;
+ * padding: 5px 35px 5px 10px; appearance: none; background-image: ... }.
+ * We override with !important and a fixed control height so dropdowns
+ * never clip their option text vertically.
+ */
+.lfp-field input[type="text"],
+.lfp-field input[type="url"],
+.lfp-field input[type="number"],
+.lfp-field input[type="search"],
+.lfp-field input[type="email"],
+.lfp-field select,
+.lfp-image-input input[type="url"],
+.lfp-prefix-input input,
+#lfp-picker input[type="search"] {
+    width: 100% !important;
+    height: var(--lfp-ctrl-h) !important;
+    min-height: var(--lfp-ctrl-h) !important;
+    line-height: 1.4 !important;
+    padding: 0 var(--lfp-ctrl-px) !important;
+    margin: 0 !important;
+    border: 1px solid var(--lfp-border) !important;
+    border-radius: var(--lfp-ctrl-r) !important;
+    font: inherit !important;
+    color: var(--lfp-fg) !important;
+    background: var(--lfp-bg) !important;
+    box-sizing: border-box !important;
+    box-shadow: none !important;
+    outline: none;
 }
 
-.lfp-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-    margin: 12px 0;
+.lfp-field textarea {
+    width: 100% !important;
+    padding: 10px var(--lfp-ctrl-px) !important;
+    margin: 0 !important;
+    border: 1px solid var(--lfp-border) !important;
+    border-radius: var(--lfp-ctrl-r) !important;
+    font: inherit !important;
+    line-height: 1.5 !important;
+    color: var(--lfp-fg) !important;
+    background: var(--lfp-bg) !important;
+    box-sizing: border-box !important;
+    resize: vertical;
+    min-height: 60px;
 }
 
-.lfp-grid-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+/* Native chevron back on every select — Sleeky paints a custom one with a
+   background-image we just wiped out. */
+.lfp-field select,
+#lfp-form select {
+    appearance: auto !important;
+    -webkit-appearance: auto !important;
+    padding-right: 28px !important;
+}
+
+.lfp-field input:focus,
+.lfp-field select:focus,
+.lfp-field textarea:focus,
+.lfp-image-input input[type="url"]:focus,
+.lfp-prefix-input input:focus,
+#lfp-picker input[type="search"]:focus {
+    border-color: var(--lfp-accent) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lfp-accent) 30%, transparent) !important;
+}
+
+.lfp-field input[type="color"] {
+    width: 100% !important;
+    height: var(--lfp-ctrl-h) !important;
+    padding: 2px !important;
+    border: 1px solid var(--lfp-border) !important;
+    border-radius: var(--lfp-ctrl-r) !important;
+    background: var(--lfp-bg) !important;
+    cursor: pointer;
+}
+
+.lfp-field input[type="file"] {
+    font-size: 0.85rem;
+    color: var(--lfp-muted);
 }
 
 .lfp-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     min-width: 0;
 }
 
 .lfp-field label {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    color: var(--lfp-fg);
 }
 
 .lfp-field small {
-    color: var(--lfp-a-muted);
-    font-size: 0.8rem;
-}
-
-.lfp-field input[type="text"],
-.lfp-field input[type="url"],
-.lfp-field input[type="number"],
-.lfp-field input[type="search"],
-.lfp-field textarea,
-.lfp-field select,
-.lfp-image-input input[type="url"],
-.lfp-prefix-input input,
-#lfp-picker input[type="search"] {
-    padding: 8px 10px !important;
-    border: 1px solid var(--lfp-a-border) !important;
-    border-radius: 6px !important;
-    font: inherit !important;
-    background: var(--lfp-a-bg) !important;
-    color: var(--lfp-a-fg) !important;
-    width: 100% !important;
-    height: auto !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* Restore the native dropdown chevron — Sleeky-backend removes it via
-   `appearance: none` and a background image, which our background
-   override wipes out, leaving an arrow-less mystery box. */
-.lfp-field select,
-#lfp-form select {
-    appearance: auto !important;
-    -webkit-appearance: auto !important;
-}
-
-.lfp-field input[type="color"] {
-    width: 100%;
-    height: 38px;
-    padding: 2px;
-    border: 1px solid var(--lfp-a-border);
-    border-radius: 6px;
-    background: var(--lfp-a-bg);
-    cursor: pointer;
-}
-
-.lfp-field textarea {
-    resize: vertical;
-    min-height: 60px;
+    color: var(--lfp-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
 }
 
 .lfp-field .lfp-mono {
@@ -246,39 +298,64 @@
 }
 
 .lfp-checkbox {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
+    color: var(--lfp-fg);
+    line-height: 1.4;
+}
+
+.lfp-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--lfp-accent);
+}
+
+.lfp-row {
+    margin: 0 0 12px;
+}
+
+.lfp-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0 0 12px;
+}
+
+.lfp-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .lfp-prefix-input {
     display: flex;
     align-items: stretch;
-    border: 1px solid var(--lfp-a-border);
-    border-radius: 6px;
+    border: 1px solid var(--lfp-border);
+    border-radius: var(--lfp-ctrl-r);
+    background: var(--lfp-bg);
+    height: var(--lfp-ctrl-h);
     overflow: hidden;
 }
 
 .lfp-prefix-input span {
-    padding: 8px 10px;
-    background: var(--lfp-a-hover);
-    color: var(--lfp-a-muted);
-    font-size: 0.9rem;
-    border-right: 1px solid var(--lfp-a-border);
+    padding: 0 12px;
+    background: var(--lfp-hover);
+    color: var(--lfp-muted);
+    font-size: 0.88rem;
+    line-height: var(--lfp-ctrl-h);
+    border-right: 1px solid var(--lfp-border);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 60%;
+    max-width: 50%;
 }
 
 .lfp-prefix-input input {
-    border: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
     flex: 1;
-    padding: 8px 10px;
-    background: var(--lfp-a-bg);
-    color: var(--lfp-a-fg);
-    font: inherit;
 }
 
 .lfp-image-input {
@@ -287,75 +364,139 @@
     gap: 6px;
 }
 
-.lfp-image-input input[type="url"] {
-    flex: 1;
-}
-
-.lfp-image-input input[type="file"] {
-    font-size: 0.85rem;
-}
-
 .lfp-thumb {
     max-width: 80px;
     max-height: 80px;
-    border-radius: 6px;
-    border: 1px solid var(--lfp-a-border);
+    border-radius: var(--lfp-ctrl-r);
+    border: 1px solid var(--lfp-border);
 }
 
-/* -------- Buttons */
+.lfp-hint {
+    display: block;
+    margin-top: 8px;
+    color: var(--lfp-muted);
+    font-size: 0.78rem;
+}
+
+/* ---------- 5. Buttons (consistent height with controls) ---------- */
 
 .lfp-btn {
-    background: var(--lfp-a-bg);
-    color: var(--lfp-a-fg);
-    border: 1px solid var(--lfp-a-border);
-    padding: 8px 14px;
-    border-radius: 6px;
+    appearance: none;
+    background: var(--lfp-bg);
+    color: var(--lfp-fg);
+    border: 1px solid var(--lfp-border);
+    height: var(--lfp-ctrl-h);
+    padding: 0 16px;
+    border-radius: var(--lfp-ctrl-r);
     cursor: pointer;
     font: inherit;
     font-weight: 500;
-    transition: background 120ms ease, border-color 120ms ease;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    box-sizing: border-box;
+    white-space: nowrap;
 }
 
 .lfp-btn:hover {
-    background: var(--lfp-a-hover);
+    background: var(--lfp-hover);
+    border-color: color-mix(in srgb, var(--lfp-fg) 25%, var(--lfp-border));
+}
+
+.lfp-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lfp-accent) 35%, transparent);
 }
 
 .lfp-btn-primary {
-    background: var(--lfp-a-accent);
-    border-color: var(--lfp-a-accent);
+    background: var(--lfp-accent);
+    border-color: var(--lfp-accent);
     color: #fff;
 }
 
 .lfp-btn-primary:hover {
-    background: color-mix(in srgb, var(--lfp-a-accent) 88%, black);
+    background: var(--lfp-accent-2);
+    border-color: var(--lfp-accent-2);
 }
 
 .lfp-btn-danger {
-    color: var(--lfp-a-danger);
-    border-color: color-mix(in srgb, var(--lfp-a-danger) 40%, var(--lfp-a-border));
+    color: var(--lfp-danger);
+    border-color: color-mix(in srgb, var(--lfp-danger) 35%, var(--lfp-border));
+}
+
+.lfp-btn-danger:hover {
+    background: color-mix(in srgb, var(--lfp-danger) 12%, transparent);
+}
+
+.lfp-btn-ghost {
+    color: var(--lfp-accent);
+    border-color: var(--lfp-accent);
+    background: color-mix(in srgb, var(--lfp-accent) 8%, transparent);
+}
+
+.lfp-btn-ghost:hover {
+    background: color-mix(in srgb, var(--lfp-accent) 18%, transparent);
+}
+
+.lfp-btn-tight {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 0.85rem;
 }
 
 .lfp-icon-btn {
+    appearance: none;
     background: transparent;
     border: 0;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    color: var(--lfp-a-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--lfp-ctrl-r);
+    color: var(--lfp-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.1rem;
     line-height: 1;
+    padding: 0;
+    transition: background 120ms ease, color 120ms ease;
 }
 
 .lfp-icon-btn:hover {
-    background: var(--lfp-a-hover);
-    color: var(--lfp-a-fg);
+    background: var(--lfp-hover);
+    color: var(--lfp-fg);
 }
 
-.lfp-icon-btn.lfp-icon-danger:hover {
-    color: var(--lfp-a-danger);
+.lfp-icon-danger:hover {
+    background: color-mix(in srgb, var(--lfp-danger) 14%, transparent);
+    color: var(--lfp-danger);
 }
 
-/* -------- Tree / item */
+/* ---------- 6. Cards / Fieldsets ---------- */
+
+.lfp-fieldset {
+    border: 1px solid var(--lfp-border);
+    border-radius: var(--lfp-card-r);
+    padding: var(--lfp-card-pad);
+    margin: 0 0 var(--lfp-section);
+    background: color-mix(in srgb, var(--lfp-elev) 50%, transparent);
+}
+
+.lfp-fieldset > legend {
+    padding: 0 8px;
+    margin-left: -4px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--lfp-fg);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ---------- 7. Tree / link items ---------- */
 
 .lfp-toolbar {
     display: flex;
@@ -365,8 +506,10 @@
     margin-bottom: 12px;
 }
 
+.lfp-toolbar-tight { margin: 8px 0 4px; }
+
 .lfp-toolbar-hint {
-    color: var(--lfp-a-muted);
+    color: var(--lfp-muted);
     font-size: 0.85rem;
     margin-left: auto;
 }
@@ -374,7 +517,7 @@
 .lfp-handle-demo {
     display: inline-block;
     padding: 0 4px;
-    border: 1px dashed var(--lfp-a-border);
+    border: 1px dashed var(--lfp-border);
     border-radius: 3px;
     font-size: 0.8em;
 }
@@ -384,71 +527,72 @@
     flex-direction: column;
     gap: 8px;
     min-height: 60px;
-    padding: 8px;
-    border: 1px dashed var(--lfp-a-border);
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--lfp-a-hover) 30%, transparent);
+    padding: 10px;
+    border: 1px dashed var(--lfp-border);
+    border-radius: var(--lfp-card-r);
+    background: color-mix(in srgb, var(--lfp-hover) 35%, transparent);
 }
 
 .lfp-tree-children {
     margin-top: 10px;
-    padding: 8px;
-    background: color-mix(in srgb, var(--lfp-a-hover) 60%, transparent);
+    padding: 10px;
+    background: color-mix(in srgb, var(--lfp-hover) 60%, transparent);
 }
 
 .lfp-tree.is-drop-target {
-    background: color-mix(in srgb, var(--lfp-a-accent) 8%, transparent);
-    border-color: var(--lfp-a-accent);
+    background: color-mix(in srgb, var(--lfp-accent) 8%, transparent);
+    border-color: var(--lfp-accent);
 }
 
 .lfp-item {
-    background: var(--lfp-a-bg);
-    border: 1px solid var(--lfp-a-border);
-    border-radius: var(--lfp-a-radius);
-    transition: opacity 160ms ease, transform 160ms ease;
+    background: var(--lfp-card);
+    border: 1px solid var(--lfp-border);
+    border-radius: var(--lfp-card-r);
+    box-shadow: var(--lfp-shadow-sm);
+    transition: opacity 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
-.lfp-item.is-dragging {
-    opacity: 0.4;
+.lfp-item:hover {
+    box-shadow: var(--lfp-shadow-md);
 }
 
-.lfp-item.is-drop-above {
-    border-top: 2px solid var(--lfp-a-accent);
-}
-
-.lfp-item.is-drop-below {
-    border-bottom: 2px solid var(--lfp-a-accent);
-}
+.lfp-item.is-dragging { opacity: 0.4; }
+.lfp-item.is-drop-above { border-top: 2px solid var(--lfp-accent); }
+.lfp-item.is-drop-below { border-bottom: 2px solid var(--lfp-accent); }
 
 .lfp-item--category {
-    border-left: 3px solid var(--lfp-a-accent);
+    border-left: 3px solid var(--lfp-accent);
 }
 
 .lfp-item-head {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
+    gap: 12px;
+    padding: 10px 12px;
 }
 
 .lfp-handle {
     cursor: grab;
-    color: var(--lfp-a-muted);
-    font-size: 1.1rem;
+    color: var(--lfp-muted);
+    font-size: 1.05rem;
     user-select: none;
-    padding: 2px 4px;
+    padding: 4px 6px;
+    border-radius: 4px;
     line-height: 1;
 }
 
-.lfp-handle:active {
-    cursor: grabbing;
+.lfp-handle:hover {
+    background: var(--lfp-hover);
+    color: var(--lfp-fg);
 }
+
+.lfp-handle:active { cursor: grabbing; }
 
 .lfp-item-thumb {
     width: 36px;
     height: 36px;
-    border-radius: 6px;
-    background: var(--lfp-a-hover);
+    border-radius: var(--lfp-ctrl-r);
+    background: var(--lfp-hover);
     flex: 0 0 auto;
     background-size: cover;
     background-position: center;
@@ -466,13 +610,13 @@
 .lfp-item-keyword {
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
     font-size: 0.85rem;
-    color: var(--lfp-a-accent);
+    color: var(--lfp-accent);
 }
 
 .lfp-item-fallback,
 .lfp-item-cat-count {
     font-size: 0.8rem;
-    color: var(--lfp-a-muted);
+    color: var(--lfp-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -480,86 +624,49 @@
 
 .lfp-item-cat-title {
     font-size: 0.95rem;
+    color: var(--lfp-fg);
 }
 
 .lfp-item-body {
-    padding: 0 14px 14px;
-    border-top: 1px dashed var(--lfp-a-border);
+    padding: 0 16px 16px;
+    border-top: 1px dashed var(--lfp-border);
     margin-top: 4px;
 }
 
-.lfp-item-body[hidden] {
-    display: none;
-}
-
-/* -------- Fieldset / Socials list */
-
-.lfp-fieldset {
-    border: 1px solid var(--lfp-a-border);
-    border-radius: var(--lfp-a-radius);
-    padding: 12px 16px 16px;
-    margin: 16px 0;
-}
-
-.lfp-fieldset > legend {
-    padding: 0 6px;
-    font-weight: 600;
-    color: var(--lfp-a-fg);
-}
-
-.lfp-toolbar-tight {
-    margin: 8px 0 4px;
-}
-
-.lfp-btn-tight {
-    padding: 4px 10px;
-    font-size: 0.85rem;
-}
+/* ---------- 8. Social media list (refactored) ---------- */
 
 #lfp-socials {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 8px;
 }
 
 .lfp-social-row {
-    display: grid;
-    grid-template-columns:
-        24px                  /* handle */
-        28px                  /* icon */
-        minmax(0, 1.4fr)      /* platform select */
-        minmax(0, 1fr)        /* source select */
-        minmax(0, 2fr)        /* url / keyword */
-        auto;                 /* remove btn */
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    background: var(--lfp-a-bg);
-    border: 1px solid var(--lfp-a-border);
-    border-radius: 6px;
-    padding: 8px 10px;
-    transition: opacity 160ms ease;
-    min-width: 0;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--lfp-card);
+    border: 1px solid var(--lfp-border);
+    border-radius: var(--lfp-card-r);
+    transition: opacity 160ms ease, box-shadow 160ms ease;
 }
 
-.lfp-social-row > * {
-    min-width: 0;
-}
+.lfp-social-row:hover { box-shadow: var(--lfp-shadow-sm); }
+.lfp-social-row.is-dragging { opacity: 0.4; }
+.lfp-social-row.is-drop-above { border-top: 2px solid var(--lfp-accent); }
+.lfp-social-row.is-drop-below { border-bottom: 2px solid var(--lfp-accent); }
 
-.lfp-social-row.is-dragging {
-    opacity: 0.4;
-}
+.lfp-social-row > * { min-width: 0; }
 
-.lfp-social-row.is-drop-above {
-    border-top: 2px solid var(--lfp-a-accent);
-}
-.lfp-social-row.is-drop-below {
-    border-bottom: 2px solid var(--lfp-a-accent);
-}
+.lfp-social-row .lfp-handle { flex: 0 0 auto; }
 
 .lfp-social-icon {
-    width: 24px;
-    height: 24px;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -570,91 +677,103 @@
     height: 22px;
 }
 
-/* Override Sleeky-backend's `select { width: 150px; padding: 5px 35px 5px 10px }`.
-   We need width:100% so the select fills its grid cell, plus appearance:auto
-   to restore the native chevron (Sleeky removes it via `appearance: none`
-   and a background image, but our background override wipes that image). */
+/* Selects override Sleeky's fixed width:150 — these use flex sizing. */
 .lfp-social-platform,
 .lfp-social-source,
 #lfp-form .lfp-social-row select {
-    width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
+    flex: 1 1 auto;
+    width: auto !important;
+    min-width: 160px !important;
+    height: var(--lfp-ctrl-h) !important;
+    line-height: 1.4 !important;
+    padding: 0 28px 0 12px !important;
     appearance: auto !important;
     -webkit-appearance: auto !important;
-    padding: 6px 8px !important;
-    border: 1px solid var(--lfp-a-border) !important;
-    border-radius: 4px !important;
-    background: var(--lfp-a-bg) !important;
-    color: var(--lfp-a-fg) !important;
+    border: 1px solid var(--lfp-border) !important;
+    border-radius: var(--lfp-ctrl-r) !important;
+    background: var(--lfp-bg) !important;
+    color: var(--lfp-fg) !important;
     font: inherit !important;
-    height: auto !important;
+    box-sizing: border-box !important;
+}
+
+.lfp-social-platform { flex: 1 1 200px; min-width: 180px !important; }
+.lfp-social-source   { flex: 0 0 160px; min-width: 150px !important; max-width: 200px; }
+
+.lfp-social-row .lfp-social-url {
+    flex: 1 1 240px;
+    min-width: 200px;
+    height: var(--lfp-ctrl-h) !important;
+    line-height: 1.4 !important;
+    padding: 0 var(--lfp-ctrl-px) !important;
+    border: 1px solid var(--lfp-border) !important;
+    border-radius: var(--lfp-ctrl-r) !important;
+    background: var(--lfp-bg) !important;
+    color: var(--lfp-fg) !important;
+    font: inherit !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+.lfp-social-row .lfp-social-url:focus {
+    border-color: var(--lfp-accent) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--lfp-accent) 30%, transparent) !important;
+    outline: none;
 }
 
 .lfp-social-keyword-wrap {
+    flex: 1 1 240px;
+    min-width: 200px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    flex: 1;
-    min-width: 0;
+    gap: 8px;
 }
 
 .lfp-social-keyword {
-    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-    font-size: 0.85rem;
-    color: var(--lfp-a-accent);
-    background: var(--lfp-a-hover);
-    padding: 4px 8px;
-    border-radius: 4px;
     flex: 1;
+    min-width: 0;
+    height: var(--lfp-ctrl-h);
+    line-height: var(--lfp-ctrl-h);
+    padding: 0 12px;
+    background: var(--lfp-hover);
+    border-radius: var(--lfp-ctrl-r);
+    color: var(--lfp-accent);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.88rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    border: 1px solid var(--lfp-border);
 }
+
+.lfp-social-row [data-lfp-social-remove] { margin-left: auto; }
 
 @media (max-width: 720px) {
-    .lfp-social-row {
-        grid-template-columns: auto auto 1fr auto;
-        grid-template-rows: auto auto;
-    }
-    .lfp-social-source,
-    .lfp-social-url,
-    .lfp-social-keyword-wrap {
-        grid-column: 1 / -1;
-    }
+    .lfp-social-platform,
+    .lfp-social-source { flex-basis: 100%; }
+    .lfp-social-source { max-width: none; }
 }
 
-/* -------- Font picker */
+/* ---------- 9. Font picker ---------- */
 
 .lfp-font-picker {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .lfp-font-picker select {
-    padding: 6px 8px !important;
-    border: 1px solid var(--lfp-a-border) !important;
-    border-radius: 4px !important;
-    background: var(--lfp-a-bg) !important;
-    color: var(--lfp-a-fg) !important;
-    font: inherit !important;
-    height: 160px;
+    height: 180px !important;
+    padding: 6px !important;
+    line-height: 1.6 !important;
 }
 
-.lfp-hint {
-    display: block;
-    margin-top: 8px;
-    color: var(--lfp-a-muted);
-    font-size: 0.8rem;
-}
-
-/* -------- Instagram grid (admin) */
+/* ---------- 10. Instagram grid (admin) ---------- */
 
 .lfp-ig-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    gap: 8px;
     margin: 12px 0;
 }
 
@@ -662,26 +781,26 @@
 .lfp-ig-add {
     position: relative;
     aspect-ratio: 1 / 1;
-    border: 1px solid var(--lfp-a-border);
-    border-radius: 8px;
+    border: 1px solid var(--lfp-border);
+    border-radius: var(--lfp-card-r);
     overflow: hidden;
-    background: var(--lfp-a-hover);
-    transition: opacity 160ms ease;
+    background: var(--lfp-hover);
+    transition: opacity 160ms ease, border-color 160ms ease;
 }
 
 .lfp-ig-tile.is-dragging { opacity: 0.4; }
 .lfp-ig-tile.is-drop-target {
-    outline: 2px solid var(--lfp-a-accent);
+    outline: 2px solid var(--lfp-accent);
     outline-offset: -2px;
 }
 
 .lfp-ig-tile.lfp-ig-needs-details::before {
     content: 'needs link';
     position: absolute;
-    top: 4px;
-    right: 32px;
+    top: 6px;
+    right: 36px;
     z-index: 2;
-    background: #f59e0b;
+    background: var(--lfp-warn);
     color: #1f2937;
     font-size: 0.65rem;
     font-weight: 700;
@@ -694,10 +813,10 @@
 
 .lfp-ig-tile .lfp-handle {
     position: absolute;
-    top: 4px;
-    left: 4px;
+    top: 6px;
+    left: 6px;
     z-index: 2;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.55);
     color: #fff;
     border-radius: 4px;
     padding: 2px 6px;
@@ -720,13 +839,13 @@
     inset: 0;
     background-size: cover;
     background-position: center;
-    background-color: var(--lfp-a-hover);
+    background-color: var(--lfp-hover);
 }
 
 .lfp-ig-overlay {
     position: absolute;
     inset: auto 0 0 0;
-    padding: 6px 8px;
+    padding: 8px 10px;
     color: #fff;
     background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0));
     font-size: 0.8rem;
@@ -739,25 +858,27 @@
 
 .lfp-ig-remove {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 6px;
+    right: 6px;
     z-index: 2;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.6);
     color: #fff;
     border-radius: 999px;
-    padding: 0 8px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
 }
 
 .lfp-ig-remove:hover {
-    background: var(--lfp-a-danger);
+    background: var(--lfp-danger);
     color: #fff;
 }
 
 .lfp-ig-add {
     background: transparent;
-    border: 2px dashed var(--lfp-a-border);
+    border: 2px dashed var(--lfp-border);
     cursor: pointer;
-    color: var(--lfp-a-muted);
+    color: var(--lfp-muted);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -767,38 +888,121 @@
 }
 
 .lfp-ig-add:hover {
-    border-color: var(--lfp-a-accent);
-    color: var(--lfp-a-accent);
-    background: color-mix(in srgb, var(--lfp-a-accent) 6%, transparent);
+    border-color: var(--lfp-accent);
+    color: var(--lfp-accent);
+    background: color-mix(in srgb, var(--lfp-accent) 6%, transparent);
 }
 
-.lfp-ig-add-icon {
-    font-size: 2rem;
-    line-height: 1;
-}
+.lfp-ig-add-icon { font-size: 2rem; line-height: 1; }
+.lfp-ig-add-label { font-size: 0.85rem; font-weight: 500; }
 
-.lfp-ig-add-label {
-    font-size: 0.85rem;
-    font-weight: 500;
-}
+/* ---------- 11. Dialogs (shared base) ---------- */
 
+#lfp-picker,
 #lfp-ig-dialog {
-    width: min(560px, 92vw);
+    width: min(640px, 92vw);
     max-height: 90vh;
     border: 0;
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 0;
-    background: var(--lfp-a-bg);
-    color: var(--lfp-a-fg);
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+    background: var(--lfp-bg);
+    color: var(--lfp-fg);
+    box-shadow: var(--lfp-shadow-md);
     overflow: hidden;
 }
 
+#lfp-picker { max-height: 80vh; }
+
+#lfp-picker::backdrop,
 #lfp-ig-dialog::backdrop {
     background: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(4px);
 }
 
+.lfp-picker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--lfp-border);
+}
+
+.lfp-picker-head h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.lfp-picker-search {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--lfp-border);
+}
+
+.lfp-picker-search input {
+    width: 100%;
+    height: var(--lfp-ctrl-h);
+    line-height: 1.4;
+    padding: 0 var(--lfp-ctrl-px);
+    border: 1px solid var(--lfp-border);
+    border-radius: var(--lfp-ctrl-r);
+    background: var(--lfp-card);
+    color: var(--lfp-fg);
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.lfp-picker-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.lfp-picker-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: var(--lfp-ctrl-r);
+    cursor: pointer;
+}
+
+.lfp-picker-list li:hover,
+.lfp-picker-list li.is-active {
+    background: var(--lfp-hover);
+}
+
+.lfp-picker-list .lfp-pick-keyword {
+    color: var(--lfp-accent);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.85rem;
+}
+
+.lfp-picker-list .lfp-pick-title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lfp-picker-list .lfp-pick-url {
+    font-size: 0.8rem;
+    color: var(--lfp-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lfp-picker-foot {
+    padding: 10px 18px;
+    border-top: 1px solid var(--lfp-border);
+    color: var(--lfp-muted);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* Instagram dialog body extends the same shell. */
 #lfp-ig-form {
     display: flex;
     flex-direction: column;
@@ -806,18 +1010,11 @@
 }
 
 .lfp-ig-form {
-    padding: 16px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
     gap: 14px;
     overflow-y: auto;
-}
-
-/* Force [hidden] to actually hide form fields — author CSS like
-   .lfp-field { display: flex } otherwise wins over the UA stylesheet. */
-.lfp-ig-form [hidden],
-#lfp-form [hidden] {
-    display: none !important;
 }
 
 .lfp-ig-image-block {
@@ -830,11 +1027,11 @@
 .lfp-ig-preview {
     width: 96px;
     height: 96px;
-    border-radius: 8px;
-    background-color: var(--lfp-a-hover);
+    border-radius: var(--lfp-ctrl-r);
+    background-color: var(--lfp-hover);
     background-size: cover;
     background-position: center;
-    border: 1px solid var(--lfp-a-border);
+    border: 1px solid var(--lfp-border);
 }
 
 .lfp-ig-image-fields {
@@ -849,17 +1046,7 @@
     font-size: 0.9rem;
 }
 
-.lfp-ig-required {
-    color: var(--lfp-a-danger);
-}
-
-.lfp-ig-image-fields input[type="url"] {
-    text-overflow: ellipsis;
-}
-
-.lfp-ig-image-fields input[type="file"] {
-    font-size: 0.85rem;
-}
+.lfp-ig-required { color: var(--lfp-danger); }
 
 .lfp-keyword-pick {
     display: flex;
@@ -870,10 +1057,13 @@
 .lfp-keyword-pick code {
     flex: 1;
     min-width: 0;
-    padding: 8px 10px;
-    background: var(--lfp-a-hover);
-    border-radius: 6px;
-    color: var(--lfp-a-accent);
+    height: var(--lfp-ctrl-h);
+    line-height: var(--lfp-ctrl-h);
+    padding: 0 12px;
+    background: var(--lfp-hover);
+    border-radius: var(--lfp-ctrl-r);
+    border: 1px solid var(--lfp-border);
+    color: var(--lfp-accent);
     font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
     font-size: 0.9rem;
     overflow: hidden;
@@ -885,144 +1075,48 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    padding: 12px 16px;
-    border-top: 1px solid var(--lfp-a-border);
-    background: var(--lfp-a-bg);
+    padding: 12px 18px;
+    border-top: 1px solid var(--lfp-border);
+    background: var(--lfp-bg);
 }
 
-/* -------- Picker dialog */
-
-#lfp-picker {
-    width: min(640px, 92vw);
-    max-height: 80vh;
-    border: 0;
-    border-radius: 12px;
-    padding: 0;
-    background: var(--lfp-a-bg, #fff);
-    color: var(--lfp-a-fg, #111);
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
-    overflow: hidden;
-}
-
-#lfp-picker::backdrop {
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(4px);
-}
-
-.lfp-picker-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--lfp-a-border, #e5e7eb);
-}
-
-.lfp-picker-head h3 {
-    margin: 0;
-    font-size: 1.05rem;
-}
-
-.lfp-picker-search {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--lfp-a-border, #e5e7eb);
-}
-
-.lfp-picker-search input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--lfp-a-border, #e5e7eb);
-    border-radius: 6px;
-    font: inherit;
-    background: var(--lfp-a-bg, #fff);
-    color: var(--lfp-a-fg, #111);
-}
-
-.lfp-picker-list {
-    list-style: none;
-    margin: 0;
-    padding: 4px;
-    max-height: 50vh;
-    overflow-y: auto;
-}
-
-.lfp-picker-list li {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.lfp-picker-list li:hover,
-.lfp-picker-list li.is-active {
-    background: var(--lfp-a-hover, #f3f4f6);
-}
-
-.lfp-picker-list .lfp-pick-keyword {
-    color: var(--lfp-a-accent);
-    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-    font-size: 0.85rem;
-}
-
-.lfp-picker-list .lfp-pick-title {
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.lfp-picker-list .lfp-pick-url {
-    font-size: 0.8rem;
-    color: var(--lfp-a-muted, #6b7280);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.lfp-picker-foot {
-    padding: 8px 16px;
-    border-top: 1px solid var(--lfp-a-border, #e5e7eb);
-    color: var(--lfp-a-muted, #6b7280);
-    font-size: 0.8rem;
-    text-align: center;
-}
-
-/* -------- Actions */
+/* ---------- 12. Action bar + plugin footer ---------- */
 
 .lfp-actions {
     display: flex;
     gap: 10px;
     margin-top: 24px;
     padding-top: 16px;
-    border-top: 1px solid var(--lfp-a-border);
+    border-top: 1px solid var(--lfp-border);
 }
 
 .lfp-pluginfoot {
-    margin-top: 24px;
-    padding-top: 14px;
-    border-top: 1px solid var(--lfp-a-border);
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--lfp-border);
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    color: var(--lfp-a-muted);
+    color: var(--lfp-muted);
     font-size: 0.85rem;
 }
 
 .lfp-pluginfoot-name strong {
-    color: var(--lfp-a-fg);
+    color: var(--lfp-fg);
     font-weight: 600;
 }
 
 .lfp-pluginfoot-credit a {
-    color: var(--lfp-a-accent);
+    color: var(--lfp-accent);
     text-decoration: none;
-    border-bottom: 1px dotted color-mix(in srgb, var(--lfp-a-accent) 50%, transparent);
+    border-bottom: 1px dotted color-mix(in srgb, var(--lfp-accent) 50%, transparent);
 }
 
 .lfp-pluginfoot-credit a:hover {
-    border-bottom-color: var(--lfp-a-accent);
+    border-bottom-color: var(--lfp-accent);
 }
+
+/* ---------- 13. Responsive ---------- */
 
 @media (max-width: 720px) {
     .lfp-grid,
@@ -1032,5 +1126,8 @@
     .lfp-toolbar-hint {
         margin-left: 0;
         flex-basis: 100%;
+    }
+    .lfp-pagehead {
+        flex-direction: column;
     }
 }
