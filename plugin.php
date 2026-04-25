@@ -79,25 +79,30 @@ function lfp_default_appearance(): array
 {
     return [
         // Colors
-        'background_color'    => '#0f172a',
-        'background_image'    => '',
-        'text_color'          => '#f1f5f9',
+        'background_color'      => '#0f172a',
+        'background_image'      => '',
+        'background_size'       => 'cover',     // cover | contain | auto | 100% 100%
+        'background_repeat'     => 'no-repeat', // no-repeat | repeat | repeat-x | repeat-y | space | round
+        'background_position'   => 'center',    // center | top | bottom | left | right | top left | …
+        'background_attachment' => 'fixed',     // fixed | scroll | local
+        'text_color'            => '#f1f5f9',
         'muted_color'         => '#94a3b8',
         'card_background'     => '#1e293b',
         'card_hover'          => '#334155',
         'accent_color'        => '#3b82f6',
 
-        // Sizing & spacing
-        'border_radius'       => '16',
-        'page_max_width'      => '640',
-        'page_padding_top'    => '56',
-        'page_padding_bottom' => '80',
-        'page_padding_x'      => '20',
-        'card_gap'            => '14',
-        'card_padding_y'      => '14',
-        'card_padding_x'      => '18',
-        'icon_size'           => '44',
-        'about_photo_size'    => '120',
+        // Sizing & spacing — strings with CSS units. Plain numbers entered
+        // by the user are coerced to "Npx" via lfp_sanitize_size().
+        'border_radius'       => '16px',
+        'page_max_width'      => '640px',
+        'page_padding_top'    => '56px',
+        'page_padding_bottom' => '80px',
+        'page_padding_x'      => '20px',
+        'card_gap'            => '14px',
+        'card_padding_y'      => '14px',
+        'card_padding_x'      => '18px',
+        'icon_size'           => '44px',
+        'about_photo_size'    => '120px',
 
         // Typography
         'font_source'         => 'system',  // 'system' | 'google' | 'custom'
@@ -150,6 +155,23 @@ function lfp_get_appearance(): array
     if (!is_array($stored)) {
         $stored = [];
     }
+
+    // Migrate legacy spacing values that were stored as bare integers (pre-2.1
+    // fields used <input type="number">) to "Npx" strings.
+    $legacy_size_keys = [
+        'border_radius', 'page_max_width', 'page_padding_top',
+        'page_padding_bottom', 'page_padding_x', 'card_gap',
+        'card_padding_y', 'card_padding_x', 'icon_size', 'about_photo_size',
+    ];
+    foreach ($legacy_size_keys as $key) {
+        if (isset($stored[$key])
+            && is_string($stored[$key])
+            && preg_match('/^-?\d+(\.\d+)?$/', $stored[$key]) === 1
+        ) {
+            $stored[$key] = $stored[$key] . 'px';
+        }
+    }
+
     return array_merge(lfp_default_appearance(), $stored);
 }
 
@@ -320,6 +342,180 @@ function lfp_render_frontend(): void
 }
 
 /* ---------------------------------------------------------------------------
+ * Admin: row action in /admin/index.php — adds a link directly to the bottom
+ * of the homepage link list with a single click.
+ * ------------------------------------------------------------------------ */
+
+yourls_add_filter('table_add_row_action_array', 'lfp_table_row_action', 10, 2);
+yourls_add_action('plugins_loaded',             'lfp_handle_admin_quickadd');
+yourls_add_action('html_head',                  'lfp_admin_quickadd_styles');
+
+function lfp_table_row_action(array $actions, string $keyword): array
+{
+    if (!yourls_keyword_is_taken($keyword)) {
+        return $actions;
+    }
+
+    $in_list = isset(lfp_listed_keywords()[$keyword]);
+
+    if ($in_list) {
+        $anchor = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        $actions['lfp_add'] = [
+            'href'   => '#',
+            'id'     => 'lfp_add_' . $keyword,
+            'title'  => 'Already on the Link Front Page homepage',
+            'anchor' => $anchor,
+        ];
+        return $actions;
+    }
+
+    $nonce  = yourls_create_nonce('lfp_quickadd', defined('YOURLS_USER') ? YOURLS_USER : '');
+    $href   = yourls_admin_url('index.php')
+            . '?lfp_quickadd=' . urlencode($keyword)
+            . '&lfp_nonce='    . urlencode($nonce);
+    $anchor = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+
+    $actions['lfp_add'] = [
+        'href'   => $href,
+        'id'     => 'lfp_add_' . $keyword,
+        'title'  => 'Add to Link Front Page homepage',
+        'anchor' => $anchor,
+    ];
+    return $actions;
+}
+
+/**
+ * Quick-add handler. Hooks plugins_loaded so it runs before the admin page
+ * starts emitting HTML, then redirects back to /admin/index.php with a
+ * success/duplicate flag.
+ */
+function lfp_handle_admin_quickadd(): void
+{
+    if (!yourls_is_admin()) {
+        return;
+    }
+    if (!isset($_GET['lfp_quickadd'])) {
+        return;
+    }
+
+    $keyword = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['lfp_quickadd']);
+    $nonce   = (string) ($_GET['lfp_nonce'] ?? '');
+
+    if (!is_string($keyword) || $keyword === ''
+        || !yourls_verify_nonce('lfp_quickadd', $nonce, defined('YOURLS_USER') ? YOURLS_USER : '')
+        || !yourls_keyword_is_taken($keyword)
+    ) {
+        yourls_redirect(yourls_admin_url('index.php'), 302);
+        exit;
+    }
+
+    $items   = lfp_get_items();
+    $listed  = lfp_listed_keywords();
+    $already = isset($listed[$keyword]);
+
+    if (!$already) {
+        try {
+            $id = 'link_' . bin2hex(random_bytes(4));
+        } catch (\Throwable) {
+            $id = 'link_' . substr(md5(uniqid('', true)), 0, 8);
+        }
+        $items[] = [
+            'id'          => $id,
+            'type'        => 'link',
+            'keyword'     => $keyword,
+            'title'       => '',
+            'description' => '',
+            'image'       => '',
+        ];
+        yourls_update_option(LFP_OPT_ITEMS, $items);
+    }
+
+    $flag = $already ? 'lfp_dup' : 'lfp_added';
+    yourls_redirect(yourls_admin_url('index.php?' . $flag . '=' . urlencode($keyword)), 302);
+    exit;
+}
+
+/**
+ * Tiny CSS injection in admin so the quick-add icon button blends in with
+ * the existing row-action buttons regardless of the active YOURLS theme,
+ * plus a brief flash banner when a quick-add just happened.
+ */
+function lfp_admin_quickadd_styles(): void
+{
+    if (!yourls_is_admin()) {
+        return;
+    }
+
+    $added = isset($_GET['lfp_added']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['lfp_added']) : '';
+    $dup   = isset($_GET['lfp_dup'])   ? preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['lfp_dup'])   : '';
+
+    echo '<style>
+        a[id^="lfp_add_"] { color: inherit; }
+        a[id^="lfp_add_"] svg { vertical-align: middle; }
+        a[id^="lfp_add_"]:hover { color: #2563eb; }
+        .lfp-quickadd-flash {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; color: #f1f5f9; padding: 10px 18px;
+            border-radius: 6px; font-size: 0.9rem; z-index: 99999;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-left: 3px solid #3b82f6;
+            animation: lfp-flash 4s ease forwards;
+        }
+        .lfp-quickadd-flash.is-dup { border-left-color: #f59e0b; }
+        @keyframes lfp-flash {
+            0%   { opacity: 0; transform: translate(-50%, -16px); }
+            10%  { opacity: 1; transform: translate(-50%, 0); }
+            85%  { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -16px); pointer-events: none; }
+        }
+    </style>';
+
+    if ($added !== '') {
+        echo '<script>document.addEventListener("DOMContentLoaded", () => {'
+           . 'const f=document.createElement("div");f.className="lfp-quickadd-flash";'
+           . 'f.textContent=' . json_encode('Added "' . $added . '" to the Link Front Page homepage list.') . ';'
+           . 'document.body.appendChild(f);setTimeout(()=>f.remove(),4500);'
+           . '});</script>';
+    } elseif ($dup !== '') {
+        echo '<script>document.addEventListener("DOMContentLoaded", () => {'
+           . 'const f=document.createElement("div");f.className="lfp-quickadd-flash is-dup";'
+           . 'f.textContent=' . json_encode('"' . $dup . '" was already on the Link Front Page homepage list.') . ';'
+           . 'document.body.appendChild(f);setTimeout(()=>f.remove(),4500);'
+           . '});</script>';
+    }
+}
+
+/**
+ * Returns a [keyword => true] map of every keyword currently on the homepage
+ * link list (top-level links and links nested inside categories).
+ */
+function lfp_listed_keywords(): array
+{
+    static $set = null;
+    if ($set !== null) {
+        return $set;
+    }
+    $set = [];
+    $walk = function (array $list) use (&$walk, &$set): void {
+        foreach ($list as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            if (($item['type'] ?? '') === 'link') {
+                $kw = (string) ($item['keyword'] ?? '');
+                if ($kw !== '') {
+                    $set[$kw] = true;
+                }
+            }
+            if (($item['type'] ?? '') === 'category' && is_array($item['children'] ?? null)) {
+                $walk($item['children']);
+            }
+        }
+    };
+    $walk(lfp_get_items());
+    return $set;
+}
+
+/* ---------------------------------------------------------------------------
  * Admin: settings page
  * ------------------------------------------------------------------------ */
 
@@ -394,25 +590,39 @@ function lfp_save_settings(): never
     $custom_url    = $custom_font['url']    ?? trim((string) ($_POST['font_custom_url']    ?? $existing_appearance['font_custom_url']));
     $custom_format = $custom_font['format'] ?? trim((string) ($_POST['font_custom_format'] ?? $existing_appearance['font_custom_format']));
 
+    $bg_size_opts       = ['cover', 'contain', 'auto', '100% 100%'];
+    $bg_repeat_opts     = ['no-repeat', 'repeat', 'repeat-x', 'repeat-y', 'space', 'round'];
+    $bg_position_opts   = ['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right'];
+    $bg_attachment_opts = ['fixed', 'scroll', 'local'];
+
+    $bg_size       = (string) ($_POST['background_size']       ?? 'cover');
+    $bg_repeat     = (string) ($_POST['background_repeat']     ?? 'no-repeat');
+    $bg_position   = (string) ($_POST['background_position']   ?? 'center');
+    $bg_attachment = (string) ($_POST['background_attachment'] ?? 'fixed');
+
     $appearance = [
-        'background_color'    => lfp_sanitize_color((string) ($_POST['background_color'] ?? '#0f172a')),
-        'background_image'    => $uploaded['background_image'] ?? trim((string) ($_POST['background_image'] ?? '')),
-        'text_color'          => lfp_sanitize_color((string) ($_POST['text_color'] ?? '#f1f5f9')),
+        'background_color'      => lfp_sanitize_color((string) ($_POST['background_color'] ?? '#0f172a')),
+        'background_image'      => $uploaded['background_image'] ?? trim((string) ($_POST['background_image'] ?? '')),
+        'background_size'       => in_array($bg_size,       $bg_size_opts,       true) ? $bg_size       : 'cover',
+        'background_repeat'     => in_array($bg_repeat,     $bg_repeat_opts,     true) ? $bg_repeat     : 'no-repeat',
+        'background_position'   => in_array($bg_position,   $bg_position_opts,   true) ? $bg_position   : 'center',
+        'background_attachment' => in_array($bg_attachment, $bg_attachment_opts, true) ? $bg_attachment : 'fixed',
+        'text_color'            => lfp_sanitize_color((string) ($_POST['text_color'] ?? '#f1f5f9')),
         'muted_color'         => lfp_sanitize_color((string) ($_POST['muted_color'] ?? '#94a3b8')),
         'card_background'     => lfp_sanitize_color((string) ($_POST['card_background'] ?? '#1e293b')),
         'card_hover'          => lfp_sanitize_color((string) ($_POST['card_hover'] ?? '#334155')),
         'accent_color'        => lfp_sanitize_color((string) ($_POST['accent_color'] ?? '#3b82f6')),
 
-        'border_radius'       => (string) max(0, min(64,   (int) ($_POST['border_radius']       ?? 16))),
-        'page_max_width'      => (string) max(280, min(1600,(int) ($_POST['page_max_width']      ?? 640))),
-        'page_padding_top'    => (string) max(0, min(400,  (int) ($_POST['page_padding_top']    ?? 56))),
-        'page_padding_bottom' => (string) max(0, min(400,  (int) ($_POST['page_padding_bottom'] ?? 80))),
-        'page_padding_x'      => (string) max(0, min(400,  (int) ($_POST['page_padding_x']      ?? 20))),
-        'card_gap'            => (string) max(0, min(80,   (int) ($_POST['card_gap']            ?? 14))),
-        'card_padding_y'      => (string) max(0, min(80,   (int) ($_POST['card_padding_y']      ?? 14))),
-        'card_padding_x'      => (string) max(0, min(80,   (int) ($_POST['card_padding_x']      ?? 18))),
-        'icon_size'           => (string) max(0, min(160,  (int) ($_POST['icon_size']           ?? 44))),
-        'about_photo_size'    => (string) max(40, min(400, (int) ($_POST['about_photo_size']    ?? 120))),
+        'border_radius'       => lfp_sanitize_size((string) ($_POST['border_radius']       ?? '16px'),  '16px'),
+        'page_max_width'      => lfp_sanitize_size((string) ($_POST['page_max_width']      ?? '640px'), '640px'),
+        'page_padding_top'    => lfp_sanitize_size((string) ($_POST['page_padding_top']    ?? '56px'),  '56px'),
+        'page_padding_bottom' => lfp_sanitize_size((string) ($_POST['page_padding_bottom'] ?? '80px'),  '80px'),
+        'page_padding_x'      => lfp_sanitize_size((string) ($_POST['page_padding_x']      ?? '20px'),  '20px'),
+        'card_gap'            => lfp_sanitize_size((string) ($_POST['card_gap']            ?? '14px'),  '14px'),
+        'card_padding_y'      => lfp_sanitize_size((string) ($_POST['card_padding_y']      ?? '14px'),  '14px'),
+        'card_padding_x'      => lfp_sanitize_size((string) ($_POST['card_padding_x']      ?? '18px'),  '18px'),
+        'icon_size'           => lfp_sanitize_size((string) ($_POST['icon_size']           ?? '44px'),  '44px'),
+        'about_photo_size'    => lfp_sanitize_size((string) ($_POST['about_photo_size']    ?? '120px'), '120px'),
 
         'font_source'         => $font_source,
         'font_family'         => trim((string) ($_POST['font_family'] ?? '')),

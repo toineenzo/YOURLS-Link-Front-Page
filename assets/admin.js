@@ -634,6 +634,37 @@
         });
     }
 
+    /* -------- Live Google Fonts preview */
+
+    const fontPreview = document.getElementById('lfp-font-preview');
+    const loadedGoogleFonts = new Set();
+
+    const loadGoogleFont = (family) => {
+        if (!family || loadedGoogleFonts.has(family)) return;
+        loadedGoogleFonts.add(family);
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, '+')}:wght@400;600;700&display=swap`;
+        document.head.appendChild(link);
+    };
+
+    const refreshFontPreview = () => {
+        if (!fontPreview || !fontGoogleSel) return;
+        const family = fontGoogleSel.value;
+        if (!family) {
+            fontPreview.style.fontFamily = '';
+            return;
+        }
+        loadGoogleFont(family);
+        fontPreview.style.fontFamily = `"${family.replace(/"/g, '')}", sans-serif`;
+    };
+
+    if (fontGoogleSel) {
+        fontGoogleSel.addEventListener('change', refreshFontPreview);
+        // Show the currently saved font right away.
+        refreshFontPreview();
+    }
+
     /* -------------------------------------------------- Instagram grid */
 
     const igGrid = document.getElementById('lfp-ig-grid');
@@ -821,7 +852,7 @@
         igFields.showMode.value = igDialogState.show_mode || 'always';
         updateIgSourceBlocks();
         updateIgPreview();
-        document.getElementById('lfp-ig-dialog-title').textContent = id ? 'Edit Instagram tile' : 'Add Instagram tile';
+        document.getElementById('lfp-ig-dialog-title').textContent = id ? 'Edit image tile' : 'Add image tile';
 
         if (typeof igDialog.showModal === 'function') igDialog.showModal();
         else igDialog.setAttribute('open', '');

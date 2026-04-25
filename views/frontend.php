@@ -50,16 +50,16 @@ $css_vars = [
     '--lfp-card'            => $appearance['card_background'],
     '--lfp-card-hover'      => $appearance['card_hover'],
     '--lfp-accent'          => $appearance['accent_color'],
-    '--lfp-radius'          => $appearance['border_radius'] . 'px',
-    '--lfp-page-max'        => $appearance['page_max_width'] . 'px',
-    '--lfp-pad-top'         => $appearance['page_padding_top'] . 'px',
-    '--lfp-pad-bot'         => $appearance['page_padding_bottom'] . 'px',
-    '--lfp-pad-x'           => $appearance['page_padding_x'] . 'px',
-    '--lfp-card-gap'        => $appearance['card_gap'] . 'px',
-    '--lfp-card-py'         => $appearance['card_padding_y'] . 'px',
-    '--lfp-card-px'         => $appearance['card_padding_x'] . 'px',
-    '--lfp-icon'            => $appearance['icon_size'] . 'px',
-    '--lfp-photo'           => $appearance['about_photo_size'] . 'px',
+    '--lfp-radius'          => $appearance['border_radius'],
+    '--lfp-page-max'        => $appearance['page_max_width'],
+    '--lfp-pad-top'         => $appearance['page_padding_top'],
+    '--lfp-pad-bot'         => $appearance['page_padding_bottom'],
+    '--lfp-pad-x'           => $appearance['page_padding_x'],
+    '--lfp-card-gap'        => $appearance['card_gap'],
+    '--lfp-card-py'         => $appearance['card_padding_y'],
+    '--lfp-card-px'         => $appearance['card_padding_x'],
+    '--lfp-icon'            => $appearance['icon_size'],
+    '--lfp-photo'           => $appearance['about_photo_size'],
     '--lfp-font'            => $font_stack,
     '--lfp-title-size'      => $appearance['title_size'],
     '--lfp-subtitle-size'   => $appearance['subtitle_size'],
@@ -78,7 +78,15 @@ foreach ($css_vars as $name => $value) {
 
 $body_style = '';
 if ($appearance['background_image'] !== '') {
-    $body_style = "background-image:url('" . yourls_esc_url($appearance['background_image']) . "');background-size:cover;background-position:center;background-attachment:fixed;";
+    $bg_size       = (string) ($appearance['background_size']       ?? 'cover');
+    $bg_repeat     = (string) ($appearance['background_repeat']     ?? 'no-repeat');
+    $bg_position   = (string) ($appearance['background_position']   ?? 'center');
+    $bg_attachment = (string) ($appearance['background_attachment'] ?? 'fixed');
+    $body_style = "background-image:url('" . yourls_esc_url($appearance['background_image']) . "');"
+                . "background-size:"       . yourls_esc_attr($bg_size)       . ";"
+                . "background-repeat:"     . yourls_esc_attr($bg_repeat)     . ";"
+                . "background-position:"   . yourls_esc_attr($bg_position)   . ";"
+                . "background-attachment:" . yourls_esc_attr($bg_attachment) . ";";
 }
 
 /**
@@ -198,7 +206,7 @@ HTML;
         }
     ?>
         <?php if (!empty($resolved_ig)): ?>
-        <section class="lfp-ig" aria-label="Instagram feed">
+        <section class="lfp-ig" aria-label="Image gallery">
             <?php foreach ($resolved_ig as $tile): ?>
                 <a class="lfp-ig-tile lfp-ig-show-<?php echo yourls_esc_attr($tile['show_mode']); ?>"
                    href="<?php echo yourls_esc_url($tile['url']); ?>"

@@ -79,11 +79,11 @@ $bootstrap = [
         </button>
         <button type="button" class="lfp-tab" data-tab="instagram" role="tab">
             <svg class="lfp-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="5" ry="5"/>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
             </svg>
-            <span class="lfp-tab-label">Instagram</span>
+            <span class="lfp-tab-label">Image grid</span>
         </button>
         <button type="button" class="lfp-tab" data-tab="appearance" role="tab">
             <svg class="lfp-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -266,54 +266,103 @@ $bootstrap = [
                 <div class="lfp-image-input">
                     <input type="url" name="background_image" value="<?php echo yourls_esc_attr($appearance['background_image']); ?>" placeholder="https://example.com/bg.jpg" data-lfp-image-url>
                     <input type="file" name="background_image" accept="image/*" data-lfp-image-file>
+                    <?php if (!empty($appearance['background_image'])): ?>
+                        <img class="lfp-thumb" src="<?php echo yourls_esc_url($appearance['background_image']); ?>" alt="">
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="lfp-grid lfp-grid-2">
+                <div class="lfp-field">
+                    <label for="lfp-bg-size">Size</label>
+                    <select name="background_size" id="lfp-bg-size">
+                        <option value="cover"      <?php echo $appearance['background_size']==='cover'?'selected':''; ?>>Cover (fill, may crop)</option>
+                        <option value="contain"    <?php echo $appearance['background_size']==='contain'?'selected':''; ?>>Contain (fit inside)</option>
+                        <option value="auto"       <?php echo $appearance['background_size']==='auto'?'selected':''; ?>>Auto (original size)</option>
+                        <option value="100% 100%"  <?php echo $appearance['background_size']==='100% 100%'?'selected':''; ?>>Stretch (100% &times; 100%)</option>
+                    </select>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-bg-repeat">Repeat</label>
+                    <select name="background_repeat" id="lfp-bg-repeat">
+                        <option value="no-repeat" <?php echo $appearance['background_repeat']==='no-repeat'?'selected':''; ?>>No repeat</option>
+                        <option value="repeat"    <?php echo $appearance['background_repeat']==='repeat'?'selected':''; ?>>Repeat both</option>
+                        <option value="repeat-x"  <?php echo $appearance['background_repeat']==='repeat-x'?'selected':''; ?>>Repeat horizontally</option>
+                        <option value="repeat-y"  <?php echo $appearance['background_repeat']==='repeat-y'?'selected':''; ?>>Repeat vertically</option>
+                        <option value="space"     <?php echo $appearance['background_repeat']==='space'?'selected':''; ?>>Space (no clipping)</option>
+                        <option value="round"     <?php echo $appearance['background_repeat']==='round'?'selected':''; ?>>Round (rescale to fit)</option>
+                    </select>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-bg-pos">Position</label>
+                    <select name="background_position" id="lfp-bg-pos">
+                        <option value="center"       <?php echo $appearance['background_position']==='center'?'selected':''; ?>>Center</option>
+                        <option value="top"          <?php echo $appearance['background_position']==='top'?'selected':''; ?>>Top</option>
+                        <option value="bottom"       <?php echo $appearance['background_position']==='bottom'?'selected':''; ?>>Bottom</option>
+                        <option value="left"         <?php echo $appearance['background_position']==='left'?'selected':''; ?>>Left</option>
+                        <option value="right"        <?php echo $appearance['background_position']==='right'?'selected':''; ?>>Right</option>
+                        <option value="top left"     <?php echo $appearance['background_position']==='top left'?'selected':''; ?>>Top-left</option>
+                        <option value="top right"    <?php echo $appearance['background_position']==='top right'?'selected':''; ?>>Top-right</option>
+                        <option value="bottom left"  <?php echo $appearance['background_position']==='bottom left'?'selected':''; ?>>Bottom-left</option>
+                        <option value="bottom right" <?php echo $appearance['background_position']==='bottom right'?'selected':''; ?>>Bottom-right</option>
+                    </select>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-bg-attach">Attachment</label>
+                    <select name="background_attachment" id="lfp-bg-attach">
+                        <option value="fixed"  <?php echo $appearance['background_attachment']==='fixed'?'selected':''; ?>>Fixed (parallax)</option>
+                        <option value="scroll" <?php echo $appearance['background_attachment']==='scroll'?'selected':''; ?>>Scroll with page</option>
+                        <option value="local"  <?php echo $appearance['background_attachment']==='local'?'selected':''; ?>>Local (scroll inside element)</option>
+                    </select>
                 </div>
             </div>
         </fieldset>
 
         <fieldset class="lfp-fieldset">
-            <legend>Spacing &amp; sizing (px)</legend>
+            <legend>Spacing &amp; sizing</legend>
             <div class="lfp-grid lfp-grid-3">
                 <div class="lfp-field">
                     <label for="lfp-radius">Border radius</label>
-                    <input type="number" id="lfp-radius" name="border_radius" min="0" max="64" value="<?php echo yourls_esc_attr($appearance['border_radius']); ?>">
+                    <input type="text" id="lfp-radius" name="border_radius" value="<?php echo yourls_esc_attr($appearance['border_radius']); ?>" placeholder="16px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-pmw">Page max width</label>
-                    <input type="number" id="lfp-pmw" name="page_max_width" min="280" max="1600" value="<?php echo yourls_esc_attr($appearance['page_max_width']); ?>">
+                    <input type="text" id="lfp-pmw" name="page_max_width" value="<?php echo yourls_esc_attr($appearance['page_max_width']); ?>" placeholder="640px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-pad-x">Page side padding</label>
-                    <input type="number" id="lfp-pad-x" name="page_padding_x" min="0" max="400" value="<?php echo yourls_esc_attr($appearance['page_padding_x']); ?>">
+                    <input type="text" id="lfp-pad-x" name="page_padding_x" value="<?php echo yourls_esc_attr($appearance['page_padding_x']); ?>" placeholder="20px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-pad-top">Page top padding</label>
-                    <input type="number" id="lfp-pad-top" name="page_padding_top" min="0" max="400" value="<?php echo yourls_esc_attr($appearance['page_padding_top']); ?>">
+                    <input type="text" id="lfp-pad-top" name="page_padding_top" value="<?php echo yourls_esc_attr($appearance['page_padding_top']); ?>" placeholder="56px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-pad-bot">Page bottom padding</label>
-                    <input type="number" id="lfp-pad-bot" name="page_padding_bottom" min="0" max="400" value="<?php echo yourls_esc_attr($appearance['page_padding_bottom']); ?>">
+                    <input type="text" id="lfp-pad-bot" name="page_padding_bottom" value="<?php echo yourls_esc_attr($appearance['page_padding_bottom']); ?>" placeholder="80px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-cardgap">Gap between cards</label>
-                    <input type="number" id="lfp-cardgap" name="card_gap" min="0" max="80" value="<?php echo yourls_esc_attr($appearance['card_gap']); ?>">
+                    <input type="text" id="lfp-cardgap" name="card_gap" value="<?php echo yourls_esc_attr($appearance['card_gap']); ?>" placeholder="14px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-cardpy">Card padding Y</label>
-                    <input type="number" id="lfp-cardpy" name="card_padding_y" min="0" max="80" value="<?php echo yourls_esc_attr($appearance['card_padding_y']); ?>">
+                    <input type="text" id="lfp-cardpy" name="card_padding_y" value="<?php echo yourls_esc_attr($appearance['card_padding_y']); ?>" placeholder="14px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-cardpx">Card padding X</label>
-                    <input type="number" id="lfp-cardpx" name="card_padding_x" min="0" max="80" value="<?php echo yourls_esc_attr($appearance['card_padding_x']); ?>">
+                    <input type="text" id="lfp-cardpx" name="card_padding_x" value="<?php echo yourls_esc_attr($appearance['card_padding_x']); ?>" placeholder="18px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-iconsz">Link icon size</label>
-                    <input type="number" id="lfp-iconsz" name="icon_size" min="0" max="160" value="<?php echo yourls_esc_attr($appearance['icon_size']); ?>">
+                    <input type="text" id="lfp-iconsz" name="icon_size" value="<?php echo yourls_esc_attr($appearance['icon_size']); ?>" placeholder="44px">
                 </div>
                 <div class="lfp-field">
                     <label for="lfp-photosz">About photo size</label>
-                    <input type="number" id="lfp-photosz" name="about_photo_size" min="40" max="400" value="<?php echo yourls_esc_attr($appearance['about_photo_size']); ?>">
+                    <input type="text" id="lfp-photosz" name="about_photo_size" value="<?php echo yourls_esc_attr($appearance['about_photo_size']); ?>" placeholder="120px">
                 </div>
             </div>
+            <small class="lfp-hint">Same units as the typography fields: <code>px</code>, <code>%</code>, <code>em</code>, <code>rem</code>, <code>vh</code>, <code>vw</code>, plus <code>clamp()</code>, <code>calc()</code>, <code>min()</code>, <code>max()</code>. Bare numbers become <code>px</code>.</small>
         </fieldset>
 
         <fieldset class="lfp-fieldset">
@@ -355,8 +404,13 @@ $bootstrap = [
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <div class="lfp-font-preview" id="lfp-font-preview" aria-live="polite">
+                        <div class="lfp-font-preview-row" style="font-size:1.6rem;font-weight:700">The quick brown fox</div>
+                        <div class="lfp-font-preview-row" style="font-size:1rem">jumps over the lazy dog. 0123456789</div>
+                        <div class="lfp-font-preview-row" style="font-size:0.85rem;opacity:0.7">ABCDEFGHIJKLMNOPQRSTUVWXYZ &mdash; abcdefghijklmnopqrstuvwxyz</div>
+                    </div>
                 </div>
-                <small>Loaded from <code>fonts.googleapis.com</code> when the page is shown.</small>
+                <small>Loaded from <code>fonts.googleapis.com</code> when the page is shown. Live preview updates the moment you select a font.</small>
             </div>
 
             <div class="lfp-field" data-lfp-fontblock="custom">
@@ -406,14 +460,14 @@ $bootstrap = [
         </fieldset>
     </section>
 
-    <!-- ========================= INSTAGRAM TAB =========================== -->
+    <!-- ========================= IMAGE GRID TAB ========================== -->
     <section class="lfp-pane" data-pane="instagram">
-        <p>Mirror your Instagram feed grid: a 3-column gallery of clickable images. Use this for "link in bio" posts — each tile points to the URL or YOURLS shortlink that the matching Instagram post says to visit.</p>
+        <p>A 3-column gallery of clickable images — perfect for mirroring your Instagram, Pinterest, TikTok, or any social feed where you say "link in bio". Each tile points to the URL or YOURLS shortlink that the matching post promotes.</p>
 
         <div class="lfp-row">
             <label class="lfp-checkbox">
                 <input type="checkbox" name="instagram_enabled" value="1" <?php echo !empty($instagram['enabled']) ? 'checked' : ''; ?>>
-                <span>Show Instagram feed grid above the link list</span>
+                <span>Show the image grid above the link list</span>
             </label>
         </div>
 
@@ -555,7 +609,7 @@ $bootstrap = [
 <dialog id="lfp-ig-dialog">
     <form method="dialog" id="lfp-ig-form">
         <header class="lfp-picker-head">
-            <h3 id="lfp-ig-dialog-title">Add Instagram tile</h3>
+            <h3 id="lfp-ig-dialog-title">Add image tile</h3>
             <button type="submit" class="lfp-icon-btn" value="cancel" aria-label="Close">&times;</button>
         </header>
 
