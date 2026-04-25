@@ -368,15 +368,26 @@
 
     document.getElementById('lfp-add-link').addEventListener('click', () => {
         openPicker((keyword) => {
-            items.push({
+            const newItem = {
                 id: uid('link'),
                 type: 'link',
                 keyword,
                 title: '',
                 description: '',
                 image: '',
-            });
+            };
+            items.push(newItem);
             renderTree();
+            // Expand the newly added item's editor right away — saves the
+            // user a click and makes it obvious where to type the custom
+            // title / description / image.
+            const node = tree.querySelector(`[data-id="${newItem.id}"]`);
+            if (node) {
+                const body = node.querySelector('.lfp-item-body');
+                if (body) body.hidden = false;
+                node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                node.querySelector('[data-lfp-title]')?.focus();
+            }
         });
     });
 
