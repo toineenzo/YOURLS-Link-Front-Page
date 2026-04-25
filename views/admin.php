@@ -155,43 +155,6 @@ $bootstrap = [
         </div>
 
         <fieldset class="lfp-fieldset">
-            <legend>Footer</legend>
-
-            <div class="lfp-row">
-                <label class="lfp-checkbox">
-                    <input type="checkbox" name="show_login_link" value="1" <?php echo !empty($general['show_login_link']) ? 'checked' : ''; ?>>
-                    <span>Show login link (links to <code><?php echo yourls_esc_html(trim((string) $general['login_path'], '/')); ?></code>)</span>
-                </label>
-            </div>
-
-            <div class="lfp-row">
-                <label class="lfp-checkbox">
-                    <input type="checkbox" name="show_powered_by" value="1" <?php echo !empty($general['show_powered_by']) ? 'checked' : ''; ?>>
-                    <span>Show "Powered by" attribution</span>
-                </label>
-            </div>
-
-            <div class="lfp-grid">
-                <div class="lfp-field">
-                    <label for="lfp-pby-text">Attribution text</label>
-                    <input type="text" id="lfp-pby-text" name="powered_by_text" value="<?php echo yourls_esc_attr($general['powered_by_text']); ?>" placeholder="YOURLS">
-                    <small>Shown after "Powered by". Leave empty to default to <em>YOURLS</em>.</small>
-                </div>
-                <div class="lfp-field">
-                    <label for="lfp-pby-url">Attribution URL</label>
-                    <input type="url" id="lfp-pby-url" name="powered_by_url" value="<?php echo yourls_esc_attr($general['powered_by_url']); ?>" placeholder="https://yourls.org">
-                    <small>Where the attribution links to. Leave empty for <em>https://yourls.org</em>.</small>
-                </div>
-            </div>
-
-            <div class="lfp-field">
-                <label for="lfp-footer-html">Custom footer HTML</label>
-                <textarea id="lfp-footer-html" name="footer_custom_html" rows="4" class="lfp-mono" spellcheck="false" placeholder="&lt;p&gt;&copy; 2026 Toine Rademacher&lt;/p&gt;"><?php echo yourls_esc_html($general['footer_custom_html']); ?></textarea>
-                <small>Appended to the footer on the public page. <strong>HTML is rendered as-is</strong>; no sanitization, so don't paste anything you don't trust.</small>
-            </div>
-        </fieldset>
-
-        <fieldset class="lfp-fieldset">
             <legend>About me</legend>
 
             <div class="lfp-row">
@@ -226,6 +189,43 @@ $bootstrap = [
                 </div>
                 <div id="lfp-socials" class="lfp-socials" aria-live="polite"></div>
                 <input type="hidden" name="about_socials_json" id="lfp-socials-json" value="">
+            </div>
+        </fieldset>
+
+        <fieldset class="lfp-fieldset">
+            <legend>Footer</legend>
+
+            <div class="lfp-row">
+                <label class="lfp-checkbox">
+                    <input type="checkbox" name="show_login_link" value="1" <?php echo !empty($general['show_login_link']) ? 'checked' : ''; ?>>
+                    <span>Show login link (links to <code><?php echo yourls_esc_html(trim((string) $general['login_path'], '/')); ?></code>)</span>
+                </label>
+            </div>
+
+            <div class="lfp-row">
+                <label class="lfp-checkbox">
+                    <input type="checkbox" name="show_powered_by" value="1" <?php echo !empty($general['show_powered_by']) ? 'checked' : ''; ?>>
+                    <span>Show "Powered by" attribution</span>
+                </label>
+            </div>
+
+            <div class="lfp-grid">
+                <div class="lfp-field">
+                    <label for="lfp-pby-text">Attribution text</label>
+                    <input type="text" id="lfp-pby-text" name="powered_by_text" value="<?php echo yourls_esc_attr($general['powered_by_text']); ?>" placeholder="YOURLS">
+                    <small>Shown after "Powered by". Leave empty to default to <em>YOURLS</em>.</small>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-pby-url">Attribution URL</label>
+                    <input type="url" id="lfp-pby-url" name="powered_by_url" value="<?php echo yourls_esc_attr($general['powered_by_url']); ?>" placeholder="https://yourls.org">
+                    <small>Where the attribution links to. Leave empty for <em>https://yourls.org</em>.</small>
+                </div>
+            </div>
+
+            <div class="lfp-field">
+                <label for="lfp-footer-html">Custom footer HTML</label>
+                <textarea id="lfp-footer-html" name="footer_custom_html" rows="4" class="lfp-mono" spellcheck="false" placeholder="&lt;p&gt;&copy; 2026 Toine Rademacher&lt;/p&gt;"><?php echo yourls_esc_html($general['footer_custom_html']); ?></textarea>
+                <small>Appended to the footer on the public page. <strong>HTML is rendered as-is</strong>; no sanitization, so don't paste anything you don't trust.</small>
             </div>
         </fieldset>
     </section>

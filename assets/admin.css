@@ -211,7 +211,18 @@
     background: var(--lfp-a-bg) !important;
     color: var(--lfp-a-fg) !important;
     width: 100% !important;
+    height: auto !important;
     margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Restore the native dropdown chevron — Sleeky-backend removes it via
+   `appearance: none` and a background image, which our background
+   override wipes out, leaving an arrow-less mystery box. */
+.lfp-field select,
+#lfp-form select {
+    appearance: auto !important;
+    -webkit-appearance: auto !important;
 }
 
 .lfp-field input[type="color"] {
@@ -514,14 +525,25 @@
 
 .lfp-social-row {
     display: grid;
-    grid-template-columns: auto auto minmax(140px, 180px) auto minmax(180px, 1fr) auto;
+    grid-template-columns:
+        24px                  /* handle */
+        28px                  /* icon */
+        minmax(0, 1.4fr)      /* platform select */
+        minmax(0, 1fr)        /* source select */
+        minmax(0, 2fr)        /* url / keyword */
+        auto;                 /* remove btn */
     gap: 8px;
     align-items: center;
     background: var(--lfp-a-bg);
     border: 1px solid var(--lfp-a-border);
     border-radius: 6px;
-    padding: 6px 8px;
+    padding: 8px 10px;
     transition: opacity 160ms ease;
+    min-width: 0;
+}
+
+.lfp-social-row > * {
+    min-width: 0;
 }
 
 .lfp-social-row.is-dragging {
@@ -548,14 +570,25 @@
     height: 22px;
 }
 
+/* Override Sleeky-backend's `select { width: 150px; padding: 5px 35px 5px 10px }`.
+   We need width:100% so the select fills its grid cell, plus appearance:auto
+   to restore the native chevron (Sleeky removes it via `appearance: none`
+   and a background image, but our background override wipes that image). */
 .lfp-social-platform,
-.lfp-social-source {
+.lfp-social-source,
+#lfp-form .lfp-social-row select {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    appearance: auto !important;
+    -webkit-appearance: auto !important;
     padding: 6px 8px !important;
     border: 1px solid var(--lfp-a-border) !important;
     border-radius: 4px !important;
     background: var(--lfp-a-bg) !important;
     color: var(--lfp-a-fg) !important;
     font: inherit !important;
+    height: auto !important;
 }
 
 .lfp-social-keyword-wrap {
