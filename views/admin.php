@@ -42,11 +42,11 @@ $bootstrap = [
     <input type="hidden" name="lfp_action" value="save">
     <input type="hidden" name="items_json" id="lfp-items-json" value="">
 
-    <nav class="lfp-tabs" role="tablist">
+    <div class="lfp-tabs" role="tablist">
         <button type="button" class="lfp-tab is-active" data-tab="links" role="tab">Links</button>
         <button type="button" class="lfp-tab" data-tab="general" role="tab">General</button>
         <button type="button" class="lfp-tab" data-tab="appearance" role="tab">Appearance</button>
-    </nav>
+    </div>
 
     <!-- ============================ LINKS TAB ============================ -->
     <section class="lfp-pane is-active" data-pane="links">

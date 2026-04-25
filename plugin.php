@@ -103,10 +103,27 @@ function lfp_get_items(): array
 }
 
 /* ---------------------------------------------------------------------------
- * Routing: intercept "/" and "/<login_path>" before YOURLS routes them
+ * Routing: intercept "/" and "/<login_path>" before YOURLS routes them.
+ *
+ * We hook in three places so the plugin works regardless of which entry
+ * point YOURLS uses (root index.php served directly by the web server,
+ * yourls-loader.php via .htaccess rewrite, or third-party themes such as
+ * Sleeky frontend that also bootstrap YOURLS):
+ *
+ *   - plugins_loaded   - fires from includes/load-yourls.php on every entry
+ *                        point. Catches direct index.php hits.
+ *   - pre_load_template- fires inside yourls-loader.php right after the
+ *                        request is resolved, before keyword matching.
+ *                        This is the reliable interception point when
+ *                        Apache rewrites everything to yourls-loader.php.
+ *   - loader_failed    - final fallback before YOURLS does its 302 to
+ *                        YOURLS_SITE, which would otherwise cause an
+ *                        infinite redirect loop on the homepage.
  * ------------------------------------------------------------------------ */
 
 yourls_add_action('plugins_loaded', 'lfp_handle_routing');
+yourls_add_action('pre_load_template', 'lfp_handle_pre_load_template');
+yourls_add_action('loader_failed', 'lfp_handle_loader_failed');
 
 function lfp_handle_routing(): void
 {
@@ -124,9 +141,7 @@ function lfp_handle_routing(): void
         return;
     }
 
-    $request = (string) yourls_get_request();
-    $request = (string) strtok($request, '?');
-    $request = trim($request, '/');
+    $request = lfp_resolve_request();
 
     $login_path = trim((string) ($general['login_path'] ?? 'login'), '/');
     if ($login_path !== '' && $request === $login_path) {
@@ -134,12 +149,10 @@ function lfp_handle_routing(): void
         exit;
     }
 
-    $is_root_request = ($request === '' || $request === 'index.php');
-    if (!$is_root_request) {
+    if (!lfp_is_root_request($request)) {
         return;
     }
 
-    // Make sure we are really on the public root, not in /admin/
     if (str_contains((string) ($_SERVER['SCRIPT_NAME'] ?? ''), '/admin/')) {
         return;
     }
@@ -148,10 +161,80 @@ function lfp_handle_routing(): void
     exit;
 }
 
+/**
+ * Fires from yourls-loader.php after the request is resolved. If we were not
+ * already caught by plugins_loaded (e.g. the request was actually empty and
+ * the host serves yourls-loader.php for "/"), render the linktree here.
+ */
+function lfp_handle_pre_load_template(string $request = ''): void
+{
+    $general = lfp_get_general();
+    if (empty($general['enabled'])) {
+        return;
+    }
+
+    $resolved = trim((string) strtok((string) $request, '?'), '/');
+    if (!lfp_is_root_request($resolved)) {
+        return;
+    }
+
+    lfp_render_frontend();
+    exit;
+}
+
+/**
+ * Final safety net: if YOURLS is about to redirect a missing keyword and the
+ * request is actually the empty root, render the linktree instead of looping.
+ */
+function lfp_handle_loader_failed(string $request = ''): void
+{
+    $general = lfp_get_general();
+    if (empty($general['enabled'])) {
+        return;
+    }
+
+    $resolved = trim((string) strtok((string) $request, '?'), '/');
+    if (!lfp_is_root_request($resolved)) {
+        return;
+    }
+
+    lfp_render_frontend();
+    exit;
+}
+
+/**
+ * Resolve the current request path relative to YOURLS_SITE. Tries the YOURLS
+ * helper first, then falls back to a direct REQUEST_URI parse so we still
+ * work when yourls_get_request() has been cached with a stale value.
+ */
+function lfp_resolve_request(): string
+{
+    $request = '';
+    if (function_exists('yourls_get_request')) {
+        $request = (string) yourls_get_request();
+    }
+    if ($request === '') {
+        $uri  = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+        $base = parse_url(YOURLS_SITE, PHP_URL_PATH) ?: '';
+        if ($base !== '' && str_starts_with($uri, $base)) {
+            $uri = substr($uri, strlen($base));
+        }
+        $request = $uri;
+    }
+    $request = (string) strtok($request, '?');
+    return trim($request, '/');
+}
+
+function lfp_is_root_request(string $request): bool
+{
+    return $request === '' || $request === 'index.php';
+}
+
 function lfp_render_frontend(): void
 {
     if (!headers_sent()) {
         header('Content-Type: text/html; charset=utf-8');
+        header('X-LFP-Rendered: 1');
     }
     require LFP_DIR . '/views/frontend.php';
 }

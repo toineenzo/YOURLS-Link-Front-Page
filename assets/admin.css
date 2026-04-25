@@ -1,5 +1,46 @@
 /* Link Front Page — admin stylesheet */
 
+/*
+ * Defensive resets to neutralise theme rules that target generic selectors
+ * (Sleeky and other YOURLS admin themes style `nav`, `aside`, `header`,
+ * `footer`, `main`, etc. globally with position: fixed). Everything in our
+ * settings page must stay in normal flow.
+ */
+#lfp-form,
+#lfp-form * {
+    box-sizing: border-box;
+}
+
+#lfp-form > header,
+#lfp-form > footer,
+#lfp-form main,
+#lfp-form aside,
+#lfp-form nav,
+#lfp-form .lfp-tabs {
+    position: static;
+    background: transparent;
+    width: auto;
+    height: auto;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
+    float: none;
+}
+
+#lfp-form .lfp-pane {
+    position: static;
+    width: auto;
+    float: none;
+}
+
+/* Picker dialog should also escape any global theme styling */
+#lfp-picker,
+#lfp-picker * {
+    box-sizing: border-box;
+}
+
 #lfp-form {
     --lfp-a-bg: #ffffff;
     --lfp-a-fg: #1f2937;
@@ -12,6 +53,7 @@
 
     margin-top: 16px;
     color: var(--lfp-a-fg);
+    position: relative;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -108,15 +150,20 @@
 .lfp-field input[type="text"],
 .lfp-field input[type="url"],
 .lfp-field input[type="number"],
+.lfp-field input[type="search"],
 .lfp-field textarea,
-.lfp-field select {
-    padding: 8px 10px;
-    border: 1px solid var(--lfp-a-border);
-    border-radius: 6px;
-    font: inherit;
-    background: var(--lfp-a-bg);
-    color: var(--lfp-a-fg);
-    width: 100%;
+.lfp-field select,
+.lfp-image-input input[type="url"],
+.lfp-prefix-input input,
+#lfp-picker input[type="search"] {
+    padding: 8px 10px !important;
+    border: 1px solid var(--lfp-a-border) !important;
+    border-radius: 6px !important;
+    font: inherit !important;
+    background: var(--lfp-a-bg) !important;
+    color: var(--lfp-a-fg) !important;
+    width: 100% !important;
+    margin: 0 !important;
 }
 
 .lfp-field input[type="color"] {
