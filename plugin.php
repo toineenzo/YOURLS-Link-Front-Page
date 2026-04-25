@@ -350,6 +350,20 @@ yourls_add_filter('table_add_row_action_array', 'lfp_table_row_action', 10, 2);
 yourls_add_action('plugins_loaded',             'lfp_handle_admin_quickadd');
 yourls_add_action('html_head',                  'lfp_admin_quickadd_styles');
 
+/**
+ * Sign a keyword for the quick-add row action. We can't use yourls_*nonce()
+ * here because the YOURLS_USER constant is set by yourls_maybe_require_auth()
+ * which runs *after* our plugins_loaded handler, so the salt would differ
+ * between create-time (table render, user is set) and verify-time (early
+ * hook, user not set). Instead, we sign with the site-wide cookie key —
+ * available everywhere YOURLS runs, secret to operators.
+ */
+function lfp_quickadd_sign(string $keyword): string
+{
+    $secret = defined('YOURLS_COOKIEKEY') ? YOURLS_COOKIEKEY : 'lfp-fallback';
+    return substr(hash_hmac('sha256', 'lfp_quickadd|' . $keyword, (string) $secret), 0, 16);
+}
+
 function lfp_table_row_action(array $actions, string $keyword): array
 {
     if (!yourls_keyword_is_taken($keyword)) {
@@ -369,10 +383,10 @@ function lfp_table_row_action(array $actions, string $keyword): array
         return $actions;
     }
 
-    $nonce  = yourls_create_nonce('lfp_quickadd', defined('YOURLS_USER') ? YOURLS_USER : '');
+    $sig    = lfp_quickadd_sign($keyword);
     $href   = yourls_admin_url('index.php')
             . '?lfp_quickadd=' . urlencode($keyword)
-            . '&lfp_nonce='    . urlencode($nonce);
+            . '&lfp_nonce='    . urlencode($sig);
     $anchor = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
     $actions['lfp_add'] = [
@@ -398,11 +412,19 @@ function lfp_handle_admin_quickadd(): void
         return;
     }
 
+    // Bail anonymous visitors — only authenticated admins should mutate the
+    // homepage list. yourls_is_valid_user() reads the YOURLS auth cookie and
+    // returns true / false (or an error string); cast to bool keeps us safe.
+    if (function_exists('yourls_is_valid_user') && yourls_is_valid_user() !== true) {
+        yourls_redirect(yourls_admin_url(), 302);
+        exit;
+    }
+
     $keyword = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['lfp_quickadd']);
-    $nonce   = (string) ($_GET['lfp_nonce'] ?? '');
+    $sig     = (string) ($_GET['lfp_nonce'] ?? '');
 
     if (!is_string($keyword) || $keyword === ''
-        || !yourls_verify_nonce('lfp_quickadd', $nonce, defined('YOURLS_USER') ? YOURLS_USER : '')
+        || !hash_equals(lfp_quickadd_sign($keyword), $sig)
         || !yourls_keyword_is_taken($keyword)
     ) {
         yourls_redirect(yourls_admin_url('index.php'), 302);
