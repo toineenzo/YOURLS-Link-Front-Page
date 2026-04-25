@@ -124,8 +124,9 @@ function lfp_default_appearance(): array
 function lfp_default_instagram(): array
 {
     return [
-        'enabled' => false,
-        'items'   => [],
+        'enabled'       => false,
+        'visible_count' => 3,
+        'items'         => [],
     ];
 }
 
@@ -716,9 +717,11 @@ function lfp_save_settings(): never
     if (!is_array($insta_raw)) {
         $insta_raw = [];
     }
+    $visible = max(1, min(60, (int) ($_POST['instagram_visible_count'] ?? 3)));
     $instagram = [
-        'enabled' => isset($_POST['instagram_enabled']),
-        'items'   => lfp_sanitize_instagram($insta_raw, $uploaded),
+        'enabled'       => isset($_POST['instagram_enabled']),
+        'visible_count' => $visible,
+        'items'         => lfp_sanitize_instagram($insta_raw, $uploaded),
     ];
     yourls_update_option(LFP_OPT_INSTAGRAM, $instagram);
 

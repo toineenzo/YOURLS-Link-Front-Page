@@ -483,6 +483,14 @@ $bootstrap = [
             </label>
         </div>
 
+        <div class="lfp-grid">
+            <div class="lfp-field">
+                <label for="lfp-ig-visible">Tiles visible by default</label>
+                <input type="number" id="lfp-ig-visible" name="instagram_visible_count" min="1" max="60" value="<?php echo yourls_esc_attr((string) ($instagram['visible_count'] ?? 3)); ?>">
+                <small>If you have more tiles than this, a "Show more" button appears on the public page so visitors can reveal the rest. Default 3 (one full row in the 3-column grid).</small>
+            </div>
+        </div>
+
         <div class="lfp-toolbar lfp-toolbar-tight">
             <button type="button" class="lfp-btn" id="lfp-ig-bulk">&#x2B73; Bulk upload images</button>
             <input type="file" id="lfp-ig-bulk-input" accept="image/*" multiple hidden>

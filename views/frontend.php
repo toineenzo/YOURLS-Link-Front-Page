@@ -204,21 +204,33 @@ HTML;
             $r = lfp_resolve_instagram($entry);
             if ($r !== null) $resolved_ig[] = $r;
         }
+        $ig_visible = max(1, (int) ($instagram['visible_count'] ?? 3));
+        $ig_total   = count($resolved_ig);
+        $ig_overflow = $ig_total > $ig_visible;
     ?>
         <?php if (!empty($resolved_ig)): ?>
-        <section class="lfp-ig" aria-label="Image gallery">
-            <?php foreach ($resolved_ig as $tile): ?>
-                <a class="lfp-ig-tile lfp-ig-show-<?php echo yourls_esc_attr($tile['show_mode']); ?>"
-                   href="<?php echo yourls_esc_url($tile['url']); ?>"
-                   rel="noopener"
-                   <?php if ($tile['title'] !== ''): ?>aria-label="<?php echo yourls_esc_attr($tile['title']); ?>"<?php endif; ?>>
-                    <img src="<?php echo yourls_esc_url($tile['image']); ?>" alt="" loading="lazy">
-                    <?php if ($tile['title'] !== '' && $tile['show_mode'] !== 'never'): ?>
-                        <span class="lfp-ig-overlay"><?php echo yourls_esc_html($tile['title']); ?></span>
-                    <?php endif; ?>
-                </a>
-            <?php endforeach; ?>
-        </section>
+        <div class="lfp-ig-wrap">
+            <section class="lfp-ig<?php echo $ig_overflow ? ' lfp-ig--collapsed' : ''; ?>" aria-label="Image gallery">
+                <?php foreach ($resolved_ig as $i => $tile):
+                    $hidden = $ig_overflow && $i >= $ig_visible;
+                ?>
+                    <a class="lfp-ig-tile lfp-ig-show-<?php echo yourls_esc_attr($tile['show_mode']); ?><?php echo $hidden ? ' is-hidden' : ''; ?>"
+                       href="<?php echo yourls_esc_url($tile['url']); ?>"
+                       rel="noopener"
+                       <?php if ($tile['title'] !== ''): ?>aria-label="<?php echo yourls_esc_attr($tile['title']); ?>"<?php endif; ?>>
+                        <img src="<?php echo yourls_esc_url($tile['image']); ?>" alt="" loading="lazy">
+                        <?php if ($tile['title'] !== '' && $tile['show_mode'] !== 'never'): ?>
+                            <span class="lfp-ig-overlay"><?php echo yourls_esc_html($tile['title']); ?></span>
+                        <?php endif; ?>
+                    </a>
+                <?php endforeach; ?>
+            </section>
+            <?php if ($ig_overflow): ?>
+                <button type="button" class="lfp-ig-more" data-lfp-ig-more>
+                    Show more <span class="lfp-ig-more-count">(<?php echo (int) ($ig_total - $ig_visible); ?>)</span>
+                </button>
+            <?php endif; ?>
+        </div>
         <?php endif; ?>
     <?php endif; ?>
 
@@ -299,5 +311,17 @@ HTML;
         </footer>
     <?php endif; ?>
 </main>
+<?php if (!empty($instagram['enabled']) && !empty($instagram['items'])): ?>
+<script>
+    document.querySelector('[data-lfp-ig-more]')?.addEventListener('click', (e) => {
+        const btn = e.currentTarget;
+        const grid = btn.closest('.lfp-ig-wrap')?.querySelector('.lfp-ig');
+        if (!grid) return;
+        grid.classList.remove('lfp-ig--collapsed');
+        grid.querySelectorAll('.is-hidden').forEach((el) => el.classList.remove('is-hidden'));
+        btn.remove();
+    });
+</script>
+<?php endif; ?>
 </body>
 </html>
