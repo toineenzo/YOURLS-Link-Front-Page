@@ -3,7 +3,7 @@
 Plugin Name: Link Front Page
 Plugin URI: https://github.com/toineenzo/YOURLS-Link-Front-Page
 Description: Show selected shortlinks as a Linktree-style link list on the YOURLS homepage. Group links into category boxes, reorder by drag and drop, and customize each entry with an image, title and description.
-Version: 1.2.0
+Version: 2.0.0
 Author: Toine Rademacher (toineenzo)
 Author URI: https://toine.click
 */
@@ -14,7 +14,7 @@ if (!defined('YOURLS_ABSPATH')) {
     die();
 }
 
-const LFP_VERSION = '1.2.0';
+const LFP_VERSION = '2.0.0';
 const LFP_DIR = __DIR__;
 const LFP_OPT_ITEMS = 'lfp_items';
 const LFP_OPT_GENERAL = 'lfp_general';
