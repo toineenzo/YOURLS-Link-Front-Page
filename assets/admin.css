@@ -124,6 +124,15 @@
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
     font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lfp-tab svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
 }
 
 .lfp-tab:hover {
@@ -946,6 +955,32 @@
     margin-top: 24px;
     padding-top: 16px;
     border-top: 1px solid var(--lfp-a-border);
+}
+
+.lfp-pluginfoot {
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--lfp-a-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--lfp-a-muted);
+    font-size: 0.85rem;
+}
+
+.lfp-pluginfoot-name strong {
+    color: var(--lfp-a-fg);
+    font-weight: 600;
+}
+
+.lfp-pluginfoot-credit a {
+    color: var(--lfp-a-accent);
+    text-decoration: none;
+    border-bottom: 1px dotted color-mix(in srgb, var(--lfp-a-accent) 50%, transparent);
+}
+
+.lfp-pluginfoot-credit a:hover {
+    border-bottom-color: var(--lfp-a-accent);
 }
 
 @media (max-width: 720px) {

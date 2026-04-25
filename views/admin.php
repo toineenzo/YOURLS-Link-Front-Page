@@ -63,10 +63,38 @@ $bootstrap = [
     <input type="hidden" name="items_json" id="lfp-items-json" value="">
 
     <div class="lfp-tabs" role="tablist">
-        <button type="button" class="lfp-tab is-active" data-tab="links" role="tab">Links</button>
-        <button type="button" class="lfp-tab" data-tab="general" role="tab">General</button>
-        <button type="button" class="lfp-tab" data-tab="instagram" role="tab">Instagram</button>
-        <button type="button" class="lfp-tab" data-tab="appearance" role="tab">Appearance</button>
+        <button type="button" class="lfp-tab is-active" data-tab="links" role="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            <span>Links</span>
+        </button>
+        <button type="button" class="lfp-tab" data-tab="general" role="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span>General</span>
+        </button>
+        <button type="button" class="lfp-tab" data-tab="instagram" role="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+            <span>Instagram</span>
+        </button>
+        <button type="button" class="lfp-tab" data-tab="appearance" role="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/>
+                <circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/>
+                <circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/>
+                <circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"/>
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-10-10-10z"/>
+            </svg>
+            <span>Appearance</span>
+        </button>
     </div>
 
     <!-- ============================ LINKS TAB ============================ -->
@@ -154,6 +182,12 @@ $bootstrap = [
                     <input type="url" id="lfp-pby-url" name="powered_by_url" value="<?php echo yourls_esc_attr($general['powered_by_url']); ?>" placeholder="https://yourls.org">
                     <small>Where the attribution links to. Leave empty for <em>https://yourls.org</em>.</small>
                 </div>
+            </div>
+
+            <div class="lfp-field">
+                <label for="lfp-footer-html">Custom footer HTML</label>
+                <textarea id="lfp-footer-html" name="footer_custom_html" rows="4" class="lfp-mono" spellcheck="false" placeholder="&lt;p&gt;&copy; 2026 Toine Rademacher&lt;/p&gt;"><?php echo yourls_esc_html($general['footer_custom_html']); ?></textarea>
+                <small>Appended to the footer on the public page. <strong>HTML is rendered as-is</strong>; no sanitization, so don't paste anything you don't trust.</small>
             </div>
         </fieldset>
 
@@ -398,6 +432,12 @@ $bootstrap = [
         <button type="button" class="lfp-btn lfp-btn-danger" id="lfp-reset">Reset to defaults</button>
     </div>
 </form>
+
+<footer class="lfp-pluginfoot">
+    <span class="lfp-pluginfoot-name">Link Front Page <strong>v<?php echo yourls_esc_html(LFP_VERSION); ?></strong></span>
+    <span class="lfp-pluginfoot-sep" aria-hidden="true">&middot;</span>
+    <span class="lfp-pluginfoot-credit">Made by <a href="https://toine.click" target="_blank" rel="noopener">Toine Rademacher (toineenzo)</a></span>
+</footer>
 
 <!-- ====================== ITEM TEMPLATES & PICKER ===================== -->
 

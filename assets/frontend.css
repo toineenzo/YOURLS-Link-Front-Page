@@ -382,9 +382,24 @@ body {
     color: var(--lfp-muted);
     font-size: 0.85rem;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.lfp-footer-line {
+    display: flex;
     justify-content: center;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.lfp-footer-custom {
+    color: var(--lfp-muted);
+}
+
+.lfp-footer-custom a {
+    color: inherit;
 }
 
 .lfp-footer a {

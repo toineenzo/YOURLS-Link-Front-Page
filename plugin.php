@@ -61,10 +61,11 @@ function lfp_default_general(): array
         'login_path'        => 'login',
 
         // Footer (split out in 1.1: was a single show_footer toggle)
-        'show_login_link'   => true,
-        'show_powered_by'   => true,
-        'powered_by_text'   => '',
-        'powered_by_url'    => '',
+        'show_login_link'    => true,
+        'show_powered_by'    => true,
+        'powered_by_text'    => '',
+        'powered_by_url'     => '',
+        'footer_custom_html' => '',
 
         // About-me section
         'about_enabled'     => false,
@@ -372,10 +373,11 @@ function lfp_save_settings(): never
         'site_logo'         => $uploaded['site_logo'] ?? trim((string) ($_POST['site_logo'] ?? '')),
         'login_path'        => trim((string) ($_POST['login_path'] ?? 'login'), '/'),
 
-        'show_login_link'   => isset($_POST['show_login_link']),
-        'show_powered_by'   => isset($_POST['show_powered_by']),
-        'powered_by_text'   => trim((string) ($_POST['powered_by_text'] ?? '')),
-        'powered_by_url'    => trim((string) ($_POST['powered_by_url'] ?? '')),
+        'show_login_link'    => isset($_POST['show_login_link']),
+        'show_powered_by'    => isset($_POST['show_powered_by']),
+        'powered_by_text'    => trim((string) ($_POST['powered_by_text'] ?? '')),
+        'powered_by_url'     => trim((string) ($_POST['powered_by_url'] ?? '')),
+        'footer_custom_html' => (string) ($_POST['footer_custom_html'] ?? ''),
 
         'about_enabled'     => isset($_POST['about_enabled']),
         'about_image'       => $uploaded['about_image'] ?? trim((string) ($_POST['about_image'] ?? '')),

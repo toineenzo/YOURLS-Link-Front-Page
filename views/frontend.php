@@ -262,23 +262,31 @@ HTML;
     </section>
 
     <?php
-    $show_login = !empty($general['show_login_link']);
-    $show_pby   = !empty($general['show_powered_by']);
-    if ($show_login || $show_pby):
+    $show_login   = !empty($general['show_login_link']);
+    $show_pby     = !empty($general['show_powered_by']);
+    $footer_html  = trim((string) ($general['footer_custom_html'] ?? ''));
+    if ($show_login || $show_pby || $footer_html !== ''):
         $pby_text = trim((string) ($general['powered_by_text'] ?? ''));
         $pby_url  = trim((string) ($general['powered_by_url']  ?? ''));
         if ($pby_text === '') $pby_text = 'YOURLS';
         if ($pby_url  === '') $pby_url  = 'https://yourls.org';
     ?>
         <footer class="lfp-footer">
-            <?php if ($show_login): ?>
-                <a href="<?php echo yourls_esc_attr(YOURLS_SITE . '/' . trim((string) $general['login_path'], '/')); ?>" rel="nofollow">Login</a>
+            <?php if ($show_login || $show_pby): ?>
+                <div class="lfp-footer-line">
+                    <?php if ($show_login): ?>
+                        <a href="<?php echo yourls_esc_attr(YOURLS_SITE . '/' . trim((string) $general['login_path'], '/')); ?>" rel="nofollow">Login</a>
+                    <?php endif; ?>
+                    <?php if ($show_login && $show_pby): ?>
+                        <span aria-hidden="true">&middot;</span>
+                    <?php endif; ?>
+                    <?php if ($show_pby): ?>
+                        <span>Powered by <a href="<?php echo yourls_esc_url($pby_url); ?>" rel="noopener"><?php echo yourls_esc_html($pby_text); ?></a></span>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
-            <?php if ($show_login && $show_pby): ?>
-                <span aria-hidden="true">&middot;</span>
-            <?php endif; ?>
-            <?php if ($show_pby): ?>
-                <span>Powered by <a href="<?php echo yourls_esc_url($pby_url); ?>" rel="noopener"><?php echo yourls_esc_html($pby_text); ?></a></span>
+            <?php if ($footer_html !== ''): ?>
+                <div class="lfp-footer-custom"><?php echo $footer_html; ?></div>
             <?php endif; ?>
         </footer>
     <?php endif; ?>
