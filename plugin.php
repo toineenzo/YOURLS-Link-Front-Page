@@ -450,9 +450,57 @@ function lfp_admin_quickadd_styles(): void
     $dup   = isset($_GET['lfp_dup'])   ? preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $_GET['lfp_dup'])   : '';
 
     echo '<style>
-        a[id^="lfp_add_"] { color: inherit; }
-        a[id^="lfp_add_"] svg { vertical-align: middle; }
-        a[id^="lfp_add_"]:hover { color: #2563eb; }
+        /* Quick-add row action — match the standard YOURLS / Sleeky action
+           buttons (Stats, Share, Edit, Delete): same colored square with a
+           white icon. Works in both light and dark mode because the button
+           carries its own background and foreground. */
+        a.button_lfp_add {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 28px !important;
+            height: 28px !important;
+            margin: 0 2px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 4px !important;
+            background: #3b82f6 !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            vertical-align: middle !important;
+            box-shadow: none !important;
+            transition: background 120ms ease, transform 120ms ease;
+            box-sizing: border-box !important;
+            line-height: 1 !important;
+        }
+        a.button_lfp_add:hover {
+            background: #2563eb !important;
+            color: #ffffff !important;
+            transform: translateY(-1px);
+        }
+        a.button_lfp_add:active {
+            transform: translateY(0);
+        }
+        a.button_lfp_add svg {
+            width: 14px !important;
+            height: 14px !important;
+            display: block !important;
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            fill: none !important;
+            background: transparent !important;
+        }
+        /* Already-listed state — uses a distinct title attribute we set
+           server-side so we can style without injecting a custom class. */
+        a.button_lfp_add[title^="Already"] {
+            background: #10b981 !important;
+            cursor: default !important;
+        }
+        a.button_lfp_add[title^="Already"]:hover {
+            background: #10b981 !important;
+            transform: none;
+        }
+
         .lfp-quickadd-flash {
             position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
             background: #1e293b; color: #f1f5f9; padding: 10px 18px;
