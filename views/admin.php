@@ -42,8 +42,16 @@ $bootstrap = [
 ?>
 <link rel="stylesheet" href="<?php echo yourls_esc_attr(lfp_plugin_url('assets/admin.css' . $asset_v)); ?>">
 
-<h2>Link Front Page</h2>
-<p>Show selected shortlinks as a Linktree-style list on your YOURLS homepage. Drag &amp; drop to reorder, group links into category boxes, and customize each entry with an image, title and description.</p>
+<div class="lfp-pagehead">
+    <div>
+        <h2>Link Front Page</h2>
+        <p>Show selected shortlinks as a Linktree-style list on your YOURLS homepage. Drag &amp; drop to reorder, group links into category boxes, and customize each entry with an image, title and description.</p>
+    </div>
+    <a class="lfp-btn lfp-btn-ghost" href="<?php echo yourls_esc_attr(YOURLS_SITE . '/'); ?>" target="_blank" rel="noopener">
+        View linktree
+        <span aria-hidden="true">&nearr;</span>
+    </a>
+</div>
 
 <?php if ($notice !== ''): ?>
     <div class="lfp-notice"><?php echo yourls_esc_html($notice); ?></div>
@@ -510,45 +518,47 @@ $bootstrap = [
             <h3 id="lfp-ig-dialog-title">Add Instagram tile</h3>
             <button type="submit" class="lfp-icon-btn" value="cancel" aria-label="Close">&times;</button>
         </header>
+
         <div class="lfp-ig-form">
-            <div class="lfp-field">
-                <label>Image</label>
-                <div class="lfp-image-input">
+            <div class="lfp-ig-image-block">
+                <div class="lfp-ig-preview" id="lfp-ig-preview" aria-hidden="true"></div>
+                <div class="lfp-ig-image-fields">
+                    <label class="lfp-ig-label">Image <span class="lfp-ig-required">*</span></label>
                     <input type="url" id="lfp-ig-image-url" placeholder="https://example.com/photo.jpg">
                     <input type="file" id="lfp-ig-image-file" accept="image/*">
-                </div>
-                <small>Required. URL or upload — the picture shown in the grid.</small>
-            </div>
-
-            <div class="lfp-grid">
-                <div class="lfp-field">
-                    <label>Link source</label>
-                    <select id="lfp-ig-source">
-                        <option value="url">URL</option>
-                        <option value="keyword">YOURLS keyword</option>
-                    </select>
-                </div>
-                <div class="lfp-field" data-lfp-ig-block="url">
-                    <label>URL</label>
-                    <input type="url" id="lfp-ig-url" placeholder="https://...">
-                </div>
-                <div class="lfp-field" data-lfp-ig-block="keyword" hidden>
-                    <label>YOURLS shortlink</label>
-                    <div class="lfp-prefix-input">
-                        <span><?php echo yourls_esc_html(trim(YOURLS_SITE, '/')); ?>/</span>
-                        <code id="lfp-ig-keyword-display">—</code>
-                        <button type="button" class="lfp-btn lfp-btn-tight" id="lfp-ig-pick">Pick…</button>
-                    </div>
+                    <small>Paste a URL or upload a file — this is the picture shown in the grid.</small>
                 </div>
             </div>
 
             <div class="lfp-field">
-                <label>Optional title (overlay)</label>
+                <label for="lfp-ig-source">Link source</label>
+                <select id="lfp-ig-source">
+                    <option value="url">URL</option>
+                    <option value="keyword">YOURLS keyword</option>
+                </select>
+            </div>
+
+            <div class="lfp-field" data-lfp-ig-block="url">
+                <label for="lfp-ig-url">URL</label>
+                <input type="url" id="lfp-ig-url" placeholder="https://example.com/blog-post">
+            </div>
+
+            <div class="lfp-field" data-lfp-ig-block="keyword" hidden>
+                <label>YOURLS shortlink</label>
+                <div class="lfp-keyword-pick">
+                    <code id="lfp-ig-keyword-display">—</code>
+                    <button type="button" class="lfp-btn" id="lfp-ig-pick">Pick a shortlink…</button>
+                </div>
+                <small>Resolves through <code>yourls_link()</code> at click time so YOURLS click stats still increment.</small>
+            </div>
+
+            <div class="lfp-field">
+                <label for="lfp-ig-title-input">Optional title (overlay)</label>
                 <input type="text" id="lfp-ig-title-input" placeholder="e.g. New blog post">
             </div>
 
             <div class="lfp-field">
-                <label>Show title</label>
+                <label for="lfp-ig-show-mode">Show title</label>
                 <select id="lfp-ig-show-mode">
                     <option value="always">Always visible</option>
                     <option value="hover">Only on hover</option>
@@ -556,7 +566,8 @@ $bootstrap = [
                 </select>
             </div>
         </div>
-        <footer class="lfp-picker-foot lfp-ig-foot">
+
+        <footer class="lfp-ig-foot">
             <button type="button" class="lfp-btn" id="lfp-ig-cancel">Cancel</button>
             <button type="button" class="lfp-btn lfp-btn-primary" id="lfp-ig-save">Save tile</button>
         </footer>

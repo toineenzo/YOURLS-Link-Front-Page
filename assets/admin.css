@@ -74,6 +74,37 @@
     border-radius: 4px;
 }
 
+.lfp-pagehead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.lfp-pagehead h2 {
+    margin: 0 0 6px;
+}
+
+.lfp-pagehead p {
+    margin: 0;
+    max-width: 70ch;
+}
+
+.lfp-btn-ghost {
+    flex: 0 0 auto;
+    align-self: center;
+    text-decoration: none;
+    color: var(--lfp-a-accent);
+    border-color: var(--lfp-a-accent);
+    background: color-mix(in srgb, var(--lfp-a-accent) 8%, transparent);
+}
+
+.lfp-btn-ghost:hover {
+    background: color-mix(in srgb, var(--lfp-a-accent) 16%, transparent);
+}
+
 /* -------- Tabs */
 
 .lfp-tabs {
@@ -703,12 +734,14 @@
 
 #lfp-ig-dialog {
     width: min(560px, 92vw);
+    max-height: 90vh;
     border: 0;
     border-radius: 12px;
     padding: 0;
     background: var(--lfp-a-bg);
     color: var(--lfp-a-fg);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
 }
 
 #lfp-ig-dialog::backdrop {
@@ -716,11 +749,86 @@
     backdrop-filter: blur(4px);
 }
 
+#lfp-ig-form {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
 .lfp-ig-form {
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
+    overflow-y: auto;
+}
+
+/* Force [hidden] to actually hide form fields — author CSS like
+   .lfp-field { display: flex } otherwise wins over the UA stylesheet. */
+.lfp-ig-form [hidden],
+#lfp-form [hidden] {
+    display: none !important;
+}
+
+.lfp-ig-image-block {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 14px;
+    align-items: start;
+}
+
+.lfp-ig-preview {
+    width: 96px;
+    height: 96px;
+    border-radius: 8px;
+    background-color: var(--lfp-a-hover);
+    background-size: cover;
+    background-position: center;
+    border: 1px solid var(--lfp-a-border);
+}
+
+.lfp-ig-image-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.lfp-ig-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.lfp-ig-required {
+    color: var(--lfp-a-danger);
+}
+
+.lfp-ig-image-fields input[type="url"] {
+    text-overflow: ellipsis;
+}
+
+.lfp-ig-image-fields input[type="file"] {
+    font-size: 0.85rem;
+}
+
+.lfp-keyword-pick {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lfp-keyword-pick code {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    background: var(--lfp-a-hover);
+    border-radius: 6px;
+    color: var(--lfp-a-accent);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .lfp-ig-foot {

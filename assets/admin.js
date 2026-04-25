@@ -777,13 +777,31 @@
     };
     let igDialogState = {};
 
+    const igPreview = document.getElementById('lfp-ig-preview');
+
+    const updateIgPreview = () => {
+        if (!igPreview) return;
+        igPreview.style.backgroundImage = igDialogState.image ? cssUrl(igDialogState.image) : '';
+    };
+
+    const isDataUrl = (v) => typeof v === 'string' && v.startsWith('data:');
+
     function openIgDialog(id) {
         igEditId = id;
         igDialogState = id
             ? structuredClone(igItems.find((i) => i.id === id) || {})
             : { id: uid('ig'), source: 'url', url: '', keyword: '', image: '', title: '', show_mode: 'always' };
 
-        igFields.imageUrl.value = igDialogState.image || '';
+        // Show uploaded files as "(uploaded file)" in the URL field instead
+        // of a multi-line base64 data: URL. The preview tile shows the actual
+        // image, which is what the user cares about.
+        if (isDataUrl(igDialogState.image)) {
+            igFields.imageUrl.value = '';
+            igFields.imageUrl.placeholder = '(uploaded image shown above — paste a URL to replace)';
+        } else {
+            igFields.imageUrl.value = igDialogState.image || '';
+            igFields.imageUrl.placeholder = 'https://example.com/photo.jpg';
+        }
         igFields.imageFile.value = '';
         igFields.source.value = igDialogState.source || 'url';
         igFields.url.value = igDialogState.url || '';
@@ -791,6 +809,7 @@
         igFields.title.value = igDialogState.title || '';
         igFields.showMode.value = igDialogState.show_mode || 'always';
         updateIgSourceBlocks();
+        updateIgPreview();
         document.getElementById('lfp-ig-dialog-title').textContent = id ? 'Edit Instagram tile' : 'Add Instagram tile';
 
         if (typeof igDialog.showModal === 'function') igDialog.showModal();
@@ -810,18 +829,18 @@
 
     igFields.imageUrl?.addEventListener('input', (e) => {
         igDialogState.image = e.target.value;
+        updateIgPreview();
     });
 
-    igFields.imageFile?.addEventListener('change', (e) => {
+    igFields.imageFile?.addEventListener('change', async (e) => {
         const f = e.target.files && e.target.files[0];
         if (!f) return;
-        // Read as data URL so the live grid preview works before form submit.
-        const reader = new FileReader();
-        reader.addEventListener('load', (ev) => {
-            igDialogState.image = String(ev.target.result);
-            igFields.imageUrl.value = igDialogState.image;
-        });
-        reader.readAsDataURL(f);
+        igDialogState.image = await readFileAsDataUrl(f);
+        // Don't dump the base64 blob into the URL input; the preview shows
+        // the picture instead.
+        igFields.imageUrl.value = '';
+        igFields.imageUrl.placeholder = '(uploaded image shown above — paste a URL to replace)';
+        updateIgPreview();
     });
 
     igFields.url?.addEventListener('input', (e) => {
