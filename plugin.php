@@ -3,7 +3,7 @@
 Plugin Name: Link Front Page
 Plugin URI: https://github.com/toineenzo/YOURLS-Link-Front-Page
 Description: Show selected shortlinks as a Linktree-style link list on the YOURLS homepage. Group links into category boxes, reorder by drag and drop, and customize each entry with an image, title and description.
-Version: 2.2.1
+Version: 2.3.0
 Author: Toine Rademacher (toineenzo)
 Author URI: https://toine.click
 */
@@ -14,7 +14,7 @@ if (!defined('YOURLS_ABSPATH')) {
     die();
 }
 
-const LFP_VERSION = '2.2.1';
+const LFP_VERSION = '2.3.0';
 const LFP_DIR = __DIR__;
 const LFP_OPT_ITEMS = 'lfp_items';
 const LFP_OPT_GENERAL = 'lfp_general';
@@ -72,6 +72,25 @@ function lfp_default_general(): array
         'about_image'       => '',
         'about_text'        => '',
         'about_socials'     => [],
+
+        // Optional contact card data (Personal + Business). Each tab keeps
+        // the same shape so the VCF generator can swap between them.
+        'about_personal' => [
+            'enabled' => false,
+            'name'    => '',
+            'phone'   => '',
+            'email'   => '',
+            'website' => '',
+            'address' => '',
+        ],
+        'about_business' => [
+            'enabled' => false,
+            'name'    => '',
+            'phone'   => '',
+            'email'   => '',
+            'website' => '',
+            'address' => '',
+        ],
     ];
 }
 
@@ -220,6 +239,53 @@ function lfp_get_google_fonts(): array
     return $fonts;
 }
 
+/**
+ * Parsedown lazy loader. Lets us run untrusted-by-author markdown through
+ * a real parser instead of regex hacks. The class itself escapes raw HTML
+ * by default; we deliberately allow inline HTML because the admin (the
+ * author) is trusted on this surface — same security posture as the
+ * Custom CSS / Custom footer HTML fields.
+ */
+function lfp_parsedown(): \Parsedown
+{
+    static $instance = null;
+    if ($instance === null) {
+        require_once LFP_DIR . '/includes/Parsedown.php';
+        $instance = new \Parsedown();
+        $instance->setMarkupEscaped(false);
+        $instance->setBreaksEnabled(true);
+        $instance->setSafeMode(false);
+    }
+    return $instance;
+}
+
+/**
+ * Render multi-line text that may contain Markdown and/or HTML. Used for
+ * descriptions, About-me text, image overlay titles, etc.
+ */
+function lfp_render_text(string $text): string
+{
+    $text = trim($text);
+    if ($text === '') {
+        return '';
+    }
+    return lfp_parsedown()->text($text);
+}
+
+/**
+ * Render a single-line piece of text — wraps the result in NO block tag,
+ * so this is safe to drop inside an existing <h1>, <span>, etc. Used for
+ * site title, tagline, link / category titles.
+ */
+function lfp_render_inline(string $text): string
+{
+    $text = trim($text);
+    if ($text === '') {
+        return '';
+    }
+    return lfp_parsedown()->line($text);
+}
+
 /* ---------------------------------------------------------------------------
  * Routing: intercept "/" and "/<login_path>" before YOURLS routes them.
  *
@@ -267,6 +333,13 @@ function lfp_handle_routing(): void
         exit;
     }
 
+    // /contact.vcf?type=personal|business — serves the matching contact card
+    // as a downloadable vCard 3.0.
+    if ($request === 'contact.vcf') {
+        lfp_serve_vcard($general);
+        exit;
+    }
+
     if (!lfp_is_root_request($request)) {
         return;
     }
@@ -277,6 +350,30 @@ function lfp_handle_routing(): void
 
     lfp_render_frontend();
     exit;
+}
+
+function lfp_serve_vcard(array $general): void
+{
+    $type    = ($_GET['type'] ?? 'personal') === 'business' ? 'business' : 'personal';
+    $contact = is_array($general['about_' . $type] ?? null) ? $general['about_' . $type] : [];
+    $org     = $type === 'business' ? trim((string) ($contact['name'] ?? '')) : null;
+    $vcard   = lfp_build_vcard($contact, $org);
+
+    if ($vcard === null) {
+        if (!headers_sent()) {
+            header('HTTP/1.1 404 Not Found');
+        }
+        echo 'Contact not configured.';
+        return;
+    }
+
+    $filename = ($contact['name'] !== '' ? preg_replace('/[^a-zA-Z0-9._-]/', '_', $contact['name']) : 'contact') . '.vcf';
+    if (!headers_sent()) {
+        header('Content-Type: text/vcard; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($vcard));
+    }
+    echo $vcard;
 }
 
 /**
@@ -663,8 +760,10 @@ function lfp_save_settings(): never
 
         'about_enabled'     => isset($_POST['about_enabled']),
         'about_image'       => $uploaded['about_image'] ?? trim((string) ($_POST['about_image'] ?? '')),
-        'about_text'        => trim((string) ($_POST['about_text'] ?? '')),
+        'about_text'        => (string) ($_POST['about_text'] ?? ''),
         'about_socials'     => lfp_sanitize_socials($socials_raw, $uploaded),
+        'about_personal'    => lfp_sanitize_contact('personal'),
+        'about_business'    => lfp_sanitize_contact('business'),
     ];
     yourls_update_option(LFP_OPT_GENERAL, $general);
 
@@ -806,6 +905,71 @@ function lfp_sanitize_id(string $id): string
 {
     $clean = preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
     return is_string($clean) ? $clean : '';
+}
+
+/**
+ * Pull a Personal/Business contact block out of $_POST. Field names are
+ * "about_<scope>_<field>", e.g. about_personal_phone.
+ */
+function lfp_sanitize_contact(string $scope): array
+{
+    $prefix = 'about_' . $scope . '_';
+    return [
+        'enabled' => isset($_POST[$prefix . 'enabled']),
+        'name'    => trim((string) ($_POST[$prefix . 'name']    ?? '')),
+        'phone'   => trim((string) ($_POST[$prefix . 'phone']   ?? '')),
+        'email'   => trim((string) ($_POST[$prefix . 'email']   ?? '')),
+        'website' => trim((string) ($_POST[$prefix . 'website'] ?? '')),
+        'address' => trim((string) ($_POST[$prefix . 'address'] ?? '')),
+    ];
+}
+
+/**
+ * Build a vCard 3.0 payload from a sanitized contact array. Returns null
+ * when the contact is empty / disabled.
+ */
+function lfp_build_vcard(array $contact, ?string $org_label = null): ?string
+{
+    $name    = trim((string) ($contact['name']    ?? ''));
+    $phone   = trim((string) ($contact['phone']   ?? ''));
+    $email   = trim((string) ($contact['email']   ?? ''));
+    $website = trim((string) ($contact['website'] ?? ''));
+    $address = trim((string) ($contact['address'] ?? ''));
+
+    if ($name === '' && $phone === '' && $email === '' && $website === '' && $address === '') {
+        return null;
+    }
+
+    $escape = static fn(string $v): string => str_replace(
+        ["\\", ',', ';', "\r\n", "\n"],
+        ['\\\\', '\\,', '\\;', '\\n', '\\n'],
+        $v,
+    );
+
+    $lines   = [];
+    $lines[] = 'BEGIN:VCARD';
+    $lines[] = 'VERSION:3.0';
+    if ($name !== '') {
+        $lines[] = 'FN:'  . $escape($name);
+        // Best-effort split: last word is family name, the rest given name.
+        $parts  = preg_split('/\s+/', $name) ?: [$name];
+        $family = count($parts) > 1 ? array_pop($parts) : '';
+        $given  = implode(' ', $parts);
+        $lines[] = 'N:' . $escape($family) . ';' . $escape($given) . ';;;';
+    }
+    if ($org_label !== null && $org_label !== '') {
+        $lines[] = 'ORG:' . $escape($org_label);
+    }
+    if ($phone   !== '') $lines[] = 'TEL;TYPE=' . ($org_label ? 'WORK' : 'CELL') . ',VOICE:' . $escape($phone);
+    if ($email   !== '') $lines[] = 'EMAIL;TYPE=' . ($org_label ? 'WORK' : 'HOME') . ',INTERNET:' . $escape($email);
+    if ($website !== '') $lines[] = 'URL:' . $escape($website);
+    if ($address !== '') {
+        // Single-line ADR: ;;<street>;;;;
+        $lines[] = 'ADR;TYPE=' . ($org_label ? 'WORK' : 'HOME') . ':;;' . $escape($address) . ';;;;';
+    }
+    $lines[] = 'END:VCARD';
+
+    return implode("\r\n", $lines) . "\r\n";
 }
 
 /**

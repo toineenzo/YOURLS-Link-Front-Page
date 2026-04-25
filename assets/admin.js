@@ -722,6 +722,17 @@
         });
     });
 
+    /* Inner tab strip for the Personal / Business contact card. */
+    document.querySelectorAll('.lfp-contact-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.contactTab;
+            const scope = btn.closest('.lfp-contact');
+            if (!scope) return;
+            scope.querySelectorAll('.lfp-contact-tab').forEach((t) => t.classList.toggle('is-active', t === btn));
+            scope.querySelectorAll('.lfp-contact-pane').forEach((p) => p.classList.toggle('is-active', p.dataset.contactPane === target));
+        });
+    });
+
     /* -------------------------------------------------- Reset */
 
     /* Per-tab reset buttons. Each button knows which scope it targets via
@@ -1029,7 +1040,7 @@
     function updateImgSourceBlocks() {
         const v = imgFields.source.value;
         document.querySelectorAll('[data-lfp-imgrid-block]').forEach((el) => {
-            el.hidden = el.dataset.lfpIgBlock !== v;
+            el.hidden = el.dataset.lfpImgridBlock !== v;
         });
     }
 

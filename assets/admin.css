@@ -1195,6 +1195,50 @@
     border-top: 1px dashed var(--lfp-border);
 }
 
+/* -------- Contact card tabs */
+
+.lfp-contact {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--lfp-border);
+}
+
+.lfp-contact-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--lfp-border);
+}
+
+.lfp-contact-tab {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 8px 12px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    color: var(--lfp-muted);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease;
+}
+
+.lfp-contact-tab:hover { color: var(--lfp-fg); }
+
+.lfp-contact-tab.is-active {
+    color: var(--lfp-accent);
+    border-bottom-color: var(--lfp-accent);
+}
+
+.lfp-contact-pane {
+    display: none;
+}
+
+.lfp-contact-pane.is-active {
+    display: block;
+}
+
 .lfp-pluginfoot {
     margin-top: 28px;
     padding-top: 16px;
@@ -1206,6 +1250,15 @@
     font-size: 0.85rem;
 }
 
+.lfp-pluginfoot-name a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted color-mix(in srgb, var(--lfp-fg) 30%, transparent);
+}
+.lfp-pluginfoot-name a:hover {
+    color: var(--lfp-accent);
+    border-bottom-color: var(--lfp-accent);
+}
 .lfp-pluginfoot-name strong {
     color: var(--lfp-fg);
     font-weight: 600;

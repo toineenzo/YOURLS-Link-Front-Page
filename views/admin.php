@@ -129,7 +129,7 @@ $bootstrap = [
             <div class="lfp-field">
                 <label for="lfp-site-title">Site title</label>
                 <input type="text" id="lfp-site-title" name="site_title" value="<?php echo yourls_esc_attr($general['site_title']); ?>" placeholder="My Links">
-                <small>Shown at the top of the page and in the browser tab.</small>
+                <small>Shown at the top of the page and in the browser tab. Inline Markdown / HTML supported (<code>**bold**</code>, <code>&lt;em&gt;…&lt;/em&gt;</code>).</small>
             </div>
             <div class="lfp-field">
                 <label for="lfp-login-path">Login path</label>
@@ -144,6 +144,7 @@ $bootstrap = [
         <div class="lfp-field">
             <label for="lfp-site-description">Tagline / description</label>
             <textarea id="lfp-site-description" name="site_description" rows="2" placeholder="A short subtitle below the page title."><?php echo yourls_esc_html($general['site_description']); ?></textarea>
+            <small>Markdown and HTML supported.</small>
         </div>
 
         <div class="lfp-field">
@@ -182,6 +183,7 @@ $bootstrap = [
                 <div class="lfp-field">
                     <label for="lfp-about-text">About text</label>
                     <textarea id="lfp-about-text" name="about_text" rows="4" placeholder="A short bio."><?php echo yourls_esc_html($general['about_text']); ?></textarea>
+                    <small>Markdown and HTML supported (<code>**bold**</code>, <code>[link](url)</code>, <code>&lt;br&gt;</code>, …).</small>
                 </div>
             </div>
 
@@ -193,6 +195,50 @@ $bootstrap = [
                 </div>
                 <div id="lfp-socials" class="lfp-socials" aria-live="polite"></div>
                 <input type="hidden" name="about_socials_json" id="lfp-socials-json" value="">
+            </div>
+
+            <div class="lfp-contact">
+                <div class="lfp-contact-tabs" role="tablist">
+                    <button type="button" class="lfp-contact-tab is-active" data-contact-tab="personal" role="tab">Personal</button>
+                    <button type="button" class="lfp-contact-tab" data-contact-tab="business" role="tab">Business</button>
+                </div>
+
+                <?php foreach (['personal' => 'Personal contact card', 'business' => 'Business contact card'] as $scope => $heading):
+                    $contact = is_array($general['about_' . $scope] ?? null) ? $general['about_' . $scope] : [];
+                ?>
+                <div class="lfp-contact-pane<?php echo $scope === 'personal' ? ' is-active' : ''; ?>" data-contact-pane="<?php echo $scope; ?>">
+                    <div class="lfp-row">
+                        <label class="lfp-checkbox">
+                            <input type="checkbox" name="about_<?php echo $scope; ?>_enabled" value="1" <?php echo !empty($contact['enabled']) ? 'checked' : ''; ?>>
+                            <span>Enable a "<?php echo $scope === 'personal' ? 'Save personal contact' : 'Save business contact'; ?>" download button on the public page</span>
+                        </label>
+                    </div>
+                    <div class="lfp-grid">
+                        <div class="lfp-field">
+                            <label>Name</label>
+                            <input type="text" name="about_<?php echo $scope; ?>_name" value="<?php echo yourls_esc_attr((string) ($contact['name'] ?? '')); ?>" placeholder="<?php echo $scope === 'business' ? 'Acme Inc.' : 'Toine Rademacher'; ?>">
+                        </div>
+                        <div class="lfp-field">
+                            <label>Phone</label>
+                            <input type="text" name="about_<?php echo $scope; ?>_phone" value="<?php echo yourls_esc_attr((string) ($contact['phone'] ?? '')); ?>" placeholder="+31 6 12 34 56 78">
+                        </div>
+                        <div class="lfp-field">
+                            <label>Email</label>
+                            <input type="email" name="about_<?php echo $scope; ?>_email" value="<?php echo yourls_esc_attr((string) ($contact['email'] ?? '')); ?>" placeholder="hello@example.com">
+                        </div>
+                        <div class="lfp-field">
+                            <label>Website</label>
+                            <input type="url" name="about_<?php echo $scope; ?>_website" value="<?php echo yourls_esc_attr((string) ($contact['website'] ?? '')); ?>" placeholder="https://example.com">
+                        </div>
+                    </div>
+                    <div class="lfp-field">
+                        <label>Address</label>
+                        <textarea name="about_<?php echo $scope; ?>_address" rows="2" placeholder="Street 1, City, Country"><?php echo yourls_esc_html((string) ($contact['address'] ?? '')); ?></textarea>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+
+                <small class="lfp-hint">Buttons render in the About me section on the public page. Clicking one downloads a vCard 3.0 (.vcf) file your visitor can import into any contact app. The Phone / Email / Website values can also be wired up as social-media buttons above using the matching platform.</small>
             </div>
         </fieldset>
 
@@ -517,7 +563,9 @@ $bootstrap = [
 </form>
 
 <footer class="lfp-pluginfoot">
-    <span class="lfp-pluginfoot-name">Link Front Page <strong>v<?php echo yourls_esc_html(LFP_VERSION); ?></strong></span>
+    <span class="lfp-pluginfoot-name">
+        <a href="https://github.com/toineenzo/YOURLS-Link-Front-Page" target="_blank" rel="noopener">Link Front Page <strong>v<?php echo yourls_esc_html(LFP_VERSION); ?></strong></a>
+    </span>
     <span class="lfp-pluginfoot-sep" aria-hidden="true">&middot;</span>
     <span class="lfp-pluginfoot-credit">Made by <a href="https://toine.click" target="_blank" rel="noopener">Toine Rademacher (toineenzo)</a></span>
 </footer>

@@ -128,6 +128,41 @@ body {
     gap: 10px;
 }
 
+.lfp-contact-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.lfp-contact-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--lfp-card);
+    color: var(--lfp-fg);
+    text-decoration: none;
+    border: 1px solid color-mix(in srgb, var(--lfp-fg) 10%, transparent);
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.lfp-contact-btn:hover,
+.lfp-contact-btn:focus-visible {
+    background: var(--lfp-card-hover);
+    border-color: var(--lfp-accent);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.lfp-contact-btn svg {
+    flex: 0 0 auto;
+}
+
 .lfp-social-btn {
     --lfp-social-color: var(--lfp-fg);
     display: inline-flex;

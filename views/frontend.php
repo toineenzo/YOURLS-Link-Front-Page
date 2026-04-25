@@ -18,9 +18,11 @@ $appearance = lfp_get_appearance();
 $items      = lfp_get_items();
 $image_grid = lfp_get_image_grid();
 
-$site_title = $general['site_title'] !== '' ? $general['site_title'] : (defined('YOURLS_SITE') ? parse_url(YOURLS_SITE, PHP_URL_HOST) : 'Links');
-$site_desc  = (string) $general['site_description'];
-$site_logo  = (string) $general['site_logo'];
+$site_title       = $general['site_title'] !== '' ? $general['site_title'] : (defined('YOURLS_SITE') ? parse_url(YOURLS_SITE, PHP_URL_HOST) : 'Links');
+$site_title_plain = trim(strip_tags(lfp_render_inline($site_title)));
+$site_desc        = (string) $general['site_description'];
+$site_desc_plain  = trim(strip_tags(lfp_render_text($site_desc)));
+$site_logo        = (string) $general['site_logo'];
 
 /* ------- Resolve font stack based on the chosen source */
 $font_source = (string) ($appearance['font_source'] ?? 'system');
@@ -98,8 +100,8 @@ $render_link = static function (array $link): string {
         return '';
     }
 
-    $title       = yourls_esc_html($resolved['title']);
-    $description = yourls_esc_html($resolved['description']);
+    $title       = lfp_render_inline($resolved['title']);
+    $description = lfp_render_text($resolved['description']);
     $image       = $resolved['image'];
     $url         = yourls_esc_url($resolved['short_url']);
 
@@ -108,7 +110,7 @@ $render_link = static function (array $link): string {
         $img_html = '<div class="lfp-link-image"><img src="' . yourls_esc_url($image) . '" alt="" loading="lazy"></div>';
     }
 
-    $desc_html = $description !== '' ? '<p class="lfp-link-desc">' . $description . '</p>' : '';
+    $desc_html = $description !== '' ? '<div class="lfp-link-desc">' . $description . '</div>' : '';
 
     return <<<HTML
 <a class="lfp-link" href="{$url}" rel="noopener">
@@ -128,13 +130,13 @@ HTML;
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="<?php echo yourls_esc_attr($appearance['background_color']); ?>">
-    <title><?php echo yourls_esc_html($site_title); ?></title>
-    <?php if ($site_desc !== ''): ?>
-    <meta name="description" content="<?php echo yourls_esc_attr($site_desc); ?>">
+    <title><?php echo yourls_esc_html($site_title_plain); ?></title>
+    <?php if ($site_desc_plain !== ''): ?>
+    <meta name="description" content="<?php echo yourls_esc_attr($site_desc_plain); ?>">
     <?php endif; ?>
-    <meta property="og:title" content="<?php echo yourls_esc_attr($site_title); ?>">
-    <?php if ($site_desc !== ''): ?>
-    <meta property="og:description" content="<?php echo yourls_esc_attr($site_desc); ?>">
+    <meta property="og:title" content="<?php echo yourls_esc_attr($site_title_plain); ?>">
+    <?php if ($site_desc_plain !== ''): ?>
+    <meta property="og:description" content="<?php echo yourls_esc_attr($site_desc_plain); ?>">
     <?php endif; ?>
     <?php if ($site_logo !== ''): ?>
     <meta property="og:image" content="<?php echo yourls_esc_attr($site_logo); ?>">
@@ -153,11 +155,11 @@ HTML;
 <main class="lfp-page">
     <header class="lfp-header">
         <?php if ($site_logo !== ''): ?>
-            <img class="lfp-logo" src="<?php echo yourls_esc_url($site_logo); ?>" alt="<?php echo yourls_esc_attr($site_title); ?>">
+            <img class="lfp-logo" src="<?php echo yourls_esc_url($site_logo); ?>" alt="<?php echo yourls_esc_attr(strip_tags($site_title)); ?>">
         <?php endif; ?>
-        <h1 class="lfp-title"><?php echo yourls_esc_html($site_title); ?></h1>
+        <h1 class="lfp-title"><?php echo lfp_render_inline($site_title); ?></h1>
         <?php if ($site_desc !== ''): ?>
-            <p class="lfp-subtitle"><?php echo yourls_esc_html($site_desc); ?></p>
+            <div class="lfp-subtitle"><?php echo lfp_render_text($site_desc); ?></div>
         <?php endif; ?>
     </header>
 
@@ -178,7 +180,28 @@ HTML;
                 <img class="lfp-about-photo" src="<?php echo yourls_esc_url($about_image); ?>" alt="" loading="lazy">
             <?php endif; ?>
             <?php if ($about_text !== ''): ?>
-                <p class="lfp-about-text"><?php echo nl2br(yourls_esc_html($about_text), false); ?></p>
+                <div class="lfp-about-text"><?php echo lfp_render_text($about_text); ?></div>
+            <?php endif; ?>
+            <?php
+            $personal = is_array($general['about_personal'] ?? null) ? $general['about_personal'] : [];
+            $business = is_array($general['about_business'] ?? null) ? $general['about_business'] : [];
+            $has_personal = !empty($personal['enabled']) && lfp_build_vcard($personal) !== null;
+            $has_business = !empty($business['enabled']) && lfp_build_vcard($business, $business['name'] ?? '') !== null;
+            if ($has_personal || $has_business): ?>
+                <div class="lfp-contact-buttons">
+                    <?php if ($has_personal): ?>
+                        <a class="lfp-contact-btn" href="<?php echo yourls_esc_attr(YOURLS_SITE . '/contact.vcf?type=personal'); ?>" download>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span>Save personal contact</span>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($has_business): ?>
+                        <a class="lfp-contact-btn" href="<?php echo yourls_esc_attr(YOURLS_SITE . '/contact.vcf?type=business'); ?>" download>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            <span>Save business contact</span>
+                        </a>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
             <?php if (!empty($resolved_socials)): ?>
                 <ul class="lfp-socials">
@@ -220,7 +243,7 @@ HTML;
                        <?php if ($tile['title'] !== ''): ?>aria-label="<?php echo yourls_esc_attr($tile['title']); ?>"<?php endif; ?>>
                         <img src="<?php echo yourls_esc_url($tile['image']); ?>" alt="" loading="lazy">
                         <?php if ($tile['title'] !== '' && $tile['show_mode'] !== 'never'): ?>
-                            <span class="lfp-imgrid-overlay"><?php echo yourls_esc_html($tile['title']); ?></span>
+                            <span class="lfp-imgrid-overlay"><?php echo lfp_render_inline($tile['title']); ?></span>
                         <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
@@ -259,10 +282,10 @@ HTML;
                         <?php if ($cat_title !== '' || $cat_desc !== ''): ?>
                             <header class="lfp-category-head">
                                 <?php if ($cat_title !== ''): ?>
-                                    <h2 class="lfp-category-title"><?php echo yourls_esc_html($cat_title); ?></h2>
+                                    <h2 class="lfp-category-title"><?php echo lfp_render_inline($cat_title); ?></h2>
                                 <?php endif; ?>
                                 <?php if ($cat_desc !== ''): ?>
-                                    <p class="lfp-category-desc"><?php echo yourls_esc_html($cat_desc); ?></p>
+                                    <div class="lfp-category-desc"><?php echo lfp_render_text($cat_desc); ?></div>
                                 <?php endif; ?>
                             </header>
                         <?php endif; ?>

@@ -1,144 +1,158 @@
 # YOURLS — Link Front Page
 
-> Turn your YOURLS homepage into a Linktree-style landing page that showcases the shortlinks you have already created.
+> Turn the YOURLS homepage into a personal landing page: a Linktree-style link list, an Instagram-style image grid, an About-me block with social buttons and downloadable contact cards, and full design controls — without leaving your YOURLS install.
 
-This plugin replaces the (rather plain) default YOURLS homepage with a curated, mobile-friendly link list. Group your shortlinks into category boxes, drag them into the order you like, and give each entry a custom image, title and description. If you don't bother to set a custom title, the plugin falls back to the title that YOURLS already stores for that shortlink.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PHP](https://img.shields.io/badge/PHP-8.4+-purple.svg)](#requirements)
+[![YOURLS](https://img.shields.io/badge/YOURLS-1.9+-orange.svg)](https://yourls.org)
+[![Latest release](https://img.shields.io/github/v/release/toineenzo/YOURLS-Link-Front-Page?display_name=tag)](https://github.com/toineenzo/YOURLS-Link-Front-Page/releases)
 
-The admin login is still one click away — just visit `https://your-site/login` (configurable) and you land on the regular YOURLS admin.
+🌐 **Live demo**: <https://toine.click>
+
+---
 
 ## ✨ Features
 
-- **Linktree-style homepage** at `https://your-site/`, replacing the default YOURLS info page.
-- **Configurable login path** (defaults to `/login`) so you can still reach the admin.
-- **About-me section** (optional) with a profile photo, bio text and a row of icon-only social media buttons. Each button can either point to a free-form URL or be tied to one of your existing YOURLS shortlinks (so click-tracking still works).
-    - 30+ supported brands out of the box: X (Twitter), Instagram, Facebook, TikTok, YouTube, LinkedIn, GitHub, GitLab, Reddit, Discord, Telegram, WhatsApp, Snapchat, Pinterest, Twitch, Spotify, SoundCloud, Mastodon, Bluesky, Threads, Patreon, Ko-fi, Buy Me a Coffee, PayPal, Signal, Dribbble, Behance, Medium, Substack, Dev.to, Stack Overflow, Product Hunt, Steam — plus generic Website / Email / RSS / Phone icons.
-    - Brand SVGs are bundled inline (CC0, simple-icons.org). No CDN, no tracking.
-- **Visual settings panel** under *Manage Plugins → Link Front Page*:
-    - Searchable picker over all your existing YOURLS shortlinks.
-    - **Drag &amp; drop** to reorder items, drop links onto a category box to nest them, drop them back to the top level to un-nest.
-    - **Category boxes** with their own title, description and optional banner image.
-    - **Per-link customization**: image (URL or upload), custom title, description.
-    - Smart **title fallback** — if you don't set a custom title, the YOURLS-saved link title is used.
-- **Configurable footer** with two independent toggles: show login link, and show "Powered by …" attribution (custom name + URL, defaults to `Powered by YOURLS` linking to yourls.org).
-- **Appearance tab** with live colors (background, card, accent, text), border radius, font family, optional background image and a custom CSS escape hatch.
-- **Image uploads** stored under `user/plugins/yourls-link-front-page/uploads/` (jpeg, png, gif, webp, svg, max 5 MB).
-- **No external dependencies** — vanilla JS, native HTML5 drag &amp; drop, native `<dialog>` picker, inline SVG icons.
-- **PHP 8.4 compatible** with `declare(strict_types=1)`, `match` expressions, typed signatures, and modern null-coalescing patterns.
-- Uses native YOURLS APIs throughout (`yourls_get_option`, `yourls_update_option`, `yourls_keyword_is_taken`, `yourls_get_keyword_longurl`, `yourls_get_keyword_title`, `yourls_link`, `yourls_redirect`, `yourls_register_plugin_page`, `yourls_nonce_field`, `yourls_verify_nonce`, …).
+### Personal landing page
+- **Linktree-style link list** with category boxes, drag-and-drop ordering and per-link image / title / description.
+- **About-me section** with profile photo, bio, and a row of icon-only social buttons.
+- **37 social platforms** bundled inline (CC0, [simple-icons](https://simpleicons.org)) — X, Instagram, Facebook, TikTok, YouTube, LinkedIn, GitHub, GitLab, Reddit, Discord, Telegram, WhatsApp, Snapchat, Pinterest, Twitch, Spotify, SoundCloud, Mastodon, Bluesky, Threads, Patreon, Ko-fi, Buy Me a Coffee, PayPal, Signal, Dribbble, Behance, Medium, Substack, Dev.to, Stack Overflow, Product Hunt, Steam — plus generic Website / Email / RSS / Phone icons.
+- **Contact cards** (Personal + Business): name, phone, email, website, address. Each card is downloadable as a vCard 3.0 (`.vcf`) file via `/contact.vcf?type=personal|business`.
+- **Image grid** — 3-column gallery for "link in bio" content. Each tile has its own image, optional overlay title and configurable show-mode (always / hover / never), points to a free URL or a YOURLS shortlink (so click-tracking still works), and supports bulk image upload.
+- **Markdown + HTML** in titles, descriptions, About-me text, image overlays and the custom footer block (parsed by [Parsedown](https://github.com/erusev/parsedown)).
+
+### Quick-add from the YOURLS link manager
+Every row in `/admin/index.php` grows a small **+** button next to the standard Stats / Share / Edit / Delete actions. One click adds the shortlink to the bottom of the homepage list. The icon flips to a green ✓ once the keyword is on the list.
+
+### Full design controls
+
+**Colors** (HTML5 color pickers): background, text, muted, card, card-hover, accent, plus optional background image with `size` / `repeat` / `position` / `attachment` selects.
+
+**Spacing & sizing**: page max width, page padding (top / bottom / sides), gap between cards, card padding, link icon size, about-photo size, border radius. Each field accepts any CSS length: `px`, `%`, `em`, `rem`, `vh`, `vw`, plus `clamp()`, `calc()`, `min()`, `max()`. Bare numbers become `px`.
+
+**Typography**: pick the font source —
+- **System** — free-text CSS font-family stack.
+- **Google Fonts** — bundled curated list of 85+ popular families with live search and live preview; loaded from `fonts.googleapis.com` at render time; weights configurable.
+- **Custom upload** — `.woff2` / `.woff` / `.ttf` / `.otf` (max 5 MB), stored under `uploads/fonts/` with a random hex filename and emitted as `@font-face`.
+
+Five separate size fields (site title, subtitle, category title, link title, body) accept the same units as Spacing & sizing.
+
+**Custom CSS** escape hatch.
+
+### Robust routing
+
+Hooks **three** YOURLS entry points so the homepage interception always fires:
+
+| Hook | Catches |
+| --- | --- |
+| `plugins_loaded` | Direct `index.php` hits. |
+| `pre_load_template` | `yourls-loader.php` after request resolution. |
+| `loader_failed` | Final fallback before YOURLS' 302 to `YOURLS_SITE`. |
+
+Plus a `REQUEST_URI` fallback for stale-cached `yourls_get_request()` and an `X-LFP-Rendered: 1` response header for easy DevTools verification. Configurable login path (defaults to `/login`) redirects to the YOURLS admin via `yourls_redirect()` — no `.htaccess` editing needed.
+
+### Compatibility
+
+- Coexists cleanly with the **Sleeky** YOURLS theme (defensive CSS resets dodge Sleeky's global `nav`, `select`, `input` overrides).
+- **PHP 8.4** ready: `declare(strict_types=1)`, typed signatures, `match`, `never`, `str_contains`. Runs on PHP ≥ 8.1.
+- Uses native YOURLS APIs throughout: `yourls_get_option`, `yourls_update_option`, `yourls_keyword_is_taken`, `yourls_get_keyword_longurl`, `yourls_get_keyword_title`, `yourls_link`, `yourls_redirect`, `yourls_register_plugin_page`, `yourls_nonce_field`, `yourls_verify_nonce`, `yourls_esc_html`/`_attr`/`_url`.
+- **No external runtime dependencies** other than `fonts.googleapis.com` when you pick a Google font. Vanilla JS, native HTML5 drag-and-drop, native `<dialog>`, inline SVG icons, single-file Parsedown.
+
+---
 
 ## 📦 Installation
 
-1. Download or clone this repository into your YOURLS install:
+```bash
+cd /path/to/yourls/user/plugins
+git clone https://github.com/toineenzo/YOURLS-Link-Front-Page.git yourls-link-front-page
+```
 
-    ```bash
-    cd /path/to/yourls/user/plugins
-    git clone https://github.com/toineenzo/YOURLS-Link-Front-Page.git yourls-link-front-page
-    ```
+…or download the latest release ZIP from the [Releases page](https://github.com/toineenzo/YOURLS-Link-Front-Page/releases) and unzip into `user/plugins/`.
 
-2. Open the YOURLS admin at `/admin/plugins.php` and click **Activate** on *Link Front Page*.
+Then open the YOURLS admin at `/admin/plugins.php` and click **Activate** on *Link Front Page*. The plugin adds a sub-page under *Manage Plugins → Link Front Page*. Open it and start adding links and categories.
 
-3. The plugin adds a sub-page in the admin sidebar under *Manage Plugins → Link Front Page*. Open it and start adding links and categories.
+> **Heads-up**: if your YOURLS root is missing `index.php` (e.g. you replaced it with a custom homepage and forgot the file), Apache will return 404 for `/`. Restore the standard YOURLS `index.php` at the root and the plugin will pick it up.
 
-That's it — visit your YOURLS root URL and you should see your new link front page.
+---
 
-## 🚀 Usage
+## ⚡ Quick tour
 
-### Adding links
+| Tab | What it does |
+| --- | --- |
+| **Links** | Drag-and-drop the link list, add categories, customize each entry. |
+| **General** | Site title, login path, About-me section, social-media buttons, contact cards (Personal + Business), footer toggles, custom footer HTML. |
+| **Image grid** | 3-column image gallery; bulk upload, per-tile dialog, "Show more" button. |
+| **Appearance** | Colors, background image, spacing, typography (system / Google Fonts / custom upload), custom CSS. |
 
-1. Go to *Manage Plugins → Link Front Page*.
-2. Click **+ Add link** and search the picker for the shortlink you want to feature.
-3. Click the gear icon on the new card to expand the editor and (optionally) set:
-    - a custom title (overrides the YOURLS link title);
-    - a description, shown beneath the title;
-    - an image, either by URL or by uploading a file (≤ 5 MB).
-
-### Adding categories
-
-1. Click **+ Add category**.
-2. Expand the category, give it a title, description and optional image.
-3. Drag links onto the category to nest them. Drag them back out to un-nest.
-
-### Reordering
-
-Grab the &#x2630; handle on the left of any card and drag. Drop *above* or *below* an existing card to position your item; drop into the empty space of a category's children list to append.
-
-> 💡 Categories can only live at the top level — YOURLS link lists are not designed for deep nesting.
-
-### Customizing the look
-
-The **Appearance** tab gives you HTML5 color pickers for the background, text, muted text, card background, hover background and accent. There's also a custom-CSS textarea for advanced tweaks; it gets injected at the bottom of the public page's inline `<style>` block.
-
-### The login path
-
-By default the plugin reserves `/login` as a redirect to `/admin/`. You can change this in the **General** tab — for example to `/admin-please` or `/me`. If you want to keep `/login` available as a real shortlink, just set the login path to a different value.
+---
 
 ## 🗂 File structure
 
 ```
 yourls-link-front-page/
-├── plugin.php             # Plugin entrypoint, hooks, settings I/O, upload handling
+├── plugin.php                   # Plugin entrypoint, hooks, settings I/O,
+│                                  routing, vCard generator, upload handling
 ├── views/
-│   ├── frontend.php       # Public Linktree-style page rendered at /
-│   └── admin.php          # Settings UI rendered inside YOURLS admin
+│   ├── frontend.php             # Public landing page rendered at /
+│   └── admin.php                # Settings UI rendered inside YOURLS admin
 ├── assets/
-│   ├── frontend.css       # Public styles (uses CSS custom properties)
-│   ├── admin.css          # Admin styles
-│   └── admin.js           # Admin logic (drag/drop, picker, serialization)
-├── uploads/               # User-uploaded images (auto-created)
+│   ├── frontend.css             # Public styles (CSS custom properties)
+│   ├── admin.css                # Admin styles
+│   └── admin.js                 # Admin logic (drag/drop, picker, dialogs)
+├── includes/
+│   ├── google-fonts.php         # Curated Google Fonts list
+│   ├── social-platforms.php     # 37 social media platform definitions
+│   └── Parsedown.php            # Bundled Markdown parser (CC-BY)
+├── uploads/                     # User-uploaded images / fonts (auto-created)
 └── README.md
 ```
 
+---
+
 ## ⚙️ Stored options
 
-The plugin uses three YOURLS options (see `yourls_get_option`):
+The plugin uses four YOURLS options:
 
-| Option           | Shape  | Notes                                                                    |
-| ---------------- | ------ | ------------------------------------------------------------------------ |
-| `lfp_general`    | array  | Enabled flag, site title/description, logo, login path, footer toggle.   |
-| `lfp_appearance` | array  | Color tokens, border radius, font family, background image, custom CSS.  |
-| `lfp_items`      | array  | Ordered list of links and categories (categories carry a `children` list). |
+| Option              | Shape | Notes |
+| ------------------- | ----- | ----- |
+| `lfp_general`       | array | Site title, description, logo, login path, footer toggles, About-me, social buttons, Personal + Business contact cards. |
+| `lfp_appearance`    | array | Colors, sizing (with units), typography (font source + size fields), background image options, custom CSS. |
+| `lfp_items`         | array | Ordered tree of links and categories. |
+| `lfp_image_grid`    | array | Image grid: enabled flag, default visible count, ordered list of tiles. |
 
-Items are stored as a tree:
+Migrations from earlier 1.x / 2.x storage keys (`show_footer`, `lfp_instagram`, bare integer spacing values) run transparently on first read.
 
-```php
-[
-    [
-        'id' => 'cat_xxx',
-        'type' => 'category',
-        'title' => 'Socials',
-        'description' => 'Catch me online',
-        'image' => 'https://…/banner.jpg',
-        'children' => [
-            ['id' => 'link_a', 'type' => 'link', 'keyword' => 'tw', 'title' => 'Twitter', …],
-            ['id' => 'link_b', 'type' => 'link', 'keyword' => 'gh', 'title' => '',          …],
-        ],
-    ],
-    ['id' => 'link_c', 'type' => 'link', 'keyword' => 'blog', 'title' => '', …],
-]
-```
-
-When rendering a link, the title is resolved as:
-1. The custom `title` set in the plugin, if any.
-2. Otherwise the YOURLS link title returned by `yourls_get_keyword_title($keyword)`.
-3. Otherwise the long URL.
+---
 
 ## 🧪 Requirements
 
-- **YOURLS** ≥ 1.9 (uses the modern `yourls_*` API surface).
-- **PHP** ≥ 8.4 (the plugin is written against PHP 8.4 syntax — `declare(strict_types=1)`, `match`, first-class callable syntax, `str_contains`).
-- A browser with native HTML5 `<dialog>` and drag/drop support (Chrome, Edge, Firefox, Safari ≥ 15.4).
+- **YOURLS** ≥ 1.9
+- **PHP** ≥ 8.1 (8.4 recommended; the plugin uses `declare(strict_types=1)`, `match`, `never`, `str_contains`)
+- A modern browser for the admin UI: Chrome, Edge, Firefox, Safari ≥ 15.4 (native `<dialog>` and HTML5 drag-and-drop)
 
-## 🛡️ Security notes
+---
 
-- All form submissions are protected by a YOURLS nonce (`yourls_nonce_field` / `yourls_verify_nonce`).
-- Output in both the admin and frontend uses `yourls_esc_html`, `yourls_esc_attr` and `yourls_esc_url`.
-- Uploads are restricted by MIME type and file size, and stored under random, hex-named filenames generated with `random_bytes`.
-- The login path is intercepted via `yourls_redirect` — no rewriting of `.htaccess` or `web.config` is required.
+## 🛡 Security
+
+- All form submissions are nonce-protected via `yourls_nonce_field` / `yourls_verify_nonce`.
+- The quick-add row action signs its URL with `hash_hmac('sha256', …, YOURLS_COOKIEKEY)` and gates execution on `yourls_is_valid_user()`.
+- Output uses `yourls_esc_html` / `_attr` / `_url`. Markdown / HTML fields are deliberately rendered raw (admin-trusted), same posture as the Custom CSS field.
+- Uploads are MIME-type allow-listed and renamed to random hex filenames generated with `random_bytes`.
+- The login path is intercepted via `yourls_redirect` — no `.htaccess` rewriting required.
+
+---
 
 ## 🤝 Contributing
 
 Bug reports, feature requests and pull requests are welcome on [GitHub](https://github.com/toineenzo/YOURLS-Link-Front-Page/issues). Please describe your YOURLS version and PHP version when filing a bug.
 
+---
+
 ## 📄 License
 
 [MIT](LICENSE) — do whatever you want, just don't blame me.
+
+Bundled third-party code:
+- **Parsedown** by Emanuil Rusev, [MIT license](https://github.com/erusev/parsedown/blob/master/LICENSE.txt).
+- **Social media SVG icons** from [simple-icons](https://simpleicons.org), [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+- **Google Fonts list** is metadata only; font files are served by Google.
