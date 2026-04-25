@@ -10,15 +10,19 @@ The admin login is still one click away — just visit `https://your-site/login`
 
 - **Linktree-style homepage** at `https://your-site/`, replacing the default YOURLS info page.
 - **Configurable login path** (defaults to `/login`) so you can still reach the admin.
+- **About-me section** (optional) with a profile photo, bio text and a row of icon-only social media buttons. Each button can either point to a free-form URL or be tied to one of your existing YOURLS shortlinks (so click-tracking still works).
+    - 30+ supported brands out of the box: X (Twitter), Instagram, Facebook, TikTok, YouTube, LinkedIn, GitHub, GitLab, Reddit, Discord, Telegram, WhatsApp, Snapchat, Pinterest, Twitch, Spotify, SoundCloud, Mastodon, Bluesky, Threads, Patreon, Ko-fi, Buy Me a Coffee, PayPal, Signal, Dribbble, Behance, Medium, Substack, Dev.to, Stack Overflow, Product Hunt, Steam — plus generic Website / Email / RSS / Phone icons.
+    - Brand SVGs are bundled inline (CC0, simple-icons.org). No CDN, no tracking.
 - **Visual settings panel** under *Manage Plugins → Link Front Page*:
     - Searchable picker over all your existing YOURLS shortlinks.
     - **Drag &amp; drop** to reorder items, drop links onto a category box to nest them, drop them back to the top level to un-nest.
     - **Category boxes** with their own title, description and optional banner image.
     - **Per-link customization**: image (URL or upload), custom title, description.
     - Smart **title fallback** — if you don't set a custom title, the YOURLS-saved link title is used.
+- **Configurable footer** with two independent toggles: show login link, and show "Powered by …" attribution (custom name + URL, defaults to `Powered by YOURLS` linking to yourls.org).
 - **Appearance tab** with live colors (background, card, accent, text), border radius, font family, optional background image and a custom CSS escape hatch.
 - **Image uploads** stored under `user/plugins/yourls-link-front-page/uploads/` (jpeg, png, gif, webp, svg, max 5 MB).
-- **No external dependencies** — vanilla JS, native HTML5 drag &amp; drop, native `<dialog>` picker.
+- **No external dependencies** — vanilla JS, native HTML5 drag &amp; drop, native `<dialog>` picker, inline SVG icons.
 - **PHP 8.4 compatible** with `declare(strict_types=1)`, `match` expressions, typed signatures, and modern null-coalescing patterns.
 - Uses native YOURLS APIs throughout (`yourls_get_option`, `yourls_update_option`, `yourls_keyword_is_taken`, `yourls_get_keyword_longurl`, `yourls_get_keyword_title`, `yourls_link`, `yourls_redirect`, `yourls_register_plugin_page`, `yourls_nonce_field`, `yourls_verify_nonce`, …).
 

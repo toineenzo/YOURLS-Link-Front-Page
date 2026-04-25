@@ -18,8 +18,16 @@ $all_links  = lfp_get_all_yourls_links();
 
 $asset_v = '?v=' . LFP_VERSION;
 
+$platforms = lfp_get_social_platforms();
+$platform_icons = [];
+foreach ($platforms as $key => $p) {
+    $platform_icons[$key] = ['name' => $p['name'], 'color' => $p['color'], 'svg' => $p['svg']];
+}
+
 $bootstrap = [
     'items'    => $items,
+    'socials'  => $general['about_socials'] ?? [],
+    'platforms'=> $platform_icons,
     'allLinks' => array_map(static fn($row): array => [
         'keyword' => (string) ($row->keyword ?? ''),
         'url'     => (string) ($row->url ?? ''),
@@ -105,12 +113,74 @@ $bootstrap = [
             <small>URL or upload an image. Uploaded files are saved under <code>user/plugins/&lt;plugin&gt;/uploads/</code>.</small>
         </div>
 
-        <div class="lfp-row">
-            <label class="lfp-checkbox">
-                <input type="checkbox" name="show_footer" value="1" <?php echo !empty($general['show_footer']) ? 'checked' : ''; ?>>
-                <span>Show footer with login link &amp; YOURLS attribution</span>
-            </label>
-        </div>
+        <fieldset class="lfp-fieldset">
+            <legend>Footer</legend>
+
+            <div class="lfp-row">
+                <label class="lfp-checkbox">
+                    <input type="checkbox" name="show_login_link" value="1" <?php echo !empty($general['show_login_link']) ? 'checked' : ''; ?>>
+                    <span>Show login link (links to <code><?php echo yourls_esc_html(trim((string) $general['login_path'], '/')); ?></code>)</span>
+                </label>
+            </div>
+
+            <div class="lfp-row">
+                <label class="lfp-checkbox">
+                    <input type="checkbox" name="show_powered_by" value="1" <?php echo !empty($general['show_powered_by']) ? 'checked' : ''; ?>>
+                    <span>Show "Powered by" attribution</span>
+                </label>
+            </div>
+
+            <div class="lfp-grid">
+                <div class="lfp-field">
+                    <label for="lfp-pby-text">Attribution text</label>
+                    <input type="text" id="lfp-pby-text" name="powered_by_text" value="<?php echo yourls_esc_attr($general['powered_by_text']); ?>" placeholder="YOURLS">
+                    <small>Shown after "Powered by". Leave empty to default to <em>YOURLS</em>.</small>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-pby-url">Attribution URL</label>
+                    <input type="url" id="lfp-pby-url" name="powered_by_url" value="<?php echo yourls_esc_attr($general['powered_by_url']); ?>" placeholder="https://yourls.org">
+                    <small>Where the attribution links to. Leave empty for <em>https://yourls.org</em>.</small>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="lfp-fieldset">
+            <legend>About me</legend>
+
+            <div class="lfp-row">
+                <label class="lfp-checkbox">
+                    <input type="checkbox" name="about_enabled" value="1" <?php echo !empty($general['about_enabled']) ? 'checked' : ''; ?>>
+                    <span>Show an "About me" section above the link list</span>
+                </label>
+            </div>
+
+            <div class="lfp-grid">
+                <div class="lfp-field">
+                    <label>Profile photo</label>
+                    <div class="lfp-image-input">
+                        <input type="url" name="about_image" value="<?php echo yourls_esc_attr($general['about_image']); ?>" placeholder="https://example.com/me.jpg" data-lfp-image-url>
+                        <input type="file" name="about_image" accept="image/*" data-lfp-image-file>
+                        <?php if ($general['about_image'] !== ''): ?>
+                            <img class="lfp-thumb" src="<?php echo yourls_esc_url($general['about_image']); ?>" alt="">
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-about-text">About text</label>
+                    <textarea id="lfp-about-text" name="about_text" rows="4" placeholder="A short bio."><?php echo yourls_esc_html($general['about_text']); ?></textarea>
+                </div>
+            </div>
+
+            <div class="lfp-field">
+                <label>Social media buttons</label>
+                <small>Icon-only buttons rendered next to your profile photo. Each button can either point to a free-form URL or be tied to one of your existing YOURLS shortlinks.</small>
+                <div class="lfp-toolbar lfp-toolbar-tight">
+                    <button type="button" class="lfp-btn" id="lfp-add-social">+ Add social button</button>
+                </div>
+                <div id="lfp-socials" class="lfp-socials" aria-live="polite"></div>
+                <input type="hidden" name="about_socials_json" id="lfp-socials-json" value="">
+            </div>
+        </fieldset>
     </section>
 
     <!-- ========================= APPEARANCE TAB ========================== -->
@@ -243,6 +313,28 @@ $bootstrap = [
         </div>
         <div class="lfp-tree lfp-tree-children" data-level="1" data-lfp-children></div>
     </article>
+</template>
+
+<template id="lfp-tpl-social">
+    <div class="lfp-social-row" draggable="true">
+        <span class="lfp-handle" title="Drag to reorder">&#x2630;</span>
+        <span class="lfp-social-icon" data-lfp-social-icon></span>
+        <select class="lfp-social-platform" data-lfp-social-platform>
+            <?php foreach (lfp_get_social_platforms() as $key => $platform): ?>
+                <option value="<?php echo yourls_esc_attr($key); ?>"><?php echo yourls_esc_html($platform['name']); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <select class="lfp-social-source" data-lfp-social-source>
+            <option value="url">URL</option>
+            <option value="keyword">YOURLS keyword</option>
+        </select>
+        <input type="url" class="lfp-social-url" data-lfp-social-url placeholder="https://...">
+        <span class="lfp-social-keyword-wrap" data-lfp-social-keyword-wrap hidden>
+            <code class="lfp-social-keyword" data-lfp-social-keyword>—</code>
+            <button type="button" class="lfp-btn lfp-btn-tight" data-lfp-social-pick>Pick…</button>
+        </span>
+        <button type="button" class="lfp-icon-btn lfp-icon-danger" data-lfp-social-remove title="Remove">&times;</button>
+    </div>
 </template>
 
 <dialog id="lfp-picker">

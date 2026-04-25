@@ -3,9 +3,9 @@
 Plugin Name: Link Front Page
 Plugin URI: https://github.com/toineenzo/YOURLS-Link-Front-Page
 Description: Show selected shortlinks as a Linktree-style link list on the YOURLS homepage. Group links into category boxes, reorder by drag and drop, and customize each entry with an image, title and description.
-Version: 1.0.1
-Author: toineenzo
-Author URI: https://github.com/toineenzo
+Version: 1.1.0
+Author: Toine Rademacher (toineenzo)
+Author URI: https://toine.click
 */
 
 declare(strict_types=1);
@@ -14,7 +14,7 @@ if (!defined('YOURLS_ABSPATH')) {
     die();
 }
 
-const LFP_VERSION = '1.0.1';
+const LFP_VERSION = '1.1.0';
 const LFP_DIR = __DIR__;
 const LFP_OPT_ITEMS = 'lfp_items';
 const LFP_OPT_GENERAL = 'lfp_general';
@@ -53,12 +53,23 @@ function lfp_uploads_url(): string
 function lfp_default_general(): array
 {
     return [
-        'enabled'          => true,
-        'site_title'       => '',
-        'site_description' => '',
-        'site_logo'        => '',
-        'login_path'       => 'login',
-        'show_footer'      => true,
+        'enabled'           => true,
+        'site_title'        => '',
+        'site_description'  => '',
+        'site_logo'         => '',
+        'login_path'        => 'login',
+
+        // Footer (split out in 1.1: was a single show_footer toggle)
+        'show_login_link'   => true,
+        'show_powered_by'   => true,
+        'powered_by_text'   => '',
+        'powered_by_url'    => '',
+
+        // About-me section
+        'about_enabled'     => false,
+        'about_image'       => '',
+        'about_text'        => '',
+        'about_socials'     => [],
     ];
 }
 
@@ -84,6 +95,17 @@ function lfp_get_general(): array
     if (!is_array($stored)) {
         $stored = [];
     }
+
+    // Migrate v1.0 footer toggle into the new split footer fields.
+    if (array_key_exists('show_footer', $stored)) {
+        $legacy = (bool) $stored['show_footer'];
+        $stored += [
+            'show_login_link' => $legacy,
+            'show_powered_by' => $legacy,
+        ];
+        unset($stored['show_footer']);
+    }
+
     return array_merge(lfp_default_general(), $stored);
 }
 
@@ -280,13 +302,28 @@ function lfp_save_settings(): never
 {
     $uploaded = lfp_process_uploaded_files();
 
+    $socials_json = (string) ($_POST['about_socials_json'] ?? '[]');
+    $socials_raw  = json_decode($socials_json, true);
+    if (!is_array($socials_raw)) {
+        $socials_raw = [];
+    }
+
     $general = [
-        'enabled'          => isset($_POST['enabled']),
-        'site_title'       => trim((string) ($_POST['site_title'] ?? '')),
-        'site_description' => trim((string) ($_POST['site_description'] ?? '')),
-        'site_logo'        => $uploaded['site_logo'] ?? trim((string) ($_POST['site_logo'] ?? '')),
-        'login_path'       => trim((string) ($_POST['login_path'] ?? 'login'), '/'),
-        'show_footer'      => isset($_POST['show_footer']),
+        'enabled'           => isset($_POST['enabled']),
+        'site_title'        => trim((string) ($_POST['site_title'] ?? '')),
+        'site_description'  => trim((string) ($_POST['site_description'] ?? '')),
+        'site_logo'         => $uploaded['site_logo'] ?? trim((string) ($_POST['site_logo'] ?? '')),
+        'login_path'        => trim((string) ($_POST['login_path'] ?? 'login'), '/'),
+
+        'show_login_link'   => isset($_POST['show_login_link']),
+        'show_powered_by'   => isset($_POST['show_powered_by']),
+        'powered_by_text'   => trim((string) ($_POST['powered_by_text'] ?? '')),
+        'powered_by_url'    => trim((string) ($_POST['powered_by_url'] ?? '')),
+
+        'about_enabled'     => isset($_POST['about_enabled']),
+        'about_image'       => $uploaded['about_image'] ?? trim((string) ($_POST['about_image'] ?? '')),
+        'about_text'        => trim((string) ($_POST['about_text'] ?? '')),
+        'about_socials'     => lfp_sanitize_socials($socials_raw, $uploaded),
     ];
     yourls_update_option(LFP_OPT_GENERAL, $general);
 
@@ -389,6 +426,49 @@ function lfp_sanitize_items(array $items, array $uploaded): array
         }
 
         $result[] = $base;
+    }
+    return $result;
+}
+
+function lfp_sanitize_socials(array $socials, array $uploaded): array
+{
+    $platforms = lfp_get_social_platforms();
+    $result = [];
+    foreach ($socials as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $id = lfp_sanitize_id((string) ($entry['id'] ?? ''));
+        if ($id === '') {
+            continue;
+        }
+        $platform = (string) ($entry['platform'] ?? '');
+        if (!isset($platforms[$platform])) {
+            continue;
+        }
+        $source = ($entry['source'] ?? 'url') === 'keyword' ? 'keyword' : 'url';
+        $clean = [
+            'id'       => $id,
+            'platform' => $platform,
+            'source'   => $source,
+            'url'      => '',
+            'keyword'  => '',
+            'label'    => trim((string) ($entry['label'] ?? '')),
+        ];
+        if ($source === 'keyword') {
+            $kw = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) ($entry['keyword'] ?? ''));
+            $clean['keyword'] = is_string($kw) ? $kw : '';
+            if ($clean['keyword'] === '') {
+                continue;
+            }
+        } else {
+            $url = trim((string) ($entry['url'] ?? ''));
+            if ($url === '') {
+                continue;
+            }
+            $clean['url'] = $url;
+        }
+        $result[] = $clean;
     }
     return $result;
 }
@@ -527,6 +607,67 @@ function lfp_resolve_link(array $item): array
         'short_url'   => $data['short_url'] ?? (YOURLS_SITE . '/' . $keyword),
         'long_url'    => $data['long_url']  ?? '',
         'exists'      => $data !== null,
+    ];
+}
+
+/* ---------------------------------------------------------------------------
+ * Social platforms
+ * ------------------------------------------------------------------------ */
+
+function lfp_get_social_platforms(): array
+{
+    static $platforms = null;
+    if ($platforms === null) {
+        $loaded = require LFP_DIR . '/includes/social-platforms.php';
+        $platforms = is_array($loaded) ? $loaded : [];
+    }
+    return $platforms;
+}
+
+function lfp_render_social_icon(string $platform_key): string
+{
+    $platforms = lfp_get_social_platforms();
+    if (!isset($platforms[$platform_key])) {
+        return '';
+    }
+    $svg = $platforms[$platform_key]['svg'];
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' . $svg . '</svg>';
+}
+
+function lfp_resolve_social(array $entry): ?array
+{
+    $platforms = lfp_get_social_platforms();
+    $platform  = (string) ($entry['platform'] ?? '');
+    if (!isset($platforms[$platform])) {
+        return null;
+    }
+    $source = ($entry['source'] ?? 'url') === 'keyword' ? 'keyword' : 'url';
+    $url    = '';
+
+    if ($source === 'keyword') {
+        $keyword = (string) ($entry['keyword'] ?? '');
+        if ($keyword === '' || !yourls_keyword_is_taken($keyword)) {
+            return null;
+        }
+        $url = yourls_link($keyword);
+    } else {
+        $url = trim((string) ($entry['url'] ?? ''));
+        if ($url === '') {
+            return null;
+        }
+    }
+
+    $label = trim((string) ($entry['label'] ?? ''));
+    if ($label === '') {
+        $label = $platforms[$platform]['name'];
+    }
+
+    return [
+        'platform' => $platform,
+        'name'     => $platforms[$platform]['name'],
+        'color'    => $platforms[$platform]['color'],
+        'url'      => $url,
+        'label'    => $label,
     ];
 }
 

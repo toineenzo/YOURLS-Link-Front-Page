@@ -116,6 +116,43 @@ HTML;
         <?php endif; ?>
     </header>
 
+    <?php if (!empty($general['about_enabled'])):
+        $about_image   = (string) ($general['about_image']   ?? '');
+        $about_text    = (string) ($general['about_text']    ?? '');
+        $about_socials = is_array($general['about_socials'] ?? null) ? $general['about_socials'] : [];
+        $resolved_socials = [];
+        foreach ($about_socials as $entry) {
+            $resolved = lfp_resolve_social($entry);
+            if ($resolved !== null) {
+                $resolved_socials[] = $resolved;
+            }
+        }
+    ?>
+        <section class="lfp-about">
+            <?php if ($about_image !== ''): ?>
+                <img class="lfp-about-photo" src="<?php echo yourls_esc_url($about_image); ?>" alt="" loading="lazy">
+            <?php endif; ?>
+            <?php if ($about_text !== ''): ?>
+                <p class="lfp-about-text"><?php echo nl2br(yourls_esc_html($about_text), false); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($resolved_socials)): ?>
+                <ul class="lfp-socials">
+                    <?php foreach ($resolved_socials as $soc): ?>
+                        <li>
+                            <a href="<?php echo yourls_esc_url($soc['url']); ?>"
+                               class="lfp-social-btn"
+                               style="--lfp-social-color: <?php echo yourls_esc_attr($soc['color']); ?>"
+                               aria-label="<?php echo yourls_esc_attr($soc['label']); ?>"
+                               rel="me noopener">
+                                <?php echo lfp_render_social_icon($soc['platform']); ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
+
     <section class="lfp-list">
         <?php if (empty($items)): ?>
             <div class="lfp-empty">
@@ -163,11 +200,25 @@ HTML;
         <?php endif; ?>
     </section>
 
-    <?php if (!empty($general['show_footer'])): ?>
+    <?php
+    $show_login = !empty($general['show_login_link']);
+    $show_pby   = !empty($general['show_powered_by']);
+    if ($show_login || $show_pby):
+        $pby_text = trim((string) ($general['powered_by_text'] ?? ''));
+        $pby_url  = trim((string) ($general['powered_by_url']  ?? ''));
+        if ($pby_text === '') $pby_text = 'YOURLS';
+        if ($pby_url  === '') $pby_url  = 'https://yourls.org';
+    ?>
         <footer class="lfp-footer">
-            <a href="<?php echo yourls_esc_attr(YOURLS_SITE . '/' . trim((string) $general['login_path'], '/')); ?>" rel="nofollow">Login</a>
-            <span aria-hidden="true">&middot;</span>
-            <span>Powered by <a href="https://yourls.org" rel="noopener">YOURLS</a></span>
+            <?php if ($show_login): ?>
+                <a href="<?php echo yourls_esc_attr(YOURLS_SITE . '/' . trim((string) $general['login_path'], '/')); ?>" rel="nofollow">Login</a>
+            <?php endif; ?>
+            <?php if ($show_login && $show_pby): ?>
+                <span aria-hidden="true">&middot;</span>
+            <?php endif; ?>
+            <?php if ($show_pby): ?>
+                <span>Powered by <a href="<?php echo yourls_esc_url($pby_url); ?>" rel="noopener"><?php echo yourls_esc_html($pby_text); ?></a></span>
+            <?php endif; ?>
         </footer>
     <?php endif; ?>
 </main>

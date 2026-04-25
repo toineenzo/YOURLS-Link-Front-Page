@@ -8,14 +8,19 @@
     for (const link of allLinks) {
         linkMap[link.keyword] = link;
     }
+    const platforms = bootstrap.platforms || {};
 
     let items = Array.isArray(bootstrap.items) ? structuredClone(bootstrap.items) : [];
+    let socials = Array.isArray(bootstrap.socials) ? structuredClone(bootstrap.socials) : [];
 
     const form = document.getElementById('lfp-form');
     const tree = document.getElementById('lfp-tree');
     const itemsJsonInput = document.getElementById('lfp-items-json');
+    const socialsJsonInput = document.getElementById('lfp-socials-json');
+    const socialsList = document.getElementById('lfp-socials');
     const tplLink = document.getElementById('lfp-tpl-link');
     const tplCategory = document.getElementById('lfp-tpl-category');
+    const tplSocial = document.getElementById('lfp-tpl-social');
     const picker = document.getElementById('lfp-picker');
     const pickerInput = document.getElementById('lfp-picker-q');
     const pickerList = document.getElementById('lfp-picker-list');
@@ -433,6 +438,144 @@
         if (first) first.click();
     });
 
+    /* -------------------------------------------------- Socials */
+
+    const renderSocialIcon = (platform) => {
+        const def = platforms[platform];
+        if (!def) return '';
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${def.svg}</svg>`;
+    };
+
+    const setSocialSourceUI = (row, source) => {
+        const urlInput = row.querySelector('[data-lfp-social-url]');
+        const kwWrap   = row.querySelector('[data-lfp-social-keyword-wrap]');
+        if (source === 'keyword') {
+            urlInput.hidden = true;
+            kwWrap.hidden = false;
+        } else {
+            urlInput.hidden = false;
+            kwWrap.hidden = true;
+        }
+    };
+
+    const renderSocials = () => {
+        socialsList.replaceChildren();
+        for (const entry of socials) {
+            socialsList.appendChild(renderSocialRow(entry));
+        }
+    };
+
+    function renderSocialRow(entry) {
+        const node = tplSocial.content.firstElementChild.cloneNode(true);
+        node.dataset.id = entry.id;
+
+        const iconSlot     = node.querySelector('[data-lfp-social-icon]');
+        const platformSel  = node.querySelector('[data-lfp-social-platform]');
+        const sourceSel    = node.querySelector('[data-lfp-social-source]');
+        const urlInput     = node.querySelector('[data-lfp-social-url]');
+        const keywordEl    = node.querySelector('[data-lfp-social-keyword]');
+        const pickBtn      = node.querySelector('[data-lfp-social-pick]');
+        const removeBtn    = node.querySelector('[data-lfp-social-remove]');
+
+        platformSel.value = entry.platform;
+        sourceSel.value   = entry.source || 'url';
+        urlInput.value    = entry.url || '';
+        keywordEl.textContent = entry.keyword ? entry.keyword : '—';
+        iconSlot.style.color = (platforms[entry.platform]?.color) || 'var(--lfp-a-fg)';
+        iconSlot.innerHTML = renderSocialIcon(entry.platform);
+        setSocialSourceUI(node, sourceSel.value);
+
+        platformSel.addEventListener('change', (e) => {
+            entry.platform = e.target.value;
+            iconSlot.style.color = (platforms[entry.platform]?.color) || 'var(--lfp-a-fg)';
+            iconSlot.innerHTML = renderSocialIcon(entry.platform);
+        });
+
+        sourceSel.addEventListener('change', (e) => {
+            entry.source = e.target.value === 'keyword' ? 'keyword' : 'url';
+            setSocialSourceUI(node, entry.source);
+        });
+
+        urlInput.addEventListener('input', (e) => { entry.url = e.target.value; });
+
+        pickBtn.addEventListener('click', () => {
+            openPicker((kw) => {
+                entry.keyword = kw;
+                keywordEl.textContent = kw;
+            });
+        });
+
+        removeBtn.addEventListener('click', () => {
+            const idx = socials.findIndex((s) => s.id === entry.id);
+            if (idx >= 0) socials.splice(idx, 1);
+            renderSocials();
+        });
+
+        // Drag handle
+        let mouseOnHandle = false;
+        node.addEventListener('mousedown', (e) => {
+            mouseOnHandle = !!e.target.closest('.lfp-handle');
+            node.draggable = mouseOnHandle;
+        });
+        node.addEventListener('dragstart', (e) => {
+            if (!mouseOnHandle) { e.preventDefault(); return; }
+            socialDragId = entry.id;
+            node.classList.add('is-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', entry.id);
+        });
+        node.addEventListener('dragend', () => {
+            node.classList.remove('is-dragging');
+            node.draggable = false;
+            socialDragId = null;
+            socialsList.querySelectorAll('.is-drop-above, .is-drop-below').forEach((el) => {
+                el.classList.remove('is-drop-above', 'is-drop-below');
+            });
+        });
+        node.addEventListener('dragover', (e) => {
+            if (!socialDragId || socialDragId === entry.id) return;
+            e.preventDefault();
+            const rect = node.getBoundingClientRect();
+            const above = (e.clientY - rect.top) < rect.height / 2;
+            node.classList.toggle('is-drop-above', above);
+            node.classList.toggle('is-drop-below', !above);
+        });
+        node.addEventListener('dragleave', () => {
+            node.classList.remove('is-drop-above', 'is-drop-below');
+        });
+        node.addEventListener('drop', (e) => {
+            if (!socialDragId || socialDragId === entry.id) return;
+            e.preventDefault();
+            const rect = node.getBoundingClientRect();
+            const above = (e.clientY - rect.top) < rect.height / 2;
+            const srcIdx = socials.findIndex((s) => s.id === socialDragId);
+            const tgtIdx = socials.findIndex((s) => s.id === entry.id);
+            if (srcIdx < 0 || tgtIdx < 0) return;
+            const [moving] = socials.splice(srcIdx, 1);
+            const reTgt = socials.findIndex((s) => s.id === entry.id);
+            const insertAt = above ? reTgt : reTgt + 1;
+            socials.splice(insertAt, 0, moving);
+            renderSocials();
+        });
+
+        return node;
+    }
+
+    let socialDragId = null;
+
+    document.getElementById('lfp-add-social').addEventListener('click', () => {
+        const firstPlatform = Object.keys(platforms)[0] || 'website';
+        socials.push({
+            id: uid('soc'),
+            platform: firstPlatform,
+            source: 'url',
+            url: '',
+            keyword: '',
+            label: '',
+        });
+        renderSocials();
+    });
+
     /* -------------------------------------------------- Tabs */
 
     document.querySelectorAll('.lfp-tab').forEach((btn) => {
@@ -494,8 +637,24 @@
             return out;
         });
         itemsJsonInput.value = JSON.stringify(clean(items));
+
+        const cleanSocials = socials
+            .filter((s) => s.platform && (
+                (s.source === 'keyword' && s.keyword) ||
+                (s.source !== 'keyword' && s.url)
+            ))
+            .map((s) => ({
+                id: s.id,
+                platform: s.platform,
+                source: s.source === 'keyword' ? 'keyword' : 'url',
+                url: s.url || '',
+                keyword: s.keyword || '',
+                label: s.label || '',
+            }));
+        socialsJsonInput.value = JSON.stringify(cleanSocials);
     });
 
     /* -------------------------------------------------- Init */
     renderTree();
+    renderSocials();
 })();
