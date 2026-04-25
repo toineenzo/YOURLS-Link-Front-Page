@@ -27,6 +27,119 @@
 
     const uid = (prefix) => prefix + '_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
+    /* -------------------------------------------------- Confirm dialog */
+
+    const confirmDialog  = document.getElementById('lfp-confirm');
+    const confirmTitle   = document.getElementById('lfp-confirm-title');
+    const confirmMessage = document.getElementById('lfp-confirm-message');
+    const confirmCancel  = document.getElementById('lfp-confirm-cancel');
+    const confirmOk      = document.getElementById('lfp-confirm-ok');
+
+    function lfpConfirm({ title = 'Confirm', message = 'Are you sure?', confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = false } = {}) {
+        return new Promise((resolve) => {
+            if (!confirmDialog) {
+                resolve(window.confirm(message));
+                return;
+            }
+            confirmTitle.textContent = title;
+            confirmMessage.textContent = message;
+            confirmOk.textContent = confirmLabel;
+            confirmCancel.textContent = cancelLabel;
+            confirmOk.classList.toggle('lfp-btn-danger',  !!danger);
+            confirmOk.classList.toggle('lfp-btn-primary', !danger);
+
+            const cleanup = (result) => {
+                confirmOk.removeEventListener('click', okHandler);
+                confirmCancel.removeEventListener('click', cancelHandler);
+                confirmDialog.removeEventListener('cancel', cancelHandler);
+                if (confirmDialog.open) confirmDialog.close();
+                resolve(result);
+            };
+            const okHandler     = (e) => { e.preventDefault(); cleanup(true);  };
+            const cancelHandler = (e) => { if (e) e.preventDefault(); cleanup(false); };
+
+            confirmOk.addEventListener('click', okHandler);
+            confirmCancel.addEventListener('click', cancelHandler);
+            confirmDialog.addEventListener('cancel', cancelHandler);
+
+            if (typeof confirmDialog.showModal === 'function') {
+                confirmDialog.showModal();
+            } else {
+                confirmDialog.setAttribute('open', '');
+            }
+            // Auto-focus the cancel button so a stray Enter doesn't destroy data.
+            setTimeout(() => confirmCancel.focus(), 30);
+        });
+    }
+
+    /* -------------------------------------------------- File input wrapper */
+
+    const enhanceFileInputs = (root) => {
+        const scope = root && root.querySelectorAll ? root : document;
+        scope.querySelectorAll('input[type="file"]').forEach((input) => {
+            if (input.dataset.lfpEnhanced === '1') return;
+            input.dataset.lfpEnhanced = '1';
+            input.classList.add('lfp-fileinput-native');
+
+            const wrap = document.createElement('div');
+            wrap.className = 'lfp-fileinput';
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'lfp-btn lfp-btn-tight lfp-fileinput-trigger';
+            trigger.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg><span>Choose file</span>';
+
+            const label = document.createElement('span');
+            label.className = 'lfp-fileinput-name';
+            label.textContent = 'No file selected';
+
+            const clear = document.createElement('button');
+            clear.type = 'button';
+            clear.className = 'lfp-fileinput-clear';
+            clear.textContent = 'Clear';
+            clear.hidden = true;
+
+            const updateLabel = () => {
+                if (input.files && input.files.length > 0) {
+                    label.textContent = input.files.length === 1
+                        ? input.files[0].name
+                        : `${input.files.length} files selected`;
+                    label.classList.add('is-selected');
+                    clear.hidden = false;
+                } else {
+                    label.textContent = 'No file selected';
+                    label.classList.remove('is-selected');
+                    clear.hidden = true;
+                }
+            };
+
+            trigger.addEventListener('click', () => input.click());
+            input.addEventListener('change', updateLabel);
+            clear.addEventListener('click', () => {
+                input.value = '';
+                input.dispatchEvent(new Event('change'));
+            });
+
+            input.parentNode.insertBefore(wrap, input);
+            wrap.appendChild(trigger);
+            wrap.appendChild(label);
+            wrap.appendChild(clear);
+            wrap.appendChild(input);
+
+            updateLabel();
+        });
+    };
+
+    // Catch any file inputs that get inserted later (from cloned templates).
+    if (typeof MutationObserver === 'function') {
+        const obs = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+                m.addedNodes.forEach((n) => { if (n.nodeType === 1) enhanceFileInputs(n); });
+            }
+        });
+        obs.observe(document.body, { childList: true, subtree: true });
+    }
+
     const ensureIds = (list) => {
         for (const item of list) {
             if (!item.id) item.id = uid(item.type === 'category' ? 'cat' : 'link');
@@ -126,8 +239,20 @@
             body.hidden = !body.hidden;
         });
 
-        removeBtn.addEventListener('click', () => {
-            if (!confirm('Remove this item from the link list?')) return;
+        removeBtn.addEventListener('click', async () => {
+            const isCategory = item.type === 'category';
+            const label = (item.title || '').trim()
+                || (item.keyword ? '/' + item.keyword : '')
+                || (isCategory ? 'this category' : 'this link');
+            const ok = await lfpConfirm({
+                title: isCategory ? 'Remove category' : 'Remove link',
+                message: isCategory
+                    ? `Remove "${label}" and any links nested inside it from the homepage list?`
+                    : `Remove "${label}" from the homepage list?`,
+                confirmLabel: 'Remove',
+                danger: true,
+            });
+            if (!ok) return;
             removeItemById(item.id);
             renderTree();
         });
@@ -599,8 +724,14 @@
 
     /* -------------------------------------------------- Reset */
 
-    document.getElementById('lfp-reset').addEventListener('click', () => {
-        if (!confirm('Reset all settings to defaults? This will remove every configured link and category.')) return;
+    document.getElementById('lfp-reset').addEventListener('click', async () => {
+        const ok = await lfpConfirm({
+            title: 'Reset all settings to defaults?',
+            message: 'This will remove every configured link, category, image-grid tile and About-me social. Appearance and General preferences also revert to defaults. This cannot be undone.',
+            confirmLabel: 'Reset everything',
+            danger: true,
+        });
+        if (!ok) return;
         const actionInput = form.querySelector('input[name="lfp_action"]');
         actionInput.value = 'reset';
         form.submit();
@@ -710,8 +841,14 @@
         if (needsDetails) node.classList.add('lfp-ig-needs-details');
 
         editBtn.addEventListener('click', () => openIgDialog(item.id));
-        removeBtn.addEventListener('click', () => {
-            if (!confirm('Remove this tile?')) return;
+        removeBtn.addEventListener('click', async () => {
+            const ok = await lfpConfirm({
+                title: 'Remove image tile',
+                message: 'Remove this tile from the image grid?',
+                confirmLabel: 'Remove',
+                danger: true,
+            });
+            if (!ok) return;
             const idx = igItems.findIndex((i) => i.id === item.id);
             if (idx >= 0) igItems.splice(idx, 1);
             renderIg();
@@ -1010,4 +1147,5 @@
     renderTree();
     renderSocials();
     renderIg();
+    enhanceFileInputs(document);
 })();

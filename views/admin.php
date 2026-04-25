@@ -668,6 +668,22 @@ $bootstrap = [
     </form>
 </dialog>
 
+<dialog id="lfp-confirm">
+    <form method="dialog" class="lfp-confirm-form">
+        <header class="lfp-picker-head">
+            <h3 id="lfp-confirm-title">Confirm</h3>
+            <button type="submit" class="lfp-icon-btn" value="cancel" aria-label="Close">&times;</button>
+        </header>
+        <div class="lfp-confirm-body">
+            <p id="lfp-confirm-message"></p>
+        </div>
+        <footer class="lfp-ig-foot">
+            <button type="button" class="lfp-btn" id="lfp-confirm-cancel">Cancel</button>
+            <button type="button" class="lfp-btn lfp-btn-primary" id="lfp-confirm-ok">Confirm</button>
+        </footer>
+    </form>
+</dialog>
+
 <dialog id="lfp-picker">
     <form method="dialog">
         <header class="lfp-picker-head">
