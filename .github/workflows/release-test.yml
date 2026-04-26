@@ -47,10 +47,19 @@ jobs:
         working-directory: tests
         run: docker compose up -d
 
+      - name: Diagnose Docker stack
+        working-directory: tests
+        run: |
+          docker ps
+          echo "---"
+          docker compose ps
+          echo "--- one-shot curl probes ---"
+          curl -sS -v -m 5 http://127.0.0.1:8080/ 2>&1 | head -30 || true
+
       - name: Wait for YOURLS to respond
         run: |
           for i in $(seq 1 90); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/admin/install.php || echo "000")
+            code=$(curl -s -4 -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/admin/install.php)
             if [ "$code" = "200" ] || [ "$code" = "302" ]; then
               echo "YOURLS responded with HTTP $code after $i attempts"
               exit 0

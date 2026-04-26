@@ -21,13 +21,13 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     environment:
       YOURLS_DB_HOST: db
       YOURLS_DB_USER: yourls
       YOURLS_DB_PASS: yourlspass
       YOURLS_DB_NAME: yourls
-      YOURLS_SITE: http://localhost:8080
+      YOURLS_SITE: http://127.0.0.1:8080
       YOURLS_USER: admin
       YOURLS_PASS: admin
       YOURLS_PRIVATE: "false"

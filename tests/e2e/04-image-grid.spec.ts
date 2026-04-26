@@ -40,7 +40,7 @@ test.describe('Image grid: bulk upload, mixed sources, title visibility modes', 
     // Seed the three YOURLS shortlinks the picker will need. Reuse the saved
     // admin storage state so we are authenticated.
     const ctx = await browser.newContext({
-      baseURL: process.env.YOURLS_BASE_URL ?? 'http://localhost:8080',
+      baseURL: process.env.YOURLS_BASE_URL ?? 'http://127.0.0.1:8080',
       storageState: '.auth/admin.json',
     });
     const page = await ctx.newPage();

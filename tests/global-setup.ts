@@ -1,7 +1,7 @@
 import { chromium, request, FullConfig } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
-const BASE_URL = process.env.YOURLS_BASE_URL ?? 'http://localhost:8080';
+const BASE_URL = process.env.YOURLS_BASE_URL ?? 'http://127.0.0.1:8080';
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'admin';
 

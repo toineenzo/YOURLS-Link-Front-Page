@@ -23,7 +23,7 @@ test.describe('Adding link items + categories via the plugin', () => {
   test.beforeAll(async ({ browser }) => {
     yourlsKeyword = `pluginlink${stamp}`;
     const ctx = await browser.newContext({
-      baseURL: process.env.YOURLS_BASE_URL ?? 'http://localhost:8080',
+      baseURL: process.env.YOURLS_BASE_URL ?? 'http://127.0.0.1:8080',
       storageState: '.auth/admin.json',
     });
     const page = await ctx.newPage();
