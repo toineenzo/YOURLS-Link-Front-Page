@@ -160,7 +160,7 @@ $bootstrap = [
                 <div class="lfp-image-input">
                     <input type="url" name="site_logo" value="<?php echo yourls_esc_attr($general['site_logo']); ?>" placeholder="https://example.com/avatar.png" data-lfp-image-url>
                     <input type="file" name="site_logo" accept="image/*" data-lfp-image-file>
-                    <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
+                    <button type="button" class="lfp-image-clear" data-lfp-image-clear title="Remove image" aria-label="Remove image">&times;</button>
                     <?php if ($general['site_logo'] !== ''): ?>
                         <img class="lfp-thumb" src="<?php echo yourls_esc_url($general['site_logo']); ?>" alt="">
                     <?php endif; ?>
@@ -172,7 +172,7 @@ $bootstrap = [
                 <div class="lfp-image-input">
                     <input type="url" name="site_favicon" value="<?php echo yourls_esc_attr($general['site_favicon']); ?>" placeholder="https://example.com/favicon.png" data-lfp-image-url>
                     <input type="file" name="site_favicon" accept="image/*,.ico" data-lfp-image-file>
-                    <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
+                    <button type="button" class="lfp-image-clear" data-lfp-image-clear title="Remove image" aria-label="Remove image">&times;</button>
                     <?php if ($general['site_favicon'] !== ''): ?>
                         <img class="lfp-thumb" src="<?php echo yourls_esc_url($general['site_favicon']); ?>" alt="">
                     <?php endif; ?>
@@ -197,7 +197,7 @@ $bootstrap = [
                     <div class="lfp-image-input">
                         <input type="url" name="about_image" value="<?php echo yourls_esc_attr($general['about_image']); ?>" placeholder="https://example.com/me.jpg" data-lfp-image-url>
                         <input type="file" name="about_image" accept="image/*" data-lfp-image-file>
-                        <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
+                        <button type="button" class="lfp-image-clear" data-lfp-image-clear title="Remove image" aria-label="Remove image">&times;</button>
                         <?php if ($general['about_image'] !== ''): ?>
                             <img class="lfp-thumb" src="<?php echo yourls_esc_url($general['about_image']); ?>" alt="">
                         <?php endif; ?>
@@ -400,7 +400,7 @@ $bootstrap = [
                 <div class="lfp-image-input">
                     <input type="url" name="background_image" value="<?php echo yourls_esc_attr($appearance['background_image']); ?>" placeholder="https://example.com/bg.jpg" data-lfp-image-url>
                     <input type="file" name="background_image" accept="image/*" data-lfp-image-file>
-                    <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
+                    <button type="button" class="lfp-image-clear" data-lfp-image-clear title="Remove image" aria-label="Remove image">&times;</button>
                     <?php if (!empty($appearance['background_image'])): ?>
                         <img class="lfp-thumb" src="<?php echo yourls_esc_url($appearance['background_image']); ?>" alt="">
                     <?php endif; ?>
@@ -727,7 +727,7 @@ $bootstrap = [
                     <div class="lfp-image-input">
                         <input type="url" placeholder="https://..." data-lfp-image-url>
                         <input type="file" accept="image/*" data-lfp-image-file>
-                        <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
+                        <button type="button" class="lfp-image-clear" data-lfp-image-clear title="Remove image" aria-label="Remove image">&times;</button>
                     </div>
                 </div>
             </div>
@@ -762,7 +762,7 @@ $bootstrap = [
                     <div class="lfp-image-input">
                         <input type="url" placeholder="https://..." data-lfp-image-url>
                         <input type="file" accept="image/*" data-lfp-image-file>
-                        <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
+                        <button type="button" class="lfp-image-clear" data-lfp-image-clear title="Remove image" aria-label="Remove image">&times;</button>
                     </div>
                 </div>
             </div>

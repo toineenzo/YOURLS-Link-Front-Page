@@ -126,6 +126,17 @@
             wrap.appendChild(clear);
             wrap.appendChild(input);
 
+            // If a sibling .lfp-image-input has its own [data-lfp-image-clear]
+            // button, pull it INTO our wrapper so the small × sits to the
+            // right of the file picker UI rather than wrapping to a new line.
+            const imageWrap = wrap.parentElement?.closest('.lfp-image-input');
+            if (imageWrap) {
+                const imgClear = imageWrap.querySelector('[data-lfp-image-clear]');
+                if (imgClear && imgClear.parentElement !== wrap) {
+                    wrap.appendChild(imgClear);
+                }
+            }
+
             updateLabel();
         });
     };
