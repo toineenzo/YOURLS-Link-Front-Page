@@ -130,8 +130,11 @@ class HelpersTest extends PHPUnit\Framework\TestCase
 
     public function test_sanitize_id_strips_unsafe_chars(): void
     {
+        // Allowed: [a-zA-Z0-9_-]. Anything else is stripped — character-level
+        // filter, not an HTML sanitiser, so any leftover letters from inline
+        // tags survive.
         $this->assertSame('safe_id-123', lfp_sanitize_id('safe_id-123'));
-        $this->assertSame('clean',       lfp_sanitize_id('cl<script>e</script>an'));
+        $this->assertSame('foobar',      lfp_sanitize_id('foo bar!@#'));
         $this->assertSame('',            lfp_sanitize_id('!!!'));
     }
 }
