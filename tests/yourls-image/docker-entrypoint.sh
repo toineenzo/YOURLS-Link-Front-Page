@@ -27,7 +27,7 @@ define( 'YOURLS_DB_PREFIX', 'yourls_' );
 define( 'YOURLS_SITE',      '${YOURLS_SITE}' );
 define( 'YOURLS_HOURS_OFFSET', 0 );
 define( 'YOURLS_LANG', '' );
-define( 'YOURLS_UNIQUE_URLS', true );
+define( 'YOURLS_UNIQUE_URLS', false );
 define( 'YOURLS_PRIVATE', ${YOURLS_PRIVATE} );
 define( 'YOURLS_COOKIEKEY', '${cookiekey}' );
 \$yourls_user_passwords = array(
