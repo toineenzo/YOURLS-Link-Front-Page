@@ -17,3 +17,9 @@ tests/playwright-report/
 tests/test-results/
 tests/.auth/
 tests/package-lock.json
+
+# Workflow build artifacts
+dist/
+staging-prod/
+staging-debug/
+test-plugin/

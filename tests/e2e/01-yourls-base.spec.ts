@@ -18,7 +18,7 @@ test.describe('YOURLS still works with Link Front Page active', () => {
     await page.goto('/admin/plugins.php');
     await expect(
       page.locator(
-        'a[href*="action=deactivate"][href*="plugin=yourls-link-front-page"]'
+        'a[href*="action=deactivate"][href*="plugin=Link-Front-Page"]'
       )
     ).toBeVisible();
   });

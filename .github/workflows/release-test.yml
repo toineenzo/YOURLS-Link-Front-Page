@@ -15,7 +15,12 @@ on:
       - '.github/workflows/release-test.yml'
 
 permissions:
-  contents: read
+  contents: write   # gh release upload needs write on releases
+
+# Force every JS-based action to run on Node 24, even if the action's metadata
+# still pins Node 20 — keeps us off the deprecation path.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   e2e:
@@ -25,12 +30,70 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
+
+      - name: Determine plugin version
+        id: version
+        run: |
+          VERSION=$(grep -oP 'Version:\s*\K[0-9.]+' plugin.php)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Plugin version: $VERSION"
+
+      - name: Build production + debug zips
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          rm -rf dist staging-prod staging-debug
+          mkdir -p dist staging-prod/Link-Front-Page staging-debug/Link-Front-Page
+
+          # ------- Production zip — install-ready for end users -------
+          # Excludes everything that is not part of the runtime plugin: dev
+          # tooling (.github, tests), VCS metadata, and dependency caches.
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='tests/' \
+            --exclude='node_modules/' \
+            --exclude='dist/' \
+            --exclude='staging-prod/' \
+            --exclude='staging-debug/' \
+            --exclude='test-plugin/' \
+            ./ staging-prod/Link-Front-Page/
+          (cd staging-prod && zip -rq "$GITHUB_WORKSPACE/dist/YOURLS-Link-Front-Page-v${VERSION}.zip" Link-Front-Page)
+
+          # ------- Debug zip — entire repo, used by these tests -------
+          # Same as above minus only .git/, node_modules/, and build outputs.
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='node_modules/' \
+            --exclude='dist/' \
+            --exclude='staging-prod/' \
+            --exclude='staging-debug/' \
+            --exclude='test-plugin/' \
+            ./ staging-debug/Link-Front-Page/
+          (cd staging-debug && zip -rq "$GITHUB_WORKSPACE/dist/YOURLS-Link-Front-Page-v${VERSION}-debug.zip" Link-Front-Page)
+
+          ls -la dist/
+
+      - name: Extract debug zip as the plugin source
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          rm -rf test-plugin
+          mkdir -p test-plugin
+          unzip -q "dist/YOURLS-Link-Front-Page-v${VERSION}-debug.zip" -d test-plugin
+          # Apache inside the YOURLS container runs as www-data; make sure it
+          # can write to the plugin's uploads directory once tests start.
+          chmod -R a+rwx test-plugin/Link-Front-Page/uploads
+          echo "--- test-plugin tree (first 2 levels) ---"
+          find test-plugin -maxdepth 2 -mindepth 1 | sort
 
       - name: Install Playwright deps
         working-directory: tests
@@ -38,13 +101,10 @@ jobs:
           npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
 
-      - name: Make uploads dir writable for Apache (www-data)
-        run: |
-          mkdir -p uploads
-          sudo chmod -R 777 uploads
-
       - name: Start YOURLS stack
         working-directory: tests
+        env:
+          PLUGIN_PATH: ${{ github.workspace }}/test-plugin/Link-Front-Page
         run: docker compose up -d
 
       - name: Diagnose Docker stack
@@ -53,7 +113,7 @@ jobs:
           docker ps
           echo "---"
           docker compose ps
-          echo "--- one-shot curl probes ---"
+          echo "--- one-shot curl probe ---"
           curl -sS -v -m 5 http://127.0.0.1:8080/ 2>&1 | head -30 || true
 
       - name: Wait for YOURLS to respond
@@ -79,9 +139,17 @@ jobs:
         working-directory: tests
         run: npx playwright test
 
+      - name: Upload built zips
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: release-zips
+          path: dist/*.zip
+          retention-days: 14
+
       - name: Upload Playwright HTML report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: tests/playwright-report/
@@ -89,7 +157,7 @@ jobs:
 
       - name: Upload Playwright trace + screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-test-results
           path: tests/test-results/
@@ -104,3 +172,15 @@ jobs:
         if: always()
         working-directory: tests
         run: docker compose down -v
+
+      - name: Attach zips to GitHub release
+        if: github.event_name == 'release' && success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release upload "v${VERSION}" \
+            "dist/YOURLS-Link-Front-Page-v${VERSION}.zip" \
+            "dist/YOURLS-Link-Front-Page-v${VERSION}-debug.zip" \
+            --repo "${{ github.repository }}" \
+            --clobber

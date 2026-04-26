@@ -15,7 +15,10 @@ services:
       start_period: 10s
 
   yourls:
-    image: yourls:latest
+    # Pin to a known-good upstream tag — the floating `latest` was shipping
+    # a build whose PHP handler reset connections immediately after Apache
+    # start on Ubuntu 24 runners.
+    image: yourls:1.10
     restart: unless-stopped
     depends_on:
       db:
@@ -32,4 +35,7 @@ services:
       YOURLS_PASS: admin
       YOURLS_PRIVATE: "false"
     volumes:
-      - ../:/var/www/html/user/plugins/yourls-link-front-page
+      # ${PLUGIN_PATH} is set by the workflow to the *extracted debug zip*
+      # so the tests run against exactly what is shipped. For local dev it
+      # falls back to the repo root, which contains the same plugin files.
+      - "${PLUGIN_PATH:-..}:/var/www/html/user/plugins/Link-Front-Page"

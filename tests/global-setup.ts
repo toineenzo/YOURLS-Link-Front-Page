@@ -72,7 +72,7 @@ export default async function globalSetup(_config: FullConfig) {
   //    activate / deactivate links keyed by plugin directory name.
   await page.goto('/admin/plugins.php');
   const activateLink = page.locator(
-    'a[href*="action=activate"][href*="plugin=yourls-link-front-page"]'
+    'a[href*="action=activate"][href*="plugin=Link-Front-Page"]'
   );
   if (await activateLink.first().isVisible({ timeout: 5000 }).catch(() => false)) {
     await activateLink.first().click();
@@ -81,11 +81,11 @@ export default async function globalSetup(_config: FullConfig) {
 
   // Verify activation succeeded — the deactivate link should now be present.
   const deactivateLink = page.locator(
-    'a[href*="action=deactivate"][href*="plugin=yourls-link-front-page"]'
+    'a[href*="action=deactivate"][href*="plugin=Link-Front-Page"]'
   );
   if (!(await deactivateLink.first().isVisible({ timeout: 5000 }).catch(() => false))) {
     throw new Error(
-      'Plugin "yourls-link-front-page" did not activate — check that the plugin folder is mounted at user/plugins/yourls-link-front-page'
+      'Plugin "Link-Front-Page" did not activate — check that the plugin folder is mounted at user/plugins/Link-Front-Page'
     );
   }
 

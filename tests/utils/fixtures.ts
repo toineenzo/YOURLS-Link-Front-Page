@@ -19,8 +19,8 @@ const PHP_ERROR_PATTERNS: RegExp[] = [
 // Narrower patterns: only flag a Warning / Notice when it points back at this
 // plugin's directory, since those are something the plugin author can fix.
 const PLUGIN_ONLY_ERROR_PATTERNS: RegExp[] = [
-  /<b>\s*Warning\s*<\/b>:[^<]*yourls-link-front-page/i,
-  /<b>\s*Notice\s*<\/b>:[^<]*yourls-link-front-page/i,
+  /<b>\s*Warning\s*<\/b>:[^<]*Link-Front-Page/i,
+  /<b>\s*Notice\s*<\/b>:[^<]*Link-Front-Page/i,
 ];
 
 // Console messages YOURLS itself emits that we don't want to flag — typically

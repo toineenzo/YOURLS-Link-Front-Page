@@ -64,10 +64,10 @@ Plus a `REQUEST_URI` fallback for stale-cached `yourls_get_request()` and an `X-
 
 ```bash
 cd /path/to/yourls/user/plugins
-git clone https://github.com/toineenzo/YOURLS-Link-Front-Page.git yourls-link-front-page
+git clone https://github.com/toineenzo/YOURLS-Link-Front-Page.git Link-Front-Page
 ```
 
-…or download the latest release ZIP from the [Releases page](https://github.com/toineenzo/YOURLS-Link-Front-Page/releases) and unzip into `user/plugins/`.
+…or download `YOURLS-Link-Front-Page-vX.Y.Z.zip` from the [Releases page](https://github.com/toineenzo/YOURLS-Link-Front-Page/releases) and unzip into `user/plugins/`. The zip already contains a `Link-Front-Page/` folder, so the final path is `user/plugins/Link-Front-Page/`.
 
 Then open the YOURLS admin at `/admin/plugins.php` and click **Activate** on *Link Front Page*. The plugin adds a sub-page under *Manage Plugins → Link Front Page*. Open it and start adding links and categories.
 
@@ -89,7 +89,7 @@ Then open the YOURLS admin at `/admin/plugins.php` and click **Activate** on *Li
 ## 🗂 File structure
 
 ```
-yourls-link-front-page/
+Link-Front-Page/
 ├── plugin.php                   # Plugin entrypoint, hooks, settings I/O,
 │                                  routing, vCard generator, upload handling
 ├── views/
