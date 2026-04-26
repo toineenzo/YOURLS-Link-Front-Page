@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: yourls
+      MARIADB_USER: yourls
+      MARIADB_PASSWORD: yourlspass
+      MARIADB_ROOT_PASSWORD: rootpass
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u root -prootpass --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  yourls:
+    image: yourls:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      YOURLS_DB_HOST: db
+      YOURLS_DB_USER: yourls
+      YOURLS_DB_PASS: yourlspass
+      YOURLS_DB_NAME: yourls
+      YOURLS_SITE: http://localhost:8080
+      YOURLS_USER: admin
+      YOURLS_PASS: admin
+      YOURLS_PRIVATE: "false"
+    volumes:
+      - ../:/var/www/html/user/plugins/yourls-link-front-page

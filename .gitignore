@@ -10,3 +10,10 @@ Thumbs.db
 .idea/
 *.swp
 *.bak
+
+# Test artifacts (Playwright)
+tests/node_modules/
+tests/playwright-report/
+tests/test-results/
+tests/.auth/
+tests/package-lock.json
