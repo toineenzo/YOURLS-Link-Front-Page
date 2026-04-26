@@ -32,13 +32,14 @@ test.describe('YOURLS still works with Link Front Page active', () => {
       title: 'YOURLS base test',
     });
 
-    // Visit the shortlink — must redirect (3xx) without a server error.
-    const response = await page.goto(`/${keyword}`, { waitUntil: 'commit' });
-    expect(response, `no response for /${keyword}`).not.toBeNull();
-    // Either we landed on example.com (redirect followed) or got a 3xx.
-    // Playwright's goto resolves to the final response, so check for a 2xx
-    // or 3xx anywhere along the chain via the request's final URL.
-    expect(response!.status()).toBeLessThan(400);
+    // Use the request API rather than a full navigation so we can inspect
+    // the very first response for the keyword (a 3xx redirect to the long
+    // URL) without Playwright trying to fetch external example.com.
+    const resp = await page.request.get(`/${keyword}`, { maxRedirects: 0 });
+    expect(
+      resp.status(),
+      `GET /${keyword} returned ${resp.status()}: ${(await resp.text()).slice(0, 200)}`
+    ).toBeLessThan(400);
     expect(errors.serverErrors).toEqual([]);
   });
 });
