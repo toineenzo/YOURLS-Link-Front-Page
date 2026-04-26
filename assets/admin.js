@@ -2,6 +2,19 @@
 (() => {
     'use strict';
 
+    /* Theme detection — Sleeky-backend ships <meta name="sleeky_theme"
+       content="dark|light"> in the admin head. Without that tag we assume
+       vanilla YOURLS (light), so our dark-on-dark inputs don't end up on
+       a white admin page. */
+    (() => {
+        const meta = document.querySelector('meta[name="sleeky_theme"]');
+        if (meta && meta.getAttribute('content') === 'dark') {
+            document.documentElement.classList.add('lfp-theme-dark');
+        } else {
+            document.documentElement.classList.add('lfp-theme-light');
+        }
+    })();
+
     const bootstrap = JSON.parse(document.getElementById('lfp-bootstrap').textContent);
     const allLinks = Array.isArray(bootstrap.allLinks) ? bootstrap.allLinks : [];
     const linkMap = Object.create(null);

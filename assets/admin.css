@@ -7,20 +7,27 @@
 
 /* ---------- 1. Design tokens (scoped) ---------- */
 
+/*
+ * Light is the default — matches vanilla YOURLS' admin chrome (white
+ * page, dark text). The dark token block kicks in only when admin.js
+ * spots Sleeky-backend's dark theme meta tag and adds `.lfp-theme-dark`
+ * to the <html> element. Without that, even dark-mode browser users
+ * keep the light surface so it doesn't clash with YOURLS' own colors.
+ */
 #lfp-form,
 #lfp-picker,
 #lfp-imgrid-dialog,
 #lfp-confirm {
-    --lfp-bg:       #1f2937;
-    --lfp-card:     #111827;
-    --lfp-elev:     #2d3748;
-    --lfp-fg:       #f3f4f6;
-    --lfp-muted:    #9ca3af;
-    --lfp-border:   #374151;
-    --lfp-hover:    #2d3748;
-    --lfp-accent:   #3b82f6;
+    --lfp-bg:       #ffffff;
+    --lfp-card:     #ffffff;
+    --lfp-elev:     #f9fafb;
+    --lfp-fg:       #111827;
+    --lfp-muted:    #6b7280;
+    --lfp-border:   #e5e7eb;
+    --lfp-hover:    #f3f4f6;
+    --lfp-accent:   #2563eb;
     --lfp-accent-2: #1d4ed8;
-    --lfp-danger:   #ef4444;
+    --lfp-danger:   #dc2626;
     --lfp-warn:     #f59e0b;
 
     --lfp-ctrl-h:    38px;
@@ -30,23 +37,25 @@
     --lfp-card-pad:  18px;
     --lfp-section:   18px;
 
-    --lfp-shadow-sm: 0 1px 2px rgba(0,0,0,0.18);
-    --lfp-shadow-md: 0 8px 24px rgba(0,0,0,0.32);
+    --lfp-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --lfp-shadow-md: 0 8px 24px rgba(0,0,0,0.10);
 }
 
-@media (prefers-color-scheme: light) {
-    #lfp-form,
-    #lfp-picker,
-    #lfp-imgrid-dialog,
-    #lfp-confirm {
-        --lfp-bg:       #ffffff;
-        --lfp-card:     #ffffff;
-        --lfp-elev:     #f9fafb;
-        --lfp-fg:       #111827;
-        --lfp-muted:    #6b7280;
-        --lfp-border:   #e5e7eb;
-        --lfp-hover:    #f3f4f6;
-    }
+.lfp-theme-dark #lfp-form,
+.lfp-theme-dark #lfp-picker,
+.lfp-theme-dark #lfp-imgrid-dialog,
+.lfp-theme-dark #lfp-confirm {
+    --lfp-bg:       #1f2937;
+    --lfp-card:     #111827;
+    --lfp-elev:     #2d3748;
+    --lfp-fg:       #f3f4f6;
+    --lfp-muted:    #9ca3af;
+    --lfp-border:   #374151;
+    --lfp-hover:    #2d3748;
+    --lfp-accent:   #3b82f6;
+    --lfp-danger:   #ef4444;
+    --lfp-shadow-sm: 0 1px 2px rgba(0,0,0,0.18);
+    --lfp-shadow-md: 0 8px 24px rgba(0,0,0,0.32);
 }
 
 /* Backwards-compatible aliases for legacy class hooks. */
