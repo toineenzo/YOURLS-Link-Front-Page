@@ -23,3 +23,7 @@ dist/
 staging-prod/
 staging-debug/
 test-plugin/
+
+# YOURLS-test-suite-for-plugins (cloned by install-test-suite.sh)
+test-suite/
+YOURLS/
