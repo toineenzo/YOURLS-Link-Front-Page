@@ -380,15 +380,19 @@ function lfp_serve_vcard(array $general): void
  * Fires from yourls-loader.php after the request is resolved. If we were not
  * already caught by plugins_loaded (e.g. the request was actually empty and
  * the host serves yourls-loader.php for "/"), render the linktree here.
+ *
+ * Note: YOURLS' yourls_do_action() wraps a single string arg into an array
+ * before dispatching, so the callback receives a single-element array, not
+ * the bare string. We accept mixed and normalize.
  */
-function lfp_handle_pre_load_template(string $request = ''): void
+function lfp_handle_pre_load_template(mixed $request = ''): void
 {
     $general = lfp_get_general();
     if (empty($general['enabled'])) {
         return;
     }
 
-    $resolved = trim((string) strtok((string) $request, '?'), '/');
+    $resolved = trim((string) strtok(lfp_unwrap_action_arg($request), '?'), '/');
     if (!lfp_is_root_request($resolved)) {
         return;
     }
@@ -401,20 +405,34 @@ function lfp_handle_pre_load_template(string $request = ''): void
  * Final safety net: if YOURLS is about to redirect a missing keyword and the
  * request is actually the empty root, render the linktree instead of looping.
  */
-function lfp_handle_loader_failed(string $request = ''): void
+function lfp_handle_loader_failed(mixed $request = ''): void
 {
     $general = lfp_get_general();
     if (empty($general['enabled'])) {
         return;
     }
 
-    $resolved = trim((string) strtok((string) $request, '?'), '/');
+    $resolved = trim((string) strtok(lfp_unwrap_action_arg($request), '?'), '/');
     if (!lfp_is_root_request($resolved)) {
         return;
     }
 
     lfp_render_frontend();
     exit;
+}
+
+/**
+ * yourls_do_action() always passes its single-arg payload as a one-element
+ * array (see includes/functions-plugins.php yourls_do_action), so action
+ * handlers that look at the arg need to peel it back off. Returns '' when
+ * the arg is missing or not a scalar.
+ */
+function lfp_unwrap_action_arg(mixed $arg): string
+{
+    if (is_array($arg)) {
+        $arg = $arg[0] ?? '';
+    }
+    return is_scalar($arg) ? (string) $arg : '';
 }
 
 /**
