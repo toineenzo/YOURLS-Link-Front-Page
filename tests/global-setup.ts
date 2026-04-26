@@ -97,11 +97,18 @@ export default async function globalSetup(_config: FullConfig) {
     await page.waitForLoadState('networkidle');
   }
 
-  // Verify activation succeeded — the deactivate link should now be present.
-  const deactivateLink = page.locator(
-    'a[href*="action=deactivate"][href*="plugin=Link-Front-Page"]'
-  );
-  if (!(await deactivateLink.first().isVisible({ timeout: 5000 }).catch(() => false))) {
+  // Verify activation succeeded. YOURLS shows "Plugin has been activated"
+  // in a notice div on the plugins page after a successful activate, plus the
+  // plugin row gets `class="plugin active"`. Either signal is enough.
+  const activated = await page
+    .locator('div.notice', { hasText: /plugin has been activated/i })
+    .or(
+      page.locator('tr.plugin.active', { hasText: 'Link Front Page' })
+    )
+    .first()
+    .isVisible({ timeout: 5000 })
+    .catch(() => false);
+  if (!activated) {
     const url = page.url();
     const bodyExcerpt = (await page.content().catch(() => ''))
       .replace(/\s+/g, ' ')
