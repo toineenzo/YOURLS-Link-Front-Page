@@ -302,6 +302,63 @@ $bootstrap = [
             </div>
         </fieldset>
 
+        <fieldset class="lfp-fieldset">
+            <legend>404 / Link not found</legend>
+            <p class="lfp-hint" style="margin-top:0">What should happen when a visitor hits a shortlink that doesn't exist (e.g. <code>https://your-site/typo</code>)?</p>
+
+            <div class="lfp-field">
+                <label for="lfp-nf-mode">When a shortlink isn't found</label>
+                <select id="lfp-nf-mode" name="not_found_mode">
+                    <option value="default"  <?php echo $general['not_found_mode']==='default'  ? 'selected' : ''; ?>>Use YOURLS default (302 to homepage)</option>
+                    <option value="root"     <?php echo $general['not_found_mode']==='root'     ? 'selected' : ''; ?>>Redirect to homepage (the linktree)</option>
+                    <option value="redirect" <?php echo $general['not_found_mode']==='redirect' ? 'selected' : ''; ?>>Redirect to a custom URL or YOURLS shortlink</option>
+                    <option value="page"     <?php echo $general['not_found_mode']==='page'     ? 'selected' : ''; ?>>Show themed 404 page with a button</option>
+                </select>
+            </div>
+
+            <div data-lfp-nf-section="target">
+                <div class="lfp-grid">
+                    <div class="lfp-field">
+                        <label for="lfp-nf-target-type">Target type</label>
+                        <select id="lfp-nf-target-type" name="not_found_target_type">
+                            <option value="url"     <?php echo $general['not_found_target_type']==='url'     ? 'selected' : ''; ?>>Custom URL</option>
+                            <option value="keyword" <?php echo $general['not_found_target_type']==='keyword' ? 'selected' : ''; ?>>YOURLS shortlink</option>
+                        </select>
+                    </div>
+                    <div class="lfp-field" data-lfp-nf-target="url">
+                        <label for="lfp-nf-url">URL</label>
+                        <input type="url" id="lfp-nf-url" name="not_found_target_url" value="<?php echo yourls_esc_attr($general['not_found_target_url']); ?>" placeholder="https://example.com/oops">
+                    </div>
+                    <div class="lfp-field" data-lfp-nf-target="keyword" hidden>
+                        <label>YOURLS shortlink</label>
+                        <div class="lfp-keyword-pick">
+                            <input type="hidden" name="not_found_target_keyword" id="lfp-nf-keyword-input" value="<?php echo yourls_esc_attr($general['not_found_target_keyword']); ?>">
+                            <code id="lfp-nf-keyword-display"><?php echo $general['not_found_target_keyword'] !== '' ? yourls_esc_html($general['not_found_target_keyword']) : '—'; ?></code>
+                            <button type="button" class="lfp-btn" id="lfp-nf-pick">Pick a shortlink…</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div data-lfp-nf-section="page">
+                <div class="lfp-grid">
+                    <div class="lfp-field">
+                        <label for="lfp-nf-title">Page title</label>
+                        <input type="text" id="lfp-nf-title" name="not_found_title" value="<?php echo yourls_esc_attr($general['not_found_title']); ?>" placeholder="Link not found">
+                    </div>
+                    <div class="lfp-field">
+                        <label for="lfp-nf-btn">Button label</label>
+                        <input type="text" id="lfp-nf-btn" name="not_found_button_label" value="<?php echo yourls_esc_attr($general['not_found_button_label']); ?>" placeholder="Back to homepage">
+                    </div>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-nf-msg">Page message</label>
+                    <textarea id="lfp-nf-msg" name="not_found_message" rows="3" placeholder="The short link you tried to visit does not exist or has been removed."><?php echo yourls_esc_html($general['not_found_message']); ?></textarea>
+                    <small>Markdown and HTML supported.</small>
+                </div>
+            </div>
+        </fieldset>
+
         <div class="lfp-pane-actions">
             <button type="button" class="lfp-btn lfp-btn-danger" data-lfp-reset="general">Reset general settings</button>
         </div>

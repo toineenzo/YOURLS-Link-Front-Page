@@ -742,6 +742,45 @@
         renderSocials();
     });
 
+    /* -------------------------------------------------- 404 settings */
+
+    const nfMode       = document.getElementById('lfp-nf-mode');
+    const nfTargetType = document.getElementById('lfp-nf-target-type');
+    const nfPickBtn    = document.getElementById('lfp-nf-pick');
+    const nfKwInput    = document.getElementById('lfp-nf-keyword-input');
+    const nfKwDisp     = document.getElementById('lfp-nf-keyword-display');
+
+    const refreshNfSections = () => {
+        const mode = nfMode ? nfMode.value : 'default';
+        document.querySelectorAll('[data-lfp-nf-section]').forEach((el) => {
+            const which = el.dataset.lfpNfSection;
+            if (which === 'target') {
+                el.hidden = !(mode === 'redirect' || mode === 'page');
+            } else if (which === 'page') {
+                el.hidden = mode !== 'page';
+            }
+        });
+    };
+
+    const refreshNfTarget = () => {
+        const v = nfTargetType ? nfTargetType.value : 'url';
+        document.querySelectorAll('[data-lfp-nf-target]').forEach((el) => {
+            el.hidden = el.dataset.lfpNfTarget !== v;
+        });
+    };
+
+    nfMode?.addEventListener('change', refreshNfSections);
+    nfTargetType?.addEventListener('change', refreshNfTarget);
+    refreshNfSections();
+    refreshNfTarget();
+
+    nfPickBtn?.addEventListener('click', () => {
+        openPicker((kw) => {
+            if (nfKwInput) nfKwInput.value = kw;
+            if (nfKwDisp)  nfKwDisp.textContent = kw;
+        });
+    });
+
     /* -------------------------------------------------- Tabs */
 
     document.querySelectorAll('.lfp-tab').forEach((btn) => {

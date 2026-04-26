@@ -69,6 +69,19 @@ function lfp_default_general(): array
         'powered_by_url'     => '',
         'footer_custom_html' => '',
 
+        // 404 / non-existent shortlink behavior. Modes:
+        //   default  - let YOURLS do its standard 302 to YOURLS_SITE
+        //   root     - redirect to YOURLS_SITE (the linktree)
+        //   redirect - 302 to a custom URL or YOURLS keyword
+        //   page     - render a themed 404 page with optional CTA button
+        'not_found_mode'           => 'default',
+        'not_found_target_type'    => 'url',
+        'not_found_target_url'     => '',
+        'not_found_target_keyword' => '',
+        'not_found_title'          => '',
+        'not_found_message'        => '',
+        'not_found_button_label'   => '',
+
         // About-me section
         'about_enabled'     => false,
         'about_image'       => '',
@@ -412,8 +425,15 @@ function lfp_handle_pre_load_template(mixed $request = ''): void
 }
 
 /**
- * Final safety net: if YOURLS is about to redirect a missing keyword and the
- * request is actually the empty root, render the linktree instead of looping.
+ * Final safety net: fired by yourls-loader.php when the request couldn't be
+ * resolved to a shortlink. Two cases:
+ *
+ *   - The empty root request: render the linktree (prevents the YOURLS
+ *     "redirect to YOURLS_SITE" loop on installs without an index.php).
+ *   - Any other unmatched keyword: respect the configured 404 mode
+ *     (default / root / redirect / page) and either redirect or render
+ *     a themed not-found page. Default mode lets YOURLS continue to its
+ *     standard 302 to YOURLS_SITE.
  */
 function lfp_handle_loader_failed(mixed $request = ''): void
 {
@@ -423,12 +443,59 @@ function lfp_handle_loader_failed(mixed $request = ''): void
     }
 
     $resolved = trim((string) strtok(lfp_unwrap_action_arg($request), '?'), '/');
-    if (!lfp_is_root_request($resolved)) {
+
+    if (lfp_is_root_request($resolved)) {
+        lfp_render_frontend();
+        exit;
+    }
+
+    $mode = (string) ($general['not_found_mode'] ?? 'default');
+
+    if ($mode === 'default') {
         return;
     }
 
-    lfp_render_frontend();
-    exit;
+    if ($mode === 'root') {
+        yourls_redirect(YOURLS_SITE, 302);
+        exit;
+    }
+
+    if ($mode === 'redirect') {
+        $url = lfp_resolve_not_found_target($general);
+        if ($url !== '') {
+            yourls_redirect($url, 302);
+            exit;
+        }
+        return; // No valid target — fall through to YOURLS' default
+    }
+
+    if ($mode === 'page') {
+        lfp_render_not_found_page($general, $resolved);
+        exit;
+    }
+}
+
+function lfp_resolve_not_found_target(array $general): string
+{
+    $type = (string) ($general['not_found_target_type'] ?? 'url');
+    if ($type === 'keyword') {
+        $kw = (string) ($general['not_found_target_keyword'] ?? '');
+        if ($kw !== '' && yourls_keyword_is_taken($kw)) {
+            return (string) yourls_link($kw);
+        }
+        return '';
+    }
+    return trim((string) ($general['not_found_target_url'] ?? ''));
+}
+
+function lfp_render_not_found_page(array $general, string $request): void
+{
+    if (!headers_sent()) {
+        header('HTTP/1.1 404 Not Found');
+        header('Content-Type: text/html; charset=utf-8');
+        header('X-LFP-Rendered: 404');
+    }
+    require LFP_DIR . '/views/not_found.php';
 }
 
 /**
@@ -787,6 +854,14 @@ function lfp_save_settings(): never
         'powered_by_text'    => trim((string) ($_POST['powered_by_text'] ?? '')),
         'powered_by_url'     => trim((string) ($_POST['powered_by_url'] ?? '')),
         'footer_custom_html' => (string) ($_POST['footer_custom_html'] ?? ''),
+
+        'not_found_mode'           => in_array((string) ($_POST['not_found_mode'] ?? 'default'), ['default', 'root', 'redirect', 'page'], true) ? (string) $_POST['not_found_mode'] : 'default',
+        'not_found_target_type'    => in_array((string) ($_POST['not_found_target_type'] ?? 'url'), ['url', 'keyword'], true) ? (string) $_POST['not_found_target_type'] : 'url',
+        'not_found_target_url'     => trim((string) ($_POST['not_found_target_url'] ?? '')),
+        'not_found_target_keyword' => preg_replace('/[^a-zA-Z0-9_-]/', '', (string) ($_POST['not_found_target_keyword'] ?? '')) ?: '',
+        'not_found_title'          => trim((string) ($_POST['not_found_title'] ?? '')),
+        'not_found_message'        => (string) ($_POST['not_found_message'] ?? ''),
+        'not_found_button_label'   => trim((string) ($_POST['not_found_button_label'] ?? '')),
 
         'about_enabled'     => isset($_POST['about_enabled']),
         'about_image'       => $uploaded['about_image'] ?? trim((string) ($_POST['about_image'] ?? '')),

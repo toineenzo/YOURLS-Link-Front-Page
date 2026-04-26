@@ -522,6 +522,84 @@ body.has-lfp-bg::after {
     color: var(--lfp-fg);
 }
 
+/* ----------------------------------- 404 / Not found */
+
+.lfp-404-page {
+    min-height: 100vh;
+    justify-content: center;
+}
+
+.lfp-404 {
+    text-align: center;
+    background: var(--lfp-card);
+    border: 1px solid color-mix(in srgb, var(--lfp-fg) 8%, transparent);
+    border-radius: calc(var(--lfp-radius) + 4px);
+    padding: 36px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.lfp-404-code {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--lfp-accent);
+    opacity: 0.8;
+}
+
+.lfp-404-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.lfp-404-message {
+    color: var(--lfp-muted);
+    line-height: 1.5;
+    max-width: 36ch;
+}
+
+.lfp-404-message p:first-child { margin-top: 0; }
+.lfp-404-message p:last-child  { margin-bottom: 0; }
+
+.lfp-404-keyword {
+    margin: 0;
+    color: var(--lfp-muted);
+    font-size: 0.85rem;
+}
+
+.lfp-404-keyword code {
+    background: color-mix(in srgb, var(--lfp-fg) 8%, transparent);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color: var(--lfp-fg);
+}
+
+.lfp-404-btn {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    background: var(--lfp-accent);
+    color: #fff;
+    border-radius: var(--lfp-radius);
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 160ms ease, transform 160ms ease;
+}
+
+.lfp-404-btn:hover,
+.lfp-404-btn:focus-visible {
+    background: color-mix(in srgb, var(--lfp-accent) 88%, black);
+    transform: translateY(-1px);
+    outline: none;
+}
+
 /* ----------------------------------- Mobile */
 
 @media (max-width: 480px) {
