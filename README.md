@@ -1,158 +1,119 @@
-# YOURLS — Link Front Page
+# Link Front Page
 
-> Turn the YOURLS homepage into a personal landing page: a Linktree-style link list, an Instagram-style image grid, an About-me block with social buttons and downloadable contact cards, and full design controls — without leaving your YOURLS install.
+> A personal landing page for your YOURLS install — Linktree-style links, an image grid, an About-me block, and a full design panel. All from one settings screen, no theme files to edit.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PHP](https://img.shields.io/badge/PHP-8.4+-purple.svg)](#requirements)
-[![YOURLS](https://img.shields.io/badge/YOURLS-1.9+-orange.svg)](https://yourls.org)
 [![Latest release](https://img.shields.io/github/v/release/toineenzo/YOURLS-Link-Front-Page?display_name=tag)](https://github.com/toineenzo/YOURLS-Link-Front-Page/releases)
+[![Listed in Awesome YOURLS!](https://img.shields.io/badge/Awesome-YOURLS-C5A3BE)](https://github.com/YOURLS/awesome)
 
 🌐 **Live demo**: <https://toine.click>
 
----
-
-## ✨ Features
-
-### Personal landing page
-- **Linktree-style link list** with category boxes, drag-and-drop ordering and per-link image / title / description.
-- **About-me section** with profile photo, bio, and a row of icon-only social buttons.
-- **37 social platforms** bundled inline (CC0, [simple-icons](https://simpleicons.org)) — X, Instagram, Facebook, TikTok, YouTube, LinkedIn, GitHub, GitLab, Reddit, Discord, Telegram, WhatsApp, Snapchat, Pinterest, Twitch, Spotify, SoundCloud, Mastodon, Bluesky, Threads, Patreon, Ko-fi, Buy Me a Coffee, PayPal, Signal, Dribbble, Behance, Medium, Substack, Dev.to, Stack Overflow, Product Hunt, Steam — plus generic Website / Email / RSS / Phone icons.
-- **Contact cards** (Personal + Business): name, phone, email, website, address. Each card is downloadable as a vCard 3.0 (`.vcf`) file via `/contact.vcf?type=personal|business`.
-- **Image grid** — 3-column gallery for "link in bio" content. Each tile has its own image, optional overlay title and configurable show-mode (always / hover / never), points to a free URL or a YOURLS shortlink (so click-tracking still works), and supports bulk image upload.
-- **Markdown + HTML** in titles, descriptions, About-me text, image overlays and the custom footer block (parsed by [Parsedown](https://github.com/erusev/parsedown)).
-
-### Quick-add from the YOURLS link manager
-Every row in `/admin/index.php` grows a small **+** button next to the standard Stats / Share / Edit / Delete actions. One click adds the shortlink to the bottom of the homepage list. The icon flips to a green ✓ once the keyword is on the list.
-
-### Full design controls
-
-**Colors** (HTML5 color pickers): background, text, muted, card, card-hover, accent, plus optional background image with `size` / `repeat` / `position` / `attachment` selects.
-
-**Spacing & sizing**: page max width, page padding (top / bottom / sides), gap between cards, card padding, link icon size, about-photo size, border radius. Each field accepts any CSS length: `px`, `%`, `em`, `rem`, `vh`, `vw`, plus `clamp()`, `calc()`, `min()`, `max()`. Bare numbers become `px`.
-
-**Typography**: pick the font source —
-- **System** — free-text CSS font-family stack.
-- **Google Fonts** — bundled curated list of 85+ popular families with live search and live preview; loaded from `fonts.googleapis.com` at render time; weights configurable.
-- **Custom upload** — `.woff2` / `.woff` / `.ttf` / `.otf` (max 5 MB), stored under `uploads/fonts/` with a random hex filename and emitted as `@font-face`.
-
-Five separate size fields (site title, subtitle, category title, link title, body) accept the same units as Spacing & sizing.
-
-**Custom CSS** escape hatch.
-
-### Robust routing
-
-Hooks **three** YOURLS entry points so the homepage interception always fires:
-
-| Hook | Catches |
-| --- | --- |
-| `plugins_loaded` | Direct `index.php` hits. |
-| `pre_load_template` | `yourls-loader.php` after request resolution. |
-| `loader_failed` | Final fallback before YOURLS' 302 to `YOURLS_SITE`. |
-
-Plus a `REQUEST_URI` fallback for stale-cached `yourls_get_request()` and an `X-LFP-Rendered: 1` response header for easy DevTools verification. Configurable login path (defaults to `/login`) redirects to the YOURLS admin via `yourls_redirect()` — no `.htaccess` editing needed.
-
-### Compatibility
-
-- Coexists cleanly with the **Sleeky** YOURLS theme (defensive CSS resets dodge Sleeky's global `nav`, `select`, `input` overrides).
-- **PHP 8.4** ready: `declare(strict_types=1)`, typed signatures, `match`, `never`, `str_contains`. Runs on PHP ≥ 8.1.
-- Uses native YOURLS APIs throughout: `yourls_get_option`, `yourls_update_option`, `yourls_keyword_is_taken`, `yourls_get_keyword_longurl`, `yourls_get_keyword_title`, `yourls_link`, `yourls_redirect`, `yourls_register_plugin_page`, `yourls_nonce_field`, `yourls_verify_nonce`, `yourls_esc_html`/`_attr`/`_url`.
-- **No external runtime dependencies** other than `fonts.googleapis.com` when you pick a Google font. Vanilla JS, native HTML5 drag-and-drop, native `<dialog>`, inline SVG icons, single-file Parsedown.
+<p align="center">
+  <!-- TODO: drop the homepage hero screenshot in docs/screenshots/hero.png -->
+  <img src="docs/screenshots/hero.png" alt="Link Front Page — public landing page" width="720">
+</p>
 
 ---
 
-## 📦 Installation
+## What you can do with it
+
+### 🔗 A Linktree-style link list
+
+Add as many links as you want, group them into category boxes, drag them around to reorder. Each entry has its own image, title, description, and a click-through that either points at a YOURLS shortlink (so click stats keep working) or any URL you type in.
+
+<p align="center">
+  <!-- TODO: docs/screenshots/links-tab.png -->
+  <img src="docs/screenshots/links-tab.png" alt="Links tab in the admin" width="720">
+</p>
+
+### 🖼️ An image grid
+
+Three-column gallery for "link in bio" content — Instagram-style. Bulk-upload a folder of images, give each tile a title overlay (always shown / on hover / hidden), and have it click through to a URL or a YOURLS shortlink.
+
+<p align="center">
+  <!-- TODO: docs/screenshots/image-grid.png -->
+  <img src="docs/screenshots/image-grid.png" alt="Image grid on the public page" width="720">
+</p>
+
+### 👋 An About-me block
+
+Profile photo, short bio, and a row of icon-only buttons for 37 social platforms (X, Instagram, GitHub, Mastodon, Bluesky, Threads, Patreon, Ko-fi, …). You can also surface a Personal and a Business contact card with one-click vCard download for visitors.
+
+<p align="center">
+  <!-- TODO: docs/screenshots/about-me.png -->
+  <img src="docs/screenshots/about-me.png" alt="About-me block + social icons" width="720">
+</p>
+
+### 🎨 A full design panel
+
+Pick colours, fonts, background images and spacings until it looks right. Typography supports a system stack, 85+ Google Fonts (with live preview), or your own font upload. Spacings accept any CSS unit (`px`, `em`, `rem`, `clamp()`, `calc()`, …). There's a Custom CSS escape hatch for anything the panel doesn't cover.
+
+<p align="center">
+  <!-- TODO: docs/screenshots/appearance-tab.png -->
+  <img src="docs/screenshots/appearance-tab.png" alt="Appearance tab" width="720">
+</p>
+
+### ➕ Quick-add from the link table
+
+Every row of YOURLS' admin link table grows a small **+** button next to *Stats / Share / Edit / Delete*. One click adds that shortlink to the bottom of your homepage list, with the destination's favicon as the default image.
+
+<p align="center">
+  <!-- TODO: docs/screenshots/quick-add.png -->
+  <img src="docs/screenshots/quick-add.png" alt="Quick-add button on the link table" width="720">
+</p>
+
+### 🚦 A friendlier 404 page
+
+Decide what happens when someone visits a shortlink that doesn't exist: keep YOURLS' default redirect, send them to your landing page, redirect to any URL or shortlink, or render a styled error page with your own message + button.
+
+---
+
+## Installation
+
+1. Download `YOURLS-Link-Front-Page-vX.Y.Z.zip` from the [Releases page](https://github.com/toineenzo/YOURLS-Link-Front-Page/releases) and unzip into your `user/plugins/` folder. The final path should be `user/plugins/Link-Front-Page/`.
+2. Open the YOURLS admin → *Manage Plugins* → click **Activate** on *Link Front Page*.
+3. A new sub-page appears under *Manage Plugins → Link Front Page*. Open it and start adding things.
+
+…or via git:
 
 ```bash
 cd /path/to/yourls/user/plugins
 git clone https://github.com/toineenzo/YOURLS-Link-Front-Page.git Link-Front-Page
 ```
 
-…or download `YOURLS-Link-Front-Page-vX.Y.Z.zip` from the [Releases page](https://github.com/toineenzo/YOURLS-Link-Front-Page/releases) and unzip into `user/plugins/`. The zip already contains a `Link-Front-Page/` folder, so the final path is `user/plugins/Link-Front-Page/`.
-
-Then open the YOURLS admin at `/admin/plugins.php` and click **Activate** on *Link Front Page*. The plugin adds a sub-page under *Manage Plugins → Link Front Page*. Open it and start adding links and categories.
-
-> **Heads-up**: if your YOURLS root is missing `index.php` (e.g. you replaced it with a custom homepage and forgot the file), Apache will return 404 for `/`. Restore the standard YOURLS `index.php` at the root and the plugin will pick it up.
+> **Heads-up**: if your YOURLS root is missing `index.php` (e.g. you replaced it with a custom homepage), Apache returns 404 for `/`. Restore the standard YOURLS `index.php` and the plugin will pick it up.
 
 ---
 
-## ⚡ Quick tour
+## A short tour
 
-| Tab | What it does |
+The settings page has four tabs:
+
+| Tab | What you do here |
 | --- | --- |
-| **Links** | Drag-and-drop the link list, add categories, customize each entry. |
-| **General** | Site title, login path, About-me section, social-media buttons, contact cards (Personal + Business), footer toggles, custom footer HTML. |
-| **Image grid** | 3-column image gallery; bulk upload, per-tile dialog, "Show more" button. |
-| **Appearance** | Colors, background image, spacing, typography (system / Google Fonts / custom upload), custom CSS. |
+| **Links** | Build the link list and category boxes shown on `/`. |
+| **Image grid** | Manage the image gallery (bulk-upload, per-tile dialog, "Show more"). |
+| **General** | Site title, About-me, social buttons, contact cards, footer, 404 behaviour. |
+| **Appearance** | Colours, background image, spacing, typography, custom CSS. |
+
+Hit **Save settings** and visit `/` to see your changes live.
 
 ---
 
-## 🗂 File structure
+## Compatibility
 
-```
-Link-Front-Page/
-├── plugin.php                   # Plugin entrypoint, hooks, settings I/O,
-│                                  routing, vCard generator, upload handling
-├── views/
-│   ├── frontend.php             # Public landing page rendered at /
-│   └── admin.php                # Settings UI rendered inside YOURLS admin
-├── assets/
-│   ├── frontend.css             # Public styles (CSS custom properties)
-│   ├── admin.css                # Admin styles
-│   └── admin.js                 # Admin logic (drag/drop, picker, dialogs)
-├── includes/
-│   ├── google-fonts.php         # Curated Google Fonts list
-│   ├── social-platforms.php     # 37 social media platform definitions
-│   └── Parsedown.php            # Bundled Markdown parser (CC-BY)
-├── uploads/                     # User-uploaded images / fonts (auto-created)
-└── README.md
-```
+- **YOURLS** 1.9 or newer (verified against 1.10).
+- **PHP** 8.1 or newer (8.4 recommended).
+- Plays nicely with the [Sleeky](https://github.com/Flynntes/Sleeky) admin theme — the CI suite tests both setups on every release.
 
 ---
 
-## ⚙️ Stored options
+## Help & feedback
 
-The plugin uses four YOURLS options:
-
-| Option              | Shape | Notes |
-| ------------------- | ----- | ----- |
-| `lfp_general`       | array | Site title, description, logo, login path, footer toggles, About-me, social buttons, Personal + Business contact cards. |
-| `lfp_appearance`    | array | Colors, sizing (with units), typography (font source + size fields), background image options, custom CSS. |
-| `lfp_items`         | array | Ordered tree of links and categories. |
-| `lfp_image_grid`    | array | Image grid: enabled flag, default visible count, ordered list of tiles. |
-
-Migrations from earlier 1.x / 2.x storage keys (`show_footer`, `lfp_instagram`, bare integer spacing values) run transparently on first read.
+Found a bug or have an idea? [Open an issue](https://github.com/toineenzo/YOURLS-Link-Front-Page/issues). Please mention your YOURLS and PHP version.
 
 ---
 
-## 🧪 Requirements
+## License
 
-- **YOURLS** ≥ 1.9
-- **PHP** ≥ 8.1 (8.4 recommended; the plugin uses `declare(strict_types=1)`, `match`, `never`, `str_contains`)
-- A modern browser for the admin UI: Chrome, Edge, Firefox, Safari ≥ 15.4 (native `<dialog>` and HTML5 drag-and-drop)
-
----
-
-## 🛡 Security
-
-- All form submissions are nonce-protected via `yourls_nonce_field` / `yourls_verify_nonce`.
-- The quick-add row action signs its URL with `hash_hmac('sha256', …, YOURLS_COOKIEKEY)` and gates execution on `yourls_is_valid_user()`.
-- Output uses `yourls_esc_html` / `_attr` / `_url`. Markdown / HTML fields are deliberately rendered raw (admin-trusted), same posture as the Custom CSS field.
-- Uploads are MIME-type allow-listed and renamed to random hex filenames generated with `random_bytes`.
-- The login path is intercepted via `yourls_redirect` — no `.htaccess` rewriting required.
-
----
-
-## 🤝 Contributing
-
-Bug reports, feature requests and pull requests are welcome on [GitHub](https://github.com/toineenzo/YOURLS-Link-Front-Page/issues). Please describe your YOURLS version and PHP version when filing a bug.
-
----
-
-## 📄 License
-
-[MIT](LICENSE) — do whatever you want, just don't blame me.
-
-Bundled third-party code:
-- **Parsedown** by Emanuil Rusev, [MIT license](https://github.com/erusev/parsedown/blob/master/LICENSE.txt).
-- **Social media SVG icons** from [simple-icons](https://simpleicons.org), [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
-- **Google Fonts list** is metadata only; font files are served by Google.
+[MIT](LICENSE). Bundles [Parsedown](https://github.com/erusev/parsedown) (MIT) for Markdown and [simple-icons](https://simpleicons.org) (CC0) SVGs.
