@@ -78,7 +78,7 @@ export default async function globalSetup(_config: FullConfig) {
     const title = await page.title().catch(() => '?');
     const bodyExcerpt = (await page.content().catch(() => ''))
       .replace(/\s+/g, ' ')
-      .slice(0, 1500);
+      .slice(0, 6000);
     throw new Error(
       `Admin login failed — no logout link visible after sign-in.\n` +
       `URL after login: ${url}\nTitle: ${title}\nFirst 1500 chars of body:\n${bodyExcerpt}`
