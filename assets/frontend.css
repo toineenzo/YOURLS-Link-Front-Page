@@ -17,6 +17,9 @@
     --lfp-card-px: 18px;
     --lfp-icon: 44px;
     --lfp-photo: 120px;
+    --lfp-photo-radius: 999px;
+    --lfp-logo: 96px;
+    --lfp-logo-radius: 999px;
     --lfp-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --lfp-title-size: 1.75rem;
     --lfp-subtitle-size: 1rem;
@@ -45,6 +48,32 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+/* Background image is rendered through fixed pseudo-elements so the
+   blur/brightness/saturation filters only apply to the picture, not the
+   text content above it. The overlay sits on top with rgba alpha. */
+body.has-lfp-bg::before,
+body.has-lfp-bg::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+
+body.has-lfp-bg::before {
+    background-image:    var(--lfp-bg-image);
+    background-size:     var(--lfp-bg-size, cover);
+    background-repeat:   var(--lfp-bg-repeat, no-repeat);
+    background-position: var(--lfp-bg-position, center);
+    filter: blur(var(--lfp-bg-blur, 0px)) var(--lfp-bg-filter, none);
+    z-index: -2;
+}
+
+body.has-lfp-bg::after {
+    background-color: var(--lfp-bg-overlay, transparent);
+    opacity: var(--lfp-bg-overlay-alpha, 0);
+}
+
 .lfp-page {
     max-width: var(--lfp-page-max);
     margin: 0 auto;
@@ -63,9 +92,9 @@ body {
 }
 
 .lfp-logo {
-    width: 96px;
-    height: 96px;
-    border-radius: 999px;
+    width: var(--lfp-logo);
+    height: var(--lfp-logo);
+    border-radius: var(--lfp-logo-radius);
     object-fit: cover;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
@@ -98,13 +127,18 @@ body {
     align-items: center;
     gap: 14px;
     text-align: center;
-    padding: 4px 0;
+    padding: 22px;
+    background: color-mix(in srgb, var(--lfp-card) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--lfp-fg) 8%, transparent);
+    border-radius: calc(var(--lfp-radius) + 4px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .lfp-about-photo {
     width: var(--lfp-photo);
     height: var(--lfp-photo);
-    border-radius: 999px;
+    border-radius: var(--lfp-photo-radius);
     object-fit: cover;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
 }

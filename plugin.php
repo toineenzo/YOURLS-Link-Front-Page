@@ -58,6 +58,8 @@ function lfp_default_general(): array
         'site_title'        => '',
         'site_description'  => '',
         'site_logo'         => '',
+        'site_favicon'      => '',
+        'open_in_new_tab'   => true,
         'login_path'        => 'login',
 
         // Footer (split out in 1.1: was a single show_footer toggle)
@@ -104,6 +106,11 @@ function lfp_default_appearance(): array
         'background_repeat'     => 'no-repeat', // no-repeat | repeat | repeat-x | repeat-y | space | round
         'background_position'   => 'center',    // center | top | bottom | left | right | top left | …
         'background_attachment' => 'fixed',     // fixed | scroll | local
+        'background_blur'           => '0px',
+        'background_brightness'     => 100,
+        'background_saturation'     => 100,
+        'background_overlay_color'  => '#000000',
+        'background_overlay_opacity'=> 0,
         'text_color'            => '#f1f5f9',
         'muted_color'         => '#94a3b8',
         'card_background'     => '#1e293b',
@@ -122,6 +129,9 @@ function lfp_default_appearance(): array
         'card_padding_x'      => '18px',
         'icon_size'           => '44px',
         'about_photo_size'    => '120px',
+        'logo_size'           => '96px',
+        'logo_round'          => true,
+        'about_photo_round'   => true,
 
         // Typography
         'font_source'         => 'system',  // 'system' | 'google' | 'custom'
@@ -767,7 +777,9 @@ function lfp_save_settings(): never
         'enabled'           => isset($_POST['enabled']),
         'site_title'        => trim((string) ($_POST['site_title'] ?? '')),
         'site_description'  => trim((string) ($_POST['site_description'] ?? '')),
-        'site_logo'         => $uploaded['site_logo'] ?? trim((string) ($_POST['site_logo'] ?? '')),
+        'site_logo'         => $uploaded['site_logo']    ?? trim((string) ($_POST['site_logo']    ?? '')),
+        'site_favicon'      => $uploaded['site_favicon'] ?? trim((string) ($_POST['site_favicon'] ?? '')),
+        'open_in_new_tab'   => isset($_POST['open_in_new_tab']),
         'login_path'        => trim((string) ($_POST['login_path'] ?? 'login'), '/'),
 
         'show_login_link'    => isset($_POST['show_login_link']),
@@ -810,6 +822,11 @@ function lfp_save_settings(): never
         'background_repeat'     => in_array($bg_repeat,     $bg_repeat_opts,     true) ? $bg_repeat     : 'no-repeat',
         'background_position'   => in_array($bg_position,   $bg_position_opts,   true) ? $bg_position   : 'center',
         'background_attachment' => in_array($bg_attachment, $bg_attachment_opts, true) ? $bg_attachment : 'fixed',
+        'background_blur'           => lfp_sanitize_size((string) ($_POST['background_blur'] ?? '0px'), '0px'),
+        'background_brightness'     => max(0, min(300, (int) ($_POST['background_brightness'] ?? 100))),
+        'background_saturation'     => max(0, min(300, (int) ($_POST['background_saturation'] ?? 100))),
+        'background_overlay_color'  => lfp_sanitize_color((string) ($_POST['background_overlay_color'] ?? '#000000')),
+        'background_overlay_opacity'=> max(0, min(100, (int) ($_POST['background_overlay_opacity'] ?? 0))),
         'text_color'            => lfp_sanitize_color((string) ($_POST['text_color'] ?? '#f1f5f9')),
         'muted_color'         => lfp_sanitize_color((string) ($_POST['muted_color'] ?? '#94a3b8')),
         'card_background'     => lfp_sanitize_color((string) ($_POST['card_background'] ?? '#1e293b')),
@@ -826,6 +843,9 @@ function lfp_save_settings(): never
         'card_padding_x'      => lfp_sanitize_size((string) ($_POST['card_padding_x']      ?? '18px'),  '18px'),
         'icon_size'           => lfp_sanitize_size((string) ($_POST['icon_size']           ?? '44px'),  '44px'),
         'about_photo_size'    => lfp_sanitize_size((string) ($_POST['about_photo_size']    ?? '120px'), '120px'),
+        'logo_size'           => lfp_sanitize_size((string) ($_POST['logo_size']           ?? '96px'),  '96px'),
+        'logo_round'          => isset($_POST['logo_round']),
+        'about_photo_round'   => isset($_POST['about_photo_round']),
 
         'font_source'         => $font_source,
         'font_family'         => trim((string) ($_POST['font_family'] ?? '')),

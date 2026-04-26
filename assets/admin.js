@@ -229,10 +229,24 @@
             if (!f) return;
             const reader = new FileReader();
             reader.addEventListener('load', (ev) => {
-                thumb.style.backgroundImage = cssUrl(String(ev.target.result));
+                const dataUrl = String(ev.target.result);
+                item.image = dataUrl;
+                urlInput.value = dataUrl;
+                thumb.style.backgroundImage = cssUrl(dataUrl);
             });
             reader.readAsDataURL(f);
         });
+
+        const clearBtn = node.querySelector('[data-lfp-image-clear]');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                item.image = '';
+                urlInput.value = '';
+                fileInput.value = '';
+                thumb.style.backgroundImage = '';
+                fileInput.dispatchEvent(new Event('change'));
+            });
+        }
 
         toggleBtn.addEventListener('click', () => {
             const body = node.querySelector('.lfp-item-body');
@@ -491,15 +505,31 @@
         renderTree();
     });
 
+    /* Pull a default favicon from Google's s2 endpoint based on the link's
+       destination URL. The user can replace it with their own image any time. */
+    const faviconFor = (url) => {
+        if (!url) return '';
+        let host = '';
+        try { host = new URL(url).hostname; } catch { /* URL might be schemeless */ }
+        if (!host) {
+            const m = String(url).match(/^(?:https?:\/\/)?([^\/?#]+)/i);
+            if (m) host = m[1];
+        }
+        return host
+            ? `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(host)}`
+            : '';
+    };
+
     document.getElementById('lfp-add-link').addEventListener('click', () => {
         openPicker((keyword) => {
+            const linkData = linkMap[keyword] || {};
             const newItem = {
                 id: uid('link'),
                 type: 'link',
                 keyword,
                 title: '',
                 description: '',
-                image: '',
+                image: faviconFor(linkData.url || ''),
             };
             items.push(newItem);
             renderTree();
@@ -807,10 +837,12 @@
         });
     }
 
-    /* -------- Live Google Fonts preview */
+    /* -------- Live font preview (works for all sources) */
 
     const fontPreview = document.getElementById('lfp-font-preview');
+    const fontFamilyInput = document.getElementById('lfp-font');
     const loadedGoogleFonts = new Set();
+    let customFontStyleEl = null;
 
     const loadGoogleFont = (family) => {
         if (!family || loadedGoogleFonts.has(family)) return;
@@ -821,22 +853,59 @@
         document.head.appendChild(link);
     };
 
-    const refreshFontPreview = () => {
-        if (!fontPreview || !fontGoogleSel) return;
-        const family = fontGoogleSel.value;
-        if (!family) {
-            fontPreview.style.fontFamily = '';
-            return;
+    const installCustomFontFace = () => {
+        // Use the saved custom font URL (set via hidden input after upload)
+        // OR a temporary blob URL from the file input the user just picked.
+        const urlInput = document.querySelector('input[name="font_custom_url"]');
+        const fileInput = document.querySelector('input[name="font_custom_file"]');
+        let url = urlInput?.value || '';
+        let format = document.querySelector('input[name="font_custom_format"]')?.value || 'woff2';
+
+        if (fileInput?.files && fileInput.files[0]) {
+            const f = fileInput.files[0];
+            url = URL.createObjectURL(f);
+            const ext = f.name.split('.').pop().toLowerCase();
+            format = { woff2: 'woff2', woff: 'woff', ttf: 'truetype', otf: 'opentype' }[ext] || 'woff2';
         }
-        loadGoogleFont(family);
-        fontPreview.style.fontFamily = `"${family.replace(/"/g, '')}", sans-serif`;
+
+        if (!url) return false;
+        if (!customFontStyleEl) {
+            customFontStyleEl = document.createElement('style');
+            document.head.appendChild(customFontStyleEl);
+        }
+        customFontStyleEl.textContent = `@font-face{font-family:"LFPCustomPreview";src:url("${url}") format("${format}");font-display:swap;}`;
+        return true;
     };
 
-    if (fontGoogleSel) {
-        fontGoogleSel.addEventListener('change', refreshFontPreview);
-        // Show the currently saved font right away.
-        refreshFontPreview();
-    }
+    const refreshFontPreview = () => {
+        if (!fontPreview) return;
+        const source = fontSource ? fontSource.value : 'system';
+
+        if (source === 'google') {
+            const family = fontGoogleSel?.value || '';
+            if (family) {
+                loadGoogleFont(family);
+                fontPreview.style.fontFamily = `"${family.replace(/"/g, '')}", sans-serif`;
+            } else {
+                fontPreview.style.fontFamily = fontFamilyInput?.value || '';
+            }
+        } else if (source === 'custom') {
+            if (installCustomFontFace()) {
+                fontPreview.style.fontFamily = '"LFPCustomPreview", sans-serif';
+            } else {
+                fontPreview.style.fontFamily = fontFamilyInput?.value || '';
+            }
+        } else {
+            fontPreview.style.fontFamily = fontFamilyInput?.value || '';
+        }
+    };
+
+    fontGoogleSel?.addEventListener('change', refreshFontPreview);
+    fontSource?.addEventListener('change', refreshFontPreview);
+    fontFamilyInput?.addEventListener('input', refreshFontPreview);
+    document.querySelector('input[name="font_custom_file"]')?.addEventListener('change', refreshFontPreview);
+
+    refreshFontPreview();
 
     /* -------------------------------------------------- Instagram grid */
 
@@ -1104,25 +1173,48 @@
         renderImg();
     });
 
-    /* -------------------------------------------------- Image preview for header/bg */
+    /* -------------------------------------------------- Inline image inputs
+       (logo / favicon / about photo / background image) — preview on upload,
+       clear via the always-present .lfp-btn[data-lfp-image-clear] button. */
 
-    document.querySelectorAll('.lfp-pane:not([data-pane="links"]) [data-lfp-image-file]').forEach((fileInput) => {
-        fileInput.addEventListener('change', (e) => {
+    document.querySelectorAll('.lfp-pane:not([data-pane="links"]) .lfp-image-input').forEach((wrap) => {
+        const urlInput  = wrap.querySelector('[data-lfp-image-url]');
+        const fileInput = wrap.querySelector('[data-lfp-image-file]');
+        const clearBtn  = wrap.querySelector('[data-lfp-image-clear]');
+
+        const ensureThumb = () => {
+            let thumb = wrap.querySelector('.lfp-thumb');
+            if (!thumb) {
+                thumb = document.createElement('img');
+                thumb.className = 'lfp-thumb';
+                wrap.appendChild(thumb);
+            }
+            return thumb;
+        };
+
+        fileInput?.addEventListener('change', (e) => {
             const f = e.target.files && e.target.files[0];
             if (!f) return;
-            const wrap = fileInput.closest('.lfp-image-input');
-            if (!wrap) return;
-            let preview = wrap.querySelector('.lfp-thumb');
-            if (!preview) {
-                preview = document.createElement('img');
-                preview.className = 'lfp-thumb';
-                wrap.appendChild(preview);
-            }
             const reader = new FileReader();
             reader.addEventListener('load', (ev) => {
-                preview.src = String(ev.target.result);
+                ensureThumb().src = String(ev.target.result);
             });
             reader.readAsDataURL(f);
+        });
+
+        urlInput?.addEventListener('input', (e) => {
+            const v = e.target.value.trim();
+            const thumb = wrap.querySelector('.lfp-thumb');
+            if (v && thumb) thumb.src = v;
+        });
+
+        clearBtn?.addEventListener('click', () => {
+            if (urlInput) urlInput.value = '';
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.dispatchEvent(new Event('change'));
+            }
+            wrap.querySelector('.lfp-thumb')?.remove();
         });
     });
 

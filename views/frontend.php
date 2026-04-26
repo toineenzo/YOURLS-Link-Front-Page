@@ -23,6 +23,13 @@ $site_title_plain = trim(strip_tags(lfp_render_inline($site_title)));
 $site_desc        = (string) $general['site_description'];
 $site_desc_plain  = trim(strip_tags(lfp_render_text($site_desc)));
 $site_logo        = (string) $general['site_logo'];
+$site_favicon     = trim((string) ($general['site_favicon'] ?? ''));
+if ($site_favicon === '') {
+    $site_favicon = $site_logo;
+}
+$open_in_new_tab  = !empty($general['open_in_new_tab']);
+$link_target_attr = $open_in_new_tab ? ' target="_blank"' : '';
+$link_rel_attr    = $open_in_new_tab ? ' rel="noopener noreferrer"' : ' rel="noopener"';
 
 /* ------- Resolve font stack based on the chosen source */
 $font_source = (string) ($appearance['font_source'] ?? 'system');
@@ -62,6 +69,9 @@ $css_vars = [
     '--lfp-card-px'         => $appearance['card_padding_x'],
     '--lfp-icon'            => $appearance['icon_size'],
     '--lfp-photo'           => $appearance['about_photo_size'],
+    '--lfp-photo-radius'    => !empty($appearance['about_photo_round']) ? '999px' : (string) $appearance['border_radius'],
+    '--lfp-logo'            => $appearance['logo_size'] ?? '96px',
+    '--lfp-logo-radius'     => !empty($appearance['logo_round']) ? '999px' : (string) $appearance['border_radius'],
     '--lfp-font'            => $font_stack,
     '--lfp-title-size'      => $appearance['title_size'],
     '--lfp-subtitle-size'   => $appearance['subtitle_size'],
@@ -78,23 +88,41 @@ foreach ($css_vars as $name => $value) {
     $style_lines[] = $name . ': ' . $value . ';';
 }
 
-$body_style = '';
+$body_style  = '';
+$body_class  = '';
+$bg_image_css = '';
 if ($appearance['background_image'] !== '') {
     $bg_size       = (string) ($appearance['background_size']       ?? 'cover');
     $bg_repeat     = (string) ($appearance['background_repeat']     ?? 'no-repeat');
     $bg_position   = (string) ($appearance['background_position']   ?? 'center');
     $bg_attachment = (string) ($appearance['background_attachment'] ?? 'fixed');
-    $body_style = "background-image:url('" . yourls_esc_url($appearance['background_image']) . "');"
-                . "background-size:"       . yourls_esc_attr($bg_size)       . ";"
-                . "background-repeat:"     . yourls_esc_attr($bg_repeat)     . ";"
-                . "background-position:"   . yourls_esc_attr($bg_position)   . ";"
-                . "background-attachment:" . yourls_esc_attr($bg_attachment) . ";";
+
+    $blur          = (string) ($appearance['background_blur']         ?? '0px');
+    $brightness    = (int)    ($appearance['background_brightness']   ?? 100);
+    $saturation    = (int)    ($appearance['background_saturation']   ?? 100);
+    $ovl_color     = (string) ($appearance['background_overlay_color']?? '#000000');
+    $ovl_opacity   = (int)    ($appearance['background_overlay_opacity'] ?? 0);
+
+    $body_class = 'has-lfp-bg';
+    $bg_image_css = sprintf(
+        ":root{--lfp-bg-image:url('%s');--lfp-bg-size:%s;--lfp-bg-repeat:%s;--lfp-bg-position:%s;--lfp-bg-attachment:%s;--lfp-bg-blur:%s;--lfp-bg-filter:brightness(%d%%) saturate(%d%%);--lfp-bg-overlay:%s;--lfp-bg-overlay-alpha:%s;}",
+        yourls_esc_url($appearance['background_image']),
+        yourls_esc_attr($bg_size),
+        yourls_esc_attr($bg_repeat),
+        yourls_esc_attr($bg_position),
+        yourls_esc_attr($bg_attachment),
+        yourls_esc_attr($blur),
+        $brightness,
+        $saturation,
+        yourls_esc_attr($ovl_color),
+        number_format($ovl_opacity / 100, 2, '.', '')
+    );
 }
 
 /**
  * Render a single link card.
  */
-$render_link = static function (array $link): string {
+$render_link = static function (array $link) use ($link_target_attr, $link_rel_attr): string {
     $resolved = lfp_resolve_link($link);
     if (!$resolved['exists']) {
         return '';
@@ -113,7 +141,7 @@ $render_link = static function (array $link): string {
     $desc_html = $description !== '' ? '<div class="lfp-link-desc">' . $description . '</div>' : '';
 
     return <<<HTML
-<a class="lfp-link" href="{$url}" rel="noopener">
+<a class="lfp-link" href="{$url}"{$link_target_attr}{$link_rel_attr}>
     {$img_html}
     <div class="lfp-link-text">
         <span class="lfp-link-title">{$title}</span>
@@ -140,18 +168,21 @@ HTML;
     <?php endif; ?>
     <?php if ($site_logo !== ''): ?>
     <meta property="og:image" content="<?php echo yourls_esc_attr($site_logo); ?>">
-    <link rel="icon" href="<?php echo yourls_esc_attr($site_logo); ?>">
+    <?php endif; ?>
+    <?php if ($site_favicon !== ''): ?>
+    <link rel="icon" href="<?php echo yourls_esc_attr($site_favicon); ?>">
     <?php endif; ?>
     <?php echo $font_assets; ?>
     <link rel="stylesheet" href="<?php echo yourls_esc_attr(lfp_plugin_url('assets/frontend.css?v=' . LFP_VERSION)); ?>">
     <style>
         :root { <?php echo implode(' ', $style_lines); ?> }
+        <?php echo $bg_image_css; ?>
         <?php if ($appearance['custom_css'] !== ''): ?>
         <?php echo $appearance['custom_css']; ?>
         <?php endif; ?>
     </style>
 </head>
-<body style="<?php echo yourls_esc_attr($body_style); ?>">
+<body class="<?php echo yourls_esc_attr($body_class); ?>">
 <main class="lfp-page">
     <header class="lfp-header">
         <?php if ($site_logo !== ''): ?>
@@ -239,7 +270,7 @@ HTML;
                 ?>
                     <a class="lfp-imgrid-tile lfp-imgrid-show-<?php echo yourls_esc_attr($tile['show_mode']); ?><?php echo $hidden ? ' is-hidden' : ''; ?>"
                        href="<?php echo yourls_esc_url($tile['url']); ?>"
-                       rel="noopener"
+                       <?php echo $link_target_attr . $link_rel_attr; ?>
                        <?php if ($tile['title'] !== ''): ?>aria-label="<?php echo yourls_esc_attr($tile['title']); ?>"<?php endif; ?>>
                         <img src="<?php echo yourls_esc_url($tile['image']); ?>" alt="" loading="lazy">
                         <?php if ($tile['title'] !== '' && $tile['show_mode'] !== 'never'): ?>

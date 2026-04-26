@@ -70,13 +70,6 @@ $bootstrap = [
             </svg>
             <span class="lfp-tab-label">Links</span>
         </button>
-        <button type="button" class="lfp-tab" data-tab="general" role="tab">
-            <svg class="lfp-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            <span class="lfp-tab-label">General</span>
-        </button>
         <button type="button" class="lfp-tab" data-tab="image_grid" role="tab">
             <svg class="lfp-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -84,6 +77,13 @@ $bootstrap = [
                 <polyline points="21 15 16 10 5 21"/>
             </svg>
             <span class="lfp-tab-label">Image grid</span>
+        </button>
+        <button type="button" class="lfp-tab" data-tab="general" role="tab">
+            <svg class="lfp-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span class="lfp-tab-label">General</span>
         </button>
         <button type="button" class="lfp-tab" data-tab="appearance" role="tab">
             <svg class="lfp-tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -125,6 +125,13 @@ $bootstrap = [
             </label>
         </div>
 
+        <div class="lfp-row">
+            <label class="lfp-checkbox">
+                <input type="checkbox" name="open_in_new_tab" value="1" <?php echo !empty($general['open_in_new_tab']) ? 'checked' : ''; ?>>
+                <span>Open all links from the homepage in a new tab</span>
+            </label>
+        </div>
+
         <div class="lfp-grid">
             <div class="lfp-field">
                 <label for="lfp-site-title">Site title</label>
@@ -147,16 +154,31 @@ $bootstrap = [
             <small>Markdown and HTML supported.</small>
         </div>
 
-        <div class="lfp-field">
-            <label>Logo / avatar</label>
-            <div class="lfp-image-input">
-                <input type="url" name="site_logo" value="<?php echo yourls_esc_attr($general['site_logo']); ?>" placeholder="https://example.com/avatar.png" data-lfp-image-url>
-                <input type="file" name="site_logo" accept="image/*" data-lfp-image-file>
-                <?php if ($general['site_logo'] !== ''): ?>
-                    <img class="lfp-thumb" src="<?php echo yourls_esc_url($general['site_logo']); ?>" alt="">
-                <?php endif; ?>
+        <div class="lfp-grid">
+            <div class="lfp-field">
+                <label>Logo / avatar</label>
+                <div class="lfp-image-input">
+                    <input type="url" name="site_logo" value="<?php echo yourls_esc_attr($general['site_logo']); ?>" placeholder="https://example.com/avatar.png" data-lfp-image-url>
+                    <input type="file" name="site_logo" accept="image/*" data-lfp-image-file>
+                    <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
+                    <?php if ($general['site_logo'] !== ''): ?>
+                        <img class="lfp-thumb" src="<?php echo yourls_esc_url($general['site_logo']); ?>" alt="">
+                    <?php endif; ?>
+                </div>
+                <small>URL or upload an image. Uploaded files are saved under <code>user/plugins/&lt;plugin&gt;/uploads/</code>.</small>
             </div>
-            <small>URL or upload an image. Uploaded files are saved under <code>user/plugins/&lt;plugin&gt;/uploads/</code>.</small>
+            <div class="lfp-field">
+                <label>Browser favicon</label>
+                <div class="lfp-image-input">
+                    <input type="url" name="site_favicon" value="<?php echo yourls_esc_attr($general['site_favicon']); ?>" placeholder="https://example.com/favicon.png" data-lfp-image-url>
+                    <input type="file" name="site_favicon" accept="image/*,.ico" data-lfp-image-file>
+                    <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
+                    <?php if ($general['site_favicon'] !== ''): ?>
+                        <img class="lfp-thumb" src="<?php echo yourls_esc_url($general['site_favicon']); ?>" alt="">
+                    <?php endif; ?>
+                </div>
+                <small>Used as the browser tab icon. Leave empty to inherit from <em>Logo / avatar</em>.</small>
+            </div>
         </div>
 
         <fieldset class="lfp-fieldset">
@@ -175,6 +197,7 @@ $bootstrap = [
                     <div class="lfp-image-input">
                         <input type="url" name="about_image" value="<?php echo yourls_esc_attr($general['about_image']); ?>" placeholder="https://example.com/me.jpg" data-lfp-image-url>
                         <input type="file" name="about_image" accept="image/*" data-lfp-image-file>
+                        <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
                         <?php if ($general['about_image'] !== ''): ?>
                             <img class="lfp-thumb" src="<?php echo yourls_esc_url($general['about_image']); ?>" alt="">
                         <?php endif; ?>
@@ -320,6 +343,7 @@ $bootstrap = [
                 <div class="lfp-image-input">
                     <input type="url" name="background_image" value="<?php echo yourls_esc_attr($appearance['background_image']); ?>" placeholder="https://example.com/bg.jpg" data-lfp-image-url>
                     <input type="file" name="background_image" accept="image/*" data-lfp-image-file>
+                    <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
                     <?php if (!empty($appearance['background_image'])): ?>
                         <img class="lfp-thumb" src="<?php echo yourls_esc_url($appearance['background_image']); ?>" alt="">
                     <?php endif; ?>
@@ -370,6 +394,33 @@ $bootstrap = [
                     </select>
                 </div>
             </div>
+
+            <div class="lfp-grid lfp-grid-3">
+                <div class="lfp-field">
+                    <label for="lfp-bg-blur">Blur</label>
+                    <input type="text" id="lfp-bg-blur" name="background_blur" value="<?php echo yourls_esc_attr($appearance['background_blur']); ?>" placeholder="0px">
+                    <small>CSS length (e.g. <code>8px</code>).</small>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-bg-bright">Brightness (%)</label>
+                    <input type="number" id="lfp-bg-bright" name="background_brightness" min="0" max="300" value="<?php echo yourls_esc_attr((string) $appearance['background_brightness']); ?>" placeholder="100">
+                    <small>100 = original, 50 = darker, 150 = brighter.</small>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-bg-sat">Saturation (%)</label>
+                    <input type="number" id="lfp-bg-sat" name="background_saturation" min="0" max="300" value="<?php echo yourls_esc_attr((string) $appearance['background_saturation']); ?>" placeholder="100">
+                    <small>100 = original, 0 = grayscale.</small>
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-bg-overlay-c">Overlay color</label>
+                    <input type="color" id="lfp-bg-overlay-c" name="background_overlay_color" value="<?php echo yourls_esc_attr($appearance['background_overlay_color']); ?>">
+                </div>
+                <div class="lfp-field">
+                    <label for="lfp-bg-overlay-o">Overlay opacity (%)</label>
+                    <input type="number" id="lfp-bg-overlay-o" name="background_overlay_opacity" min="0" max="100" value="<?php echo yourls_esc_attr((string) $appearance['background_overlay_opacity']); ?>" placeholder="0">
+                    <small>0 = no overlay, 100 = solid.</small>
+                </div>
+            </div>
         </fieldset>
 
         <fieldset class="lfp-fieldset">
@@ -412,8 +463,27 @@ $bootstrap = [
                     <input type="text" id="lfp-iconsz" name="icon_size" value="<?php echo yourls_esc_attr($appearance['icon_size']); ?>" placeholder="44px">
                 </div>
                 <div class="lfp-field">
+                    <label for="lfp-logosz">Site logo size</label>
+                    <input type="text" id="lfp-logosz" name="logo_size" value="<?php echo yourls_esc_attr($appearance['logo_size']); ?>" placeholder="96px">
+                </div>
+                <div class="lfp-field">
                     <label for="lfp-photosz">About photo size</label>
                     <input type="text" id="lfp-photosz" name="about_photo_size" value="<?php echo yourls_esc_attr($appearance['about_photo_size']); ?>" placeholder="120px">
+                </div>
+            </div>
+
+            <div class="lfp-grid">
+                <div class="lfp-field">
+                    <label class="lfp-checkbox">
+                        <input type="checkbox" name="logo_round" value="1" <?php echo !empty($appearance['logo_round']) ? 'checked' : ''; ?>>
+                        <span>Round site logo (circular mask)</span>
+                    </label>
+                </div>
+                <div class="lfp-field">
+                    <label class="lfp-checkbox">
+                        <input type="checkbox" name="about_photo_round" value="1" <?php echo !empty($appearance['about_photo_round']) ? 'checked' : ''; ?>>
+                        <span>Round About-me photo (circular mask)</span>
+                    </label>
                 </div>
             </div>
             <small class="lfp-hint">Same units as the typography fields: <code>px</code>, <code>%</code>, <code>em</code>, <code>rem</code>, <code>vh</code>, <code>vw</code>, plus <code>clamp()</code>, <code>calc()</code>, <code>min()</code>, <code>max()</code>. Bare numbers become <code>px</code>.</small>
@@ -458,13 +528,18 @@ $bootstrap = [
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <div class="lfp-font-preview" id="lfp-font-preview" aria-live="polite">
-                        <div class="lfp-font-preview-row" style="font-size:1.6rem;font-weight:700">The quick brown fox</div>
-                        <div class="lfp-font-preview-row" style="font-size:1rem">jumps over the lazy dog. 0123456789</div>
-                        <div class="lfp-font-preview-row" style="font-size:0.85rem;opacity:0.7">ABCDEFGHIJKLMNOPQRSTUVWXYZ &mdash; abcdefghijklmnopqrstuvwxyz</div>
-                    </div>
                 </div>
                 <small>Loaded from <code>fonts.googleapis.com</code> when the page is shown. Live preview updates the moment you select a font.</small>
+            </div>
+
+            <div class="lfp-field">
+                <label>Live preview</label>
+                <div class="lfp-font-preview" id="lfp-font-preview" aria-live="polite">
+                    <div class="lfp-font-preview-row" style="font-size:1.6rem;font-weight:700">The quick brown fox</div>
+                    <div class="lfp-font-preview-row" style="font-size:1rem">jumps over the lazy dog. 0123456789</div>
+                    <div class="lfp-font-preview-row" style="font-size:0.85rem;opacity:0.7">ABCDEFGHIJKLMNOPQRSTUVWXYZ &mdash; abcdefghijklmnopqrstuvwxyz</div>
+                </div>
+                <small>Reflects whichever font source is selected — system stack, Google Font, or your custom upload.</small>
             </div>
 
             <div class="lfp-field" data-lfp-fontblock="custom">
@@ -595,6 +670,7 @@ $bootstrap = [
                     <div class="lfp-image-input">
                         <input type="url" placeholder="https://..." data-lfp-image-url>
                         <input type="file" accept="image/*" data-lfp-image-file>
+                        <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
                     </div>
                 </div>
             </div>
@@ -629,6 +705,7 @@ $bootstrap = [
                     <div class="lfp-image-input">
                         <input type="url" placeholder="https://..." data-lfp-image-url>
                         <input type="file" accept="image/*" data-lfp-image-file>
+                        <button type="button" class="lfp-btn lfp-btn-tight lfp-btn-danger" data-lfp-image-clear>Clear image</button>
                     </div>
                 </div>
             </div>
