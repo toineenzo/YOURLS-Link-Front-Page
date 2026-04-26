@@ -122,10 +122,15 @@ export async function createYourlsShortlink(
 
   await page.locator('#add-button').click();
 
-  // YOURLS prepends a new row to #main_table; rows have id="id-<n>". Wait until
-  // a row mentioning our keyword shows up.
+  // YOURLS' add_link() AJAX scrapes the destination URL for a <title> on the
+  // server before responding, which takes ~10 s on a fresh DNS lookup. The
+  // record itself is committed to the database almost immediately though — so
+  // rather than waiting on the in-place row insert, give the scrape a head
+  // start and then reload, where the rendered table reflects the saved row.
+  await page.waitForTimeout(2000);
+  await page.goto('/admin/index.php');
   await page
     .locator(`#main_table tr:has-text("${opts.keyword}")`)
     .first()
-    .waitFor({ state: 'visible', timeout: 15_000 });
+    .waitFor({ state: 'visible', timeout: 30_000 });
 }
