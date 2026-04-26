@@ -50,12 +50,15 @@ export default async function globalSetup(_config: FullConfig) {
   if (await usernameInput.isVisible({ timeout: 5000 }).catch(() => false)) {
     await usernameInput.fill(ADMIN_USER);
     await page.locator('input[name=password]').fill(ADMIN_PASS);
+    // YOURLS' login form has multiple inputs; click the one with value="Login"
+    // (or the form's submit button) to avoid hitting any other submit on
+    // the page.
+    const loginButton = page
+      .locator('input[type=submit][value*="Login" i], input[type=submit][name="submit"], button[type=submit]')
+      .first();
     await Promise.all([
       page.waitForLoadState('networkidle'),
-      page
-        .locator('input[type=submit], button[type=submit]')
-        .first()
-        .click(),
+      loginButton.click(),
     ]);
   }
 
@@ -68,7 +71,18 @@ export default async function globalSetup(_config: FullConfig) {
     .isVisible({ timeout: 5000 })
     .catch(() => false);
   if (!loggedIn) {
-    throw new Error('Admin login failed — no logout link visible after sign-in');
+    // Print enough of the post-login admin page for someone reading the CI
+    // log to see what went wrong (login form still showing, error banner,
+    // unexpected redirect, …).
+    const url = page.url();
+    const title = await page.title().catch(() => '?');
+    const bodyExcerpt = (await page.content().catch(() => ''))
+      .replace(/\s+/g, ' ')
+      .slice(0, 1500);
+    throw new Error(
+      `Admin login failed — no logout link visible after sign-in.\n` +
+      `URL after login: ${url}\nTitle: ${title}\nFirst 1500 chars of body:\n${bodyExcerpt}`
+    );
   }
 
   // 3. Activate the plugin if not already active. YOURLS plugins.php exposes
