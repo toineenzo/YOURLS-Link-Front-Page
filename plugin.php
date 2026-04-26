@@ -1545,7 +1545,16 @@ function lfp_resolve_link(array $item): array
                 'exists'      => false,
             ];
         }
-        $title = $custom_title !== '' ? $custom_title : $url;
+        // Fallback title: extract a clean hostname so we don't render a raw
+        // URL into the card (Parsedown auto-links bare http(s):// URLs and
+        // produces a nested <a> inside our outer link card, which breaks the
+        // layout). "google.com" stays plain text through Parsedown.
+        $title = $custom_title;
+        if ($title === '') {
+            $host = is_string($host_raw = parse_url($url, PHP_URL_HOST)) ? $host_raw : '';
+            $host = preg_replace('/^www\./i', '', $host);
+            $title = $host !== '' ? $host : $url;
+        }
         return [
             'id'          => (string) ($item['id'] ?? ''),
             'source'      => 'url',
@@ -1564,7 +1573,11 @@ function lfp_resolve_link(array $item): array
 
     $title = $custom_title !== '' ? $custom_title : ($data['title'] ?? '');
     if ($title === '' && $data !== null) {
-        $title = $data['long_url'];
+        // Use the destination's hostname so Parsedown doesn't auto-link a
+        // raw URL into a nested <a> inside our outer link card.
+        $host = is_string($host_raw = parse_url((string) $data['long_url'], PHP_URL_HOST)) ? $host_raw : '';
+        $host = preg_replace('/^www\./i', '', $host);
+        $title = $host !== '' ? $host : (string) $data['long_url'];
     }
     if ($title === '') {
         $title = $keyword;

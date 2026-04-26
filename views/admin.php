@@ -740,7 +740,7 @@ $bootstrap = [
 
             <div class="lfp-grid">
                 <div class="lfp-field">
-                    <label>Custom title <small>(optional &mdash; falls back to YOURLS link title or the URL)</small></label>
+                    <label>Custom title <small data-lfp-title-hint>(optional)</small></label>
                     <input type="text" data-lfp-title>
                 </div>
                 <div class="lfp-field">

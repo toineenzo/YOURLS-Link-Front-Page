@@ -70,8 +70,10 @@ $css_vars = [
     '--lfp-icon'            => $appearance['icon_size'],
     '--lfp-photo'           => $appearance['about_photo_size'],
     '--lfp-photo-radius'    => !empty($appearance['about_photo_round']) ? '999px' : (string) $appearance['border_radius'],
+    '--lfp-photo-fit'       => !empty($appearance['about_photo_round']) ? 'cover'  : 'contain',
     '--lfp-logo'            => $appearance['logo_size'] ?? '96px',
     '--lfp-logo-radius'     => !empty($appearance['logo_round']) ? '999px' : (string) $appearance['border_radius'],
+    '--lfp-logo-fit'        => !empty($appearance['logo_round']) ? 'cover'  : 'contain',
     '--lfp-font'            => $font_stack,
     '--lfp-title-size'      => $appearance['title_size'],
     '--lfp-subtitle-size'   => $appearance['subtitle_size'],
@@ -383,7 +385,7 @@ HTML;
                         <span aria-hidden="true">&middot;</span>
                     <?php endif; ?>
                     <?php if ($show_pby): ?>
-                        <span>Powered by <a href="<?php echo yourls_esc_url($pby_url); ?>" rel="noopener"><?php echo yourls_esc_html($pby_text); ?></a></span>
+                        <span>Powered by <a href="<?php echo yourls_esc_url($pby_url); ?>"<?php echo $link_target_attr . $link_rel_attr; ?>><?php echo yourls_esc_html($pby_text); ?></a></span>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>

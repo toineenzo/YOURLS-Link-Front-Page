@@ -95,7 +95,7 @@ body.has-lfp-bg::after {
     width: var(--lfp-logo);
     height: var(--lfp-logo);
     border-radius: var(--lfp-logo-radius);
-    object-fit: cover;
+    object-fit: var(--lfp-logo-fit, cover);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
@@ -139,7 +139,7 @@ body.has-lfp-bg::after {
     width: var(--lfp-photo);
     height: var(--lfp-photo);
     border-radius: var(--lfp-photo-radius);
-    object-fit: cover;
+    object-fit: var(--lfp-photo-fit, cover);
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
 }
 

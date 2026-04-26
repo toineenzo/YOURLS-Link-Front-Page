@@ -381,6 +381,7 @@
             const kwDisp    = node.querySelector('[data-lfp-link-kw-display]');
             const kwPick    = node.querySelector('[data-lfp-link-pick]');
 
+            const titleHint = node.querySelector('[data-lfp-title-hint]');
             if (item.source === 'url') {
                 keywordEl.textContent = '↗ URL';
                 urlBlock.hidden = false;
@@ -390,6 +391,7 @@
                     item.url = e.target.value;
                     updateLinkFallback(node, item);
                 });
+                if (titleHint) titleHint.textContent = '(optional — falls back to the destination domain)';
             } else {
                 keywordEl.textContent = item.keyword;
                 urlBlock.hidden = true;
@@ -403,6 +405,7 @@
                         updateLinkFallback(node, item);
                     });
                 });
+                if (titleHint) titleHint.textContent = '(optional — falls back to the YOURLS link title)';
             }
             updateLinkFallback(node, item);
         }
