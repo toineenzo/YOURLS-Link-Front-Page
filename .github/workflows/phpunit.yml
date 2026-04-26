@@ -46,7 +46,11 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring, curl, zip, dom, simplexml, intl, pdo_mysql, mysqli
-          tools: phpunit:11
+          # PHPUnit 10 keeps the lenient class-name handling that the
+          # `test-*.php` filename convention used by the YOURLS test suite
+          # depends on; 11 enforces PSR-4 mapping which would force every
+          # test class to be PascalCased to match its filename.
+          tools: phpunit:10
 
       - name: Wait for MariaDB
         # `mysqladmin` ships with the runner's mysql-client; `mariadb-admin`
