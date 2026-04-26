@@ -102,8 +102,13 @@ export default async function globalSetup(_config: FullConfig) {
     'a[href*="action=deactivate"][href*="plugin=Link-Front-Page"]'
   );
   if (!(await deactivateLink.first().isVisible({ timeout: 5000 }).catch(() => false))) {
+    const url = page.url();
+    const bodyExcerpt = (await page.content().catch(() => ''))
+      .replace(/\s+/g, ' ')
+      .slice(0, 6000);
     throw new Error(
-      'Plugin "Link-Front-Page" did not activate — check that the plugin folder is mounted at user/plugins/Link-Front-Page'
+      `Plugin "Link-Front-Page" did not activate.\n` +
+      `URL: ${url}\nFirst 6000 chars of plugins page:\n${bodyExcerpt}`
     );
   }
 
