@@ -786,7 +786,7 @@ $bootstrap = [
         </select>
         <select class="lfp-social-source" data-lfp-social-source>
             <option value="url">URL</option>
-            <option value="keyword">YOURLS keyword</option>
+            <option value="keyword">YOURLS shortlink</option>
         </select>
         <input type="url" class="lfp-social-url" data-lfp-social-url placeholder="https://...">
         <span class="lfp-social-keyword-wrap" data-lfp-social-keyword-wrap hidden>
@@ -839,7 +839,7 @@ $bootstrap = [
                 <label for="lfp-imgrid-source">Link source</label>
                 <select id="lfp-imgrid-source">
                     <option value="url">URL</option>
-                    <option value="keyword">YOURLS keyword</option>
+                    <option value="keyword">YOURLS shortlink</option>
                 </select>
             </div>
 

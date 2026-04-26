@@ -745,7 +745,7 @@
         socials.push({
             id: uid('soc'),
             platform: firstPlatform,
-            source: 'url',
+            source: 'keyword',
             url: '',
             keyword: '',
             label: '',
@@ -1130,7 +1130,7 @@
         imgEditId = id;
         imgDialogState = id
             ? structuredClone(imgItems.find((i) => i.id === id) || {})
-            : { id: uid('ig'), source: 'url', url: '', keyword: '', image: '', title: '', show_mode: 'always' };
+            : { id: uid('ig'), source: 'keyword', url: '', keyword: '', image: '', title: '', show_mode: 'always' };
 
         // Show uploaded files as "(uploaded file)" in the URL field instead
         // of a multi-line base64 data: URL. The preview tile shows the actual

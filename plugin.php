@@ -72,7 +72,7 @@ function lfp_default_general(): array
         // 404 / non-existent shortlink behavior. Modes:
         //   default  - let YOURLS do its standard 302 to YOURLS_SITE
         //   root     - redirect to YOURLS_SITE (the linktree)
-        //   redirect - 302 to a custom URL or YOURLS keyword
+        //   redirect - 302 to a custom URL or YOURLS shortlink
         //   page     - render a themed 404 page with optional CTA button
         'not_found_mode'           => 'default',
         'not_found_target_type'    => 'url',
@@ -559,6 +559,28 @@ yourls_add_action('plugins_loaded',             'lfp_handle_admin_quickadd');
 yourls_add_action('html_head',                  'lfp_admin_quickadd_styles');
 
 /**
+ * Build a Google s2/favicons URL for a destination link. Mirrors the
+ * faviconFor() helper in admin.js so manual + Add link and quick-add from
+ * the YOURLS link table give the new item the same default image.
+ */
+function lfp_favicon_for_url(string $url): string
+{
+    if ($url === '') {
+        return '';
+    }
+    $host = parse_url($url, PHP_URL_HOST);
+    if (!is_string($host) || $host === '') {
+        if (preg_match('#^(?:https?://)?([^/?\#]+)#i', $url, $m) === 1) {
+            $host = $m[1];
+        }
+    }
+    if (!is_string($host) || $host === '') {
+        return '';
+    }
+    return 'https://www.google.com/s2/favicons?sz=128&domain=' . urlencode($host);
+}
+
+/**
  * Sign a keyword for the quick-add row action. We can't use yourls_*nonce()
  * here because the YOURLS_USER constant is set by yourls_maybe_require_auth()
  * which runs *after* our plugins_loaded handler, so the salt would differ
@@ -655,7 +677,9 @@ function lfp_handle_admin_quickadd(): void
             'keyword'     => $keyword,
             'title'       => '',
             'description' => '',
-            'image'       => '',
+            // Mirror the JS faviconFor() helper so quick-adds get the same
+            // default image as a manual + Add link.
+            'image'       => lfp_favicon_for_url((string) yourls_get_keyword_longurl($keyword)),
         ];
         yourls_update_option(LFP_OPT_ITEMS, $items);
     }
