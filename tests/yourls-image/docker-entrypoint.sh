@@ -37,6 +37,9 @@ define( 'YOURLS_URL_CONVERT', 36 );
 \$yourls_reserved_URL = array();
 define( 'YOURLS_DEBUG', false );
 define( 'YOURLS_NOSTATS', false );
+// Test environment — drop the flood-protection delay so the suite can
+// rapid-fire create_shortlink calls without getting HTTP 429.
+define( 'YOURLS_FLOOD_DELAY_SECONDS', 0 );
 PHP
 
     chown www-data:www-data "$CONFIG"
