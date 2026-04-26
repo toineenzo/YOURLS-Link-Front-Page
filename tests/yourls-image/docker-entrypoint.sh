@@ -58,6 +58,24 @@ PHP
     chown www-data:www-data /var/www/html/index.php
 fi
 
+# YOURLS expects a .htaccess at the docroot to rewrite short URLs into
+# yourls-loader.php. The installer creates it after a successful install,
+# but seeding it here means the first /keyword visit already works.
+if [ ! -f /var/www/html/.htaccess ]; then
+    cat > /var/www/html/.htaccess <<'HTACCESS'
+# BEGIN YOURLS
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^.*$ /yourls-loader.php [L]
+</IfModule>
+# END YOURLS
+HTACCESS
+    chown www-data:www-data /var/www/html/.htaccess
+fi
+
 # Make sure the plugin's uploads/ dir is writable when it gets mounted in
 # from outside the container (the bind mount can land with host ownership).
 if [ -d /var/www/html/user/plugins ]; then
