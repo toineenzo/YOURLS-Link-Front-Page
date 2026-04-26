@@ -92,9 +92,18 @@ export default async function globalSetup(_config: FullConfig) {
   const activateLink = page.locator(
     'a[href*="action=activate"][href*="plugin=Link-Front-Page"]'
   );
-  if (await activateLink.first().isVisible({ timeout: 5000 }).catch(() => false)) {
-    await activateLink.first().click();
-    await page.waitForLoadState('networkidle');
+  const activateCount = await activateLink.count();
+  console.log(`[global-setup] activate links visible: ${activateCount}`);
+  if (activateCount > 0) {
+    // Use the link's href directly — Playwright's click sometimes
+    // misbehaves with locators inside table rows that aren't in the
+    // viewport, and a goto() removes any animation/scroll fragility.
+    const href = await activateLink.first().getAttribute('href');
+    console.log(`[global-setup] activating via: ${href}`);
+    if (href) {
+      await page.goto(href);
+      await page.waitForLoadState('networkidle');
+    }
   }
 
   // Verify activation succeeded. YOURLS shows "Plugin has been activated"
