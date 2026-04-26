@@ -6,7 +6,7 @@ FROM php:8.4-apache
 RUN apt-get update -qq \
     && apt-get install -qq -y --no-install-recommends \
         curl unzip ca-certificates git \
-    && docker-php-ext-install mysqli \
+    && docker-php-ext-install mysqli pdo_mysql \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,6 +30,7 @@ RUN curl -fsSL "https://github.com/YOURLS/YOURLS/archive/refs/tags/${YOURLS_VERS
     && cp -a "/tmp/YOURLS-${YOURLS_VERSION}/." /var/www/html/ \
     && rm -rf /tmp/yourls.tgz "/tmp/YOURLS-${YOURLS_VERSION}" \
     && composer install --no-dev --optimize-autoloader --no-progress --no-interaction \
+        --ignore-platform-req=php --ignore-platform-req=php+ \
     && chown -R www-data:www-data /var/www/html
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
