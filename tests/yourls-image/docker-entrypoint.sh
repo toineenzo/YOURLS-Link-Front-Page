@@ -42,6 +42,19 @@ PHP
     chown www-data:www-data "$CONFIG"
 fi
 
+# YOURLS' source archive on GitHub strips index.php (it expects users to copy
+# from sample-public-front-page.txt or rely on the release ZIP). Ship a
+# minimal one ourselves that simply hands off to the loader, so requests for
+# / reach the plugin's pre_load_template hook the same way they would in a
+# real install.
+if [ ! -f /var/www/html/index.php ]; then
+    cat > /var/www/html/index.php <<'PHP'
+<?php
+require_once __DIR__ . '/yourls-loader.php';
+PHP
+    chown www-data:www-data /var/www/html/index.php
+fi
+
 # Make sure the plugin's uploads/ dir is writable when it gets mounted in
 # from outside the container (the bind mount can land with host ownership).
 if [ -d /var/www/html/user/plugins ]; then
