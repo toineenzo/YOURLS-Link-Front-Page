@@ -98,39 +98,44 @@ export const test = base.extend<{ errors: ErrorLog }>({
 export { expect };
 
 /**
- * Pre-create a YOURLS shortlink via the standard admin form at
- * /admin/index.php. The form is JS-driven (AJAX add) so we wait for the new
- * row to appear in the link table. The `title` parameter is honoured only
- * when the running YOURLS build exposes a title input — 1.10.2 doesn't, the
- * server scrapes the destination's <title> instead.
+ * Pre-create a YOURLS shortlink. Uses the public API at /yourls-api.php
+ * which accepts username+password directly — much faster and more reliable
+ * than driving the AJAX-form on /admin/index.php (which scrapes the URL
+ * for a <title> before responding and routinely hits 30 s+ on cold DNS).
  */
 export async function createYourlsShortlink(
   page: Page,
   opts: { url: string; keyword: string; title?: string }
 ) {
-  await page.goto('/admin/index.php');
-  await page.locator('#add-url').waitFor({ state: 'visible' });
-
-  await page.locator('#add-url').fill(opts.url);
-  await page.locator('#add-keyword').fill(opts.keyword);
-  if (opts.title !== undefined) {
-    const titleField = page.locator('#add-title');
-    if (await titleField.count()) {
-      await titleField.fill(opts.title);
-    }
+  const resp = await page.request.post('/yourls-api.php', {
+    form: {
+      username: 'admin',
+      password: 'admin',
+      action: 'shorturl',
+      url: opts.url,
+      keyword: opts.keyword,
+      ...(opts.title !== undefined ? { title: opts.title } : {}),
+      format: 'json',
+    },
+    timeout: 60_000,
+  });
+  if (!resp.ok()) {
+    const body = await resp.text().catch(() => '');
+    throw new Error(
+      `YOURLS API rejected create for "${opts.keyword}" (HTTP ${resp.status()}): ${body.slice(0, 300)}`
+    );
   }
-
-  await page.locator('#add-button').click();
-
-  // YOURLS' add_link() AJAX scrapes the destination URL for a <title> on the
-  // server before responding, which takes ~10 s on a fresh DNS lookup. The
-  // record itself is committed to the database almost immediately though — so
-  // rather than waiting on the in-place row insert, give the scrape a head
-  // start and then reload, where the rendered table reflects the saved row.
-  await page.waitForTimeout(2000);
-  await page.goto('/admin/index.php');
-  await page
-    .locator(`#main_table tr:has-text("${opts.keyword}")`)
-    .first()
-    .waitFor({ state: 'visible', timeout: 30_000 });
+  const json = (await resp.json().catch(() => ({}))) as {
+    status?: string;
+    code?: string;
+    message?: string;
+  };
+  // YOURLS returns status: "success" for new entries, or status: "fail" with
+  // code: "error:keyword" when the keyword is already taken — that's harmless
+  // for tests that re-run against a persisted DB.
+  if (json.status !== 'success' && json.code !== 'error:keyword') {
+    throw new Error(
+      `YOURLS API rejected create for "${opts.keyword}": ${JSON.stringify(json)}`
+    );
+  }
 }
