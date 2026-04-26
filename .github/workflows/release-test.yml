@@ -17,20 +17,20 @@ on:
 permissions:
   contents: write   # gh release upload needs write on releases
 
-# Force every JS-based action to run on Node 24, even if the action's metadata
-# still pins Node 20 — keeps us off the deprecation path.
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-
 jobs:
   e2e:
-    name: Playwright E2E against YOURLS
+    name: Playwright E2E (${{ matrix.sleeky && 'with' || 'without' }} Sleeky)
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
+    strategy:
+      fail-fast: false
+      matrix:
+        sleeky: [false, true]
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -107,20 +107,30 @@ jobs:
           PLUGIN_PATH: ${{ github.workspace }}/test-plugin/Link-Front-Page
         run: docker compose up -d
 
+      - name: Install Sleeky-backend in YOURLS container
+        if: matrix.sleeky
+        working-directory: tests
+        run: |
+          docker compose exec -T yourls bash -c '
+            set -e
+            curl -fsSL https://github.com/Flynntes/Sleeky/archive/refs/heads/master.tar.gz -o /tmp/sleeky.tgz
+            tar -xzf /tmp/sleeky.tgz -C /tmp
+            cp -a /tmp/Sleeky-master/sleeky-backend /var/www/html/user/plugins/sleeky-backend
+            chown -R www-data:www-data /var/www/html/user/plugins/sleeky-backend
+            rm -rf /tmp/sleeky.tgz /tmp/Sleeky-master
+            ls -la /var/www/html/user/plugins/sleeky-backend/plugin.php
+          '
+
       - name: Diagnose Docker stack
         working-directory: tests
         run: |
           docker ps
           echo "---"
           docker compose ps
-          echo "--- /var/www/html top-level ---"
-          docker compose exec -T yourls ls -la /var/www/html | head -30 || true
-          echo "--- user/config.php ---"
-          docker compose exec -T yourls cat /var/www/html/user/config.php 2>&1 | head -40 || true
+          echo "--- /var/www/html/user/plugins ---"
+          docker compose exec -T yourls ls -la /var/www/html/user/plugins | head -30 || true
           echo "--- one-shot curl probe (root) ---"
-          curl -sS -v -m 5 http://127.0.0.1:8080/ 2>&1 | head -40 || true
-          echo "--- install.php response body ---"
-          curl -sS -m 5 http://127.0.0.1:8080/admin/install.php 2>&1 | head -80 || true
+          curl -sS -v -m 5 http://127.0.0.1:8080/ 2>&1 | head -30 || true
 
       - name: Wait for YOURLS to respond
         # `bash -e` would otherwise abort the loop on the first curl failure
@@ -147,11 +157,13 @@ jobs:
 
       - name: Run Playwright tests
         working-directory: tests
+        env:
+          SLEEKY_ENABLED: ${{ matrix.sleeky }}
         run: npx playwright test
 
       - name: Upload built zips
-        if: always()
-        uses: actions/upload-artifact@v5
+        if: ${{ always() && !matrix.sleeky }}
+        uses: actions/upload-artifact@v7
         with:
           name: release-zips
           path: dist/*.zip
@@ -159,17 +171,17 @@ jobs:
 
       - name: Upload Playwright HTML report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-sleeky-${{ matrix.sleeky }}
           path: tests/playwright-report/
           retention-days: 14
 
       - name: Upload Playwright trace + screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: playwright-test-results
+          name: playwright-test-results-sleeky-${{ matrix.sleeky }}
           path: tests/test-results/
           retention-days: 14
 
@@ -184,7 +196,9 @@ jobs:
         run: docker compose down -v
 
       - name: Attach zips to GitHub release
-        if: github.event_name == 'release' && success()
+        # Only the no-Sleeky run uploads — both runs build the same zips, so
+        # double-upload would just race on the API.
+        if: ${{ github.event_name == 'release' && success() && !matrix.sleeky }}
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}

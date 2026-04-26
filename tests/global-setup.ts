@@ -128,6 +128,41 @@ export default async function globalSetup(_config: FullConfig) {
     );
   }
 
+  // 4. Optionally activate Sleeky-backend so we exercise the plugin against
+  //    the popular admin theme as well. The workflow's matrix sets
+  //    SLEEKY_ENABLED=true for the second job.
+  if (process.env.SLEEKY_ENABLED === 'true') {
+    await page.goto('/admin/plugins.php');
+    const sleekyActivate = page.locator(
+      'a[href*="action=activate"][href*="plugin=sleeky-backend"]'
+    );
+    const sleekyCount = await sleekyActivate.count();
+    console.log(`[global-setup] sleeky-backend activate links: ${sleekyCount}`);
+    if (sleekyCount > 0) {
+      const href = await sleekyActivate.first().getAttribute('href');
+      console.log(`[global-setup] activating sleeky-backend via: ${href}`);
+      if (href) {
+        await page.goto(href);
+        await page.waitForLoadState('networkidle');
+      }
+    } else {
+      throw new Error(
+        'SLEEKY_ENABLED=true but no sleeky-backend activate link found — was the plugin folder mounted into the YOURLS container?'
+      );
+    }
+
+    const sleekyActivated = await page
+      .locator('tr.plugin.active', { hasText: 'Sleeky Backend' })
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
+    if (!sleekyActivated) {
+      throw new Error(
+        'Sleeky-backend did not activate after navigating to its activate URL.'
+      );
+    }
+  }
+
   // Persist the authenticated state so individual specs do not have to repeat
   // the install / login dance.
   await mkdir('.auth', { recursive: true });
