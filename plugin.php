@@ -3,7 +3,7 @@
 Plugin Name: Link Front Page
 Plugin URI: https://github.com/toineenzo/YOURLS-Link-Front-Page
 Description: Show selected shortlinks as a Linktree-style link list on the YOURLS homepage. Group links into category boxes, reorder by drag and drop, and customize each entry with an image, title and description.
-Version: 2.3.2
+Version: 2.3.3
 Author: Toine Rademacher (toineenzo)
 Author URI: https://toine.click
 */
@@ -14,7 +14,7 @@ if (!defined('YOURLS_ABSPATH')) {
     die();
 }
 
-const LFP_VERSION = '2.3.2';
+const LFP_VERSION = '2.3.3';
 const LFP_DIR = __DIR__;
 const LFP_OPT_ITEMS = 'lfp_items';
 const LFP_OPT_GENERAL = 'lfp_general';
@@ -1330,11 +1330,26 @@ function lfp_sanitize_items(array $items, array $uploaded): array
         ];
 
         if ($type === 'link') {
-            $keyword = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) ($item['keyword'] ?? ''));
-            if (!is_string($keyword) || $keyword === '') {
-                continue;
+            // Backwards-compat: items stored before the URL source existed
+            // simply have no `source` field — treat them as keyword links.
+            $source = ($item['source'] ?? 'keyword') === 'url' ? 'url' : 'keyword';
+            $base['source'] = $source;
+
+            if ($source === 'url') {
+                $url = trim((string) ($item['url'] ?? ''));
+                if ($url === '') {
+                    continue; // a custom-URL link without a URL is meaningless
+                }
+                $base['url']     = $url;
+                $base['keyword'] = '';
+            } else {
+                $keyword = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) ($item['keyword'] ?? ''));
+                if (!is_string($keyword) || $keyword === '') {
+                    continue;
+                }
+                $base['keyword'] = $keyword;
+                $base['url']     = '';
             }
-            $base['keyword'] = $keyword;
         } else {
             $children = [];
             if (isset($item['children']) && is_array($item['children'])) {
@@ -1508,11 +1523,43 @@ function lfp_get_all_yourls_links(): array
 
 function lfp_resolve_link(array $item): array
 {
+    $source = ($item['source'] ?? 'keyword') === 'url' ? 'url' : 'keyword';
+
+    $custom_title = trim((string) ($item['title'] ?? ''));
+
+    if ($source === 'url') {
+        $url = trim((string) ($item['url'] ?? ''));
+        if ($url === '') {
+            return [
+                'id'          => (string) ($item['id'] ?? ''),
+                'source'      => 'url',
+                'keyword'     => '',
+                'title'       => $custom_title,
+                'description' => (string) ($item['description'] ?? ''),
+                'image'       => (string) ($item['image'] ?? ''),
+                'short_url'   => '',
+                'long_url'    => '',
+                'exists'      => false,
+            ];
+        }
+        $title = $custom_title !== '' ? $custom_title : $url;
+        return [
+            'id'          => (string) ($item['id'] ?? ''),
+            'source'      => 'url',
+            'keyword'     => '',
+            'title'       => $title,
+            'description' => (string) ($item['description'] ?? ''),
+            'image'       => (string) ($item['image'] ?? ''),
+            'short_url'   => $url,   // direct destination — no YOURLS click tracking
+            'long_url'    => $url,
+            'exists'      => true,
+        ];
+    }
+
     $keyword = (string) ($item['keyword'] ?? '');
     $data    = $keyword !== '' ? lfp_get_link_data($keyword) : null;
 
-    $custom_title = trim((string) ($item['title'] ?? ''));
-    $title        = $custom_title !== '' ? $custom_title : ($data['title'] ?? '');
+    $title = $custom_title !== '' ? $custom_title : ($data['title'] ?? '');
     if ($title === '' && $data !== null) {
         $title = $data['long_url'];
     }
@@ -1522,6 +1569,7 @@ function lfp_resolve_link(array $item): array
 
     return [
         'id'          => (string) ($item['id'] ?? ''),
+        'source'      => 'keyword',
         'keyword'     => $keyword,
         'title'       => $title,
         'description' => (string) ($item['description'] ?? ''),

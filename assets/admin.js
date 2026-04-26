@@ -158,6 +158,14 @@
                 if (!Array.isArray(item.children)) item.children = [];
                 ensureIds(item.children);
             }
+            if (item.type === 'link' && item.source !== 'url' && item.source !== 'keyword') {
+                // Legacy items pre-2.3.3 had no source field. Default to keyword
+                // (everything was keyword-based back then) unless they somehow
+                // already carry a non-empty url and no keyword.
+                item.source = (item.keyword || !item.url) ? 'keyword' : 'url';
+                if (!item.url) item.url = '';
+                if (!item.keyword) item.keyword = '';
+            }
         }
     };
     ensureIds(items);
@@ -173,14 +181,20 @@
     const updateLinkFallback = (node, item) => {
         const fallback = node.querySelector('[data-lfp-fallback]');
         if (!fallback) return;
-        const data = linkMap[item.keyword];
         const t = (item.title || '').trim();
+        fallback.style.color = '';
+        fallback.style.opacity = '0.7';
+
+        if (item.source === 'url') {
+            fallback.textContent = t || item.url || '(no URL set yet)';
+            if (!item.url) fallback.style.color = 'var(--lfp-a-danger)';
+            return;
+        }
+        const data = linkMap[item.keyword];
         if (t !== '') {
             fallback.textContent = t;
-            fallback.style.opacity = '0.7';
         } else if (data) {
             fallback.textContent = data.title || data.url || '(unknown link)';
-            fallback.style.opacity = '0.7';
         } else {
             fallback.textContent = '⚠ shortlink missing in YOURLS';
             fallback.style.color = 'var(--lfp-a-danger)';
@@ -326,8 +340,41 @@
             const display = node.querySelector('[data-lfp-display-title]');
             display.textContent = item.title || 'Category';
         } else {
+            // Treat items without an explicit source as legacy keyword links.
+            if (item.source !== 'url' && item.source !== 'keyword') {
+                item.source = item.keyword ? 'keyword' : 'url';
+            }
+
             const keywordEl = node.querySelector('[data-lfp-keyword]');
-            keywordEl.textContent = item.keyword;
+            const urlBlock  = node.querySelector('[data-lfp-link-block="url"]');
+            const kwBlock   = node.querySelector('[data-lfp-link-block="keyword"]');
+            const urlInput  = node.querySelector('[data-lfp-link-url]');
+            const kwDisp    = node.querySelector('[data-lfp-link-kw-display]');
+            const kwPick    = node.querySelector('[data-lfp-link-pick]');
+
+            if (item.source === 'url') {
+                keywordEl.textContent = '↗ URL';
+                urlBlock.hidden = false;
+                kwBlock.hidden  = true;
+                urlInput.value  = item.url || '';
+                urlInput.addEventListener('input', (e) => {
+                    item.url = e.target.value;
+                    updateLinkFallback(node, item);
+                });
+            } else {
+                keywordEl.textContent = item.keyword;
+                urlBlock.hidden = true;
+                kwBlock.hidden  = false;
+                kwDisp.textContent = item.keyword || '—';
+                kwPick.addEventListener('click', () => {
+                    openPicker((kw) => {
+                        item.keyword = kw;
+                        kwDisp.textContent = kw;
+                        keywordEl.textContent = kw;
+                        updateLinkFallback(node, item);
+                    });
+                });
+            }
             updateLinkFallback(node, item);
         }
 
@@ -516,6 +563,28 @@
         renderTree();
     });
 
+    document.getElementById('lfp-add-url').addEventListener('click', () => {
+        const newItem = {
+            id: uid('link'),
+            type: 'link',
+            source: 'url',
+            keyword: '',
+            url: '',
+            title: '',
+            description: '',
+            image: '',
+        };
+        items.push(newItem);
+        renderTree();
+        const node = tree.querySelector(`[data-id="${newItem.id}"]`);
+        if (node) {
+            const body = node.querySelector('.lfp-item-body');
+            if (body) body.hidden = false;
+            node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            node.querySelector('[data-lfp-link-url]')?.focus();
+        }
+    });
+
     /* Pull a default favicon from Google's s2 endpoint based on the link's
        destination URL. The user can replace it with their own image any time. */
     const faviconFor = (url) => {
@@ -537,7 +606,9 @@
             const newItem = {
                 id: uid('link'),
                 type: 'link',
+                source: 'keyword',
                 keyword,
+                url: '',
                 title: '',
                 description: '',
                 image: faviconFor(linkData.url || ''),
@@ -1281,7 +1352,9 @@
                 image: item.image || '',
             };
             if (item.type === 'link') {
-                out.keyword = item.keyword;
+                out.source  = item.source === 'url' ? 'url' : 'keyword';
+                out.keyword = item.keyword || '';
+                out.url     = item.url || '';
             } else {
                 out.children = clean(item.children || []);
             }

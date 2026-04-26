@@ -100,7 +100,8 @@ $bootstrap = [
     <!-- ============================ LINKS TAB ============================ -->
     <section class="lfp-pane is-active" data-pane="links">
         <div class="lfp-toolbar">
-            <button type="button" class="lfp-btn" id="lfp-add-link">+ Add link</button>
+            <button type="button" class="lfp-btn" id="lfp-add-link">+ Add YOURLS shortlink</button>
+            <button type="button" class="lfp-btn" id="lfp-add-url">+ Add custom URL</button>
             <button type="button" class="lfp-btn" id="lfp-add-category">+ Add category</button>
             <span class="lfp-toolbar-hint">Drag the <span class="lfp-handle-demo">&#x2630;</span> handle to reorder. Drop links onto a category to nest them.</span>
         </div>
@@ -717,9 +718,23 @@ $bootstrap = [
             <button type="button" class="lfp-icon-btn lfp-icon-danger" data-lfp-remove title="Remove">&times;</button>
         </div>
         <div class="lfp-item-body" hidden>
+            <div class="lfp-field" data-lfp-link-block="url" hidden>
+                <label>Destination URL</label>
+                <input type="url" placeholder="https://example.com/somewhere" data-lfp-link-url>
+                <small>Custom URL — visitors are sent here directly. YOURLS click stats won't increment for this entry.</small>
+            </div>
+            <div class="lfp-field" data-lfp-link-block="keyword" hidden>
+                <label>YOURLS shortlink</label>
+                <div class="lfp-keyword-pick">
+                    <code data-lfp-link-kw-display>—</code>
+                    <button type="button" class="lfp-btn lfp-btn-tight" data-lfp-link-pick>Change…</button>
+                </div>
+                <small>Resolves through <code>yourls_link()</code> at click time so YOURLS click stats still increment.</small>
+            </div>
+
             <div class="lfp-grid">
                 <div class="lfp-field">
-                    <label>Custom title <small>(optional &mdash; falls back to YOURLS link title)</small></label>
+                    <label>Custom title <small>(optional &mdash; falls back to YOURLS link title or the URL)</small></label>
                     <input type="text" data-lfp-title>
                 </div>
                 <div class="lfp-field">
