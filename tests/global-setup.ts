@@ -62,11 +62,12 @@ export default async function globalSetup(_config: FullConfig) {
     ]);
   }
 
-  // Confirm we are actually logged in. The admin area links to logout.php
-  // when a session is active.
+  // Confirm we are actually logged in. /admin/index.php only renders the
+  // new-link form (#new_url_form) and the admin nav (#admin_menu) when a
+  // valid session cookie is present; the login form has neither.
   await page.goto('/admin/index.php');
   const loggedIn = await page
-    .locator('a[href*="logout"]')
+    .locator('#new_url_form, #admin_menu')
     .first()
     .isVisible({ timeout: 5000 })
     .catch(() => false);
