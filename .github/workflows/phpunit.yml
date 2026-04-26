@@ -49,9 +49,11 @@ jobs:
           tools: phpunit:11
 
       - name: Wait for MariaDB
+        # `mysqladmin` ships with the runner's mysql-client; `mariadb-admin`
+        # only exists inside the mariadb container.
         run: |
           for i in $(seq 1 30); do
-            if mariadb-admin ping -h 127.0.0.1 -u root --silent; then
+            if mysqladmin ping -h 127.0.0.1 --protocol=tcp --silent 2>/dev/null; then
               echo "MariaDB is up."
               exit 0
             fi
