@@ -113,8 +113,14 @@ jobs:
           docker ps
           echo "---"
           docker compose ps
-          echo "--- one-shot curl probe ---"
-          curl -sS -v -m 5 http://127.0.0.1:8080/ 2>&1 | head -30 || true
+          echo "--- /var/www/html top-level ---"
+          docker compose exec -T yourls ls -la /var/www/html | head -30 || true
+          echo "--- user/config.php ---"
+          docker compose exec -T yourls cat /var/www/html/user/config.php 2>&1 | head -40 || true
+          echo "--- one-shot curl probe (root) ---"
+          curl -sS -v -m 5 http://127.0.0.1:8080/ 2>&1 | head -40 || true
+          echo "--- install.php response body ---"
+          curl -sS -m 5 http://127.0.0.1:8080/admin/install.php 2>&1 | head -80 || true
 
       - name: Wait for YOURLS to respond
         # `bash -e` would otherwise abort the loop on the first curl failure
