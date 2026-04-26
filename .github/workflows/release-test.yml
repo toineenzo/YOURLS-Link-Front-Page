@@ -57,14 +57,18 @@ jobs:
           curl -sS -v -m 5 http://127.0.0.1:8080/ 2>&1 | head -30 || true
 
       - name: Wait for YOURLS to respond
+        # `bash -e` would otherwise abort the loop on the first curl failure
+        # (e.g. connection-reset while Apache is still binding the port).
+        shell: bash
         run: |
+          set +e
           for i in $(seq 1 90); do
             code=$(curl -s -4 -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/admin/install.php)
             if [ "$code" = "200" ] || [ "$code" = "302" ]; then
               echo "YOURLS responded with HTTP $code after $i attempts"
               exit 0
             fi
-            echo "Attempt $i: HTTP $code, waiting..."
+            echo "Attempt $i: HTTP ${code:-000}, waiting..."
             sleep 2
           done
           echo "::error::YOURLS did not become ready in time"
