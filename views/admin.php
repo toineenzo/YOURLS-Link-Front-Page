@@ -237,6 +237,12 @@ $bootstrap = [
                             <span>Enable a "<?php echo $scope === 'personal' ? 'Save personal contact' : 'Save business contact'; ?>" download button on the public page</span>
                         </label>
                     </div>
+                    <div class="lfp-row">
+                        <label class="lfp-checkbox">
+                            <input type="checkbox" name="about_<?php echo $scope; ?>_show_inline" value="1" <?php echo !empty($contact['show_inline']) ? 'checked' : ''; ?>>
+                            <span>Also show these details inline on the public page (name, phone, email, website, address)</span>
+                        </label>
+                    </div>
                     <div class="lfp-grid">
                         <div class="lfp-field">
                             <label>Name</label>
@@ -742,6 +748,13 @@ $bootstrap = [
                     <div class="lfp-image-input">
                         <input type="url" placeholder="https://..." data-lfp-image-url>
                         <input type="file" accept="image/*" data-lfp-image-file>
+                        <button type="button" class="lfp-image-favicon" data-lfp-image-favicon title="Fetch favicon from destination URL" aria-label="Use destination favicon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="2" y1="12" x2="22" y2="12"/>
+                                <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/>
+                            </svg>
+                        </button>
                         <button type="button" class="lfp-image-clear" data-lfp-image-clear title="Remove image" aria-label="Remove image">&times;</button>
                     </div>
                 </div>

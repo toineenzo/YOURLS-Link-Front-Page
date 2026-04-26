@@ -333,10 +333,11 @@
     color: var(--lfp-danger);
 }
 
-/* Small × button next to the file picker; clears the image URL + any
-   uploaded file in one shot. JS moves it from the .lfp-image-input
-   wrapper into the .lfp-fileinput row so it sits on the right. */
-.lfp-image-clear {
+/* Small action buttons that JS docks at the right edge of the file picker
+   row. Favicon (set image to destination's favicon) sits left, then clear
+   (×) on the rightmost. Same circular shape, just different hover color. */
+.lfp-image-clear,
+.lfp-image-favicon {
     appearance: none;
     background: transparent;
     border: 0;
@@ -345,7 +346,6 @@
     height: 24px;
     border-radius: 50%;
     padding: 0;
-    margin-left: auto;
     color: var(--lfp-muted);
     font-size: 1rem;
     line-height: 1;
@@ -354,6 +354,18 @@
     justify-content: center;
     flex: 0 0 24px;
     transition: background 120ms ease, color 120ms ease;
+}
+
+.lfp-image-favicon { margin-left: auto; }
+.lfp-image-clear   { margin-left: 0; }
+.lfp-image-favicon + .lfp-image-clear,
+.lfp-image-clear:only-of-type { margin-left: auto; }
+
+.lfp-image-favicon:hover,
+.lfp-image-favicon:focus-visible {
+    background: color-mix(in srgb, var(--lfp-accent) 18%, transparent);
+    color: var(--lfp-accent);
+    outline: none;
 }
 
 .lfp-image-clear:hover,

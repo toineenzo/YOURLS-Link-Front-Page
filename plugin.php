@@ -91,20 +91,22 @@ function lfp_default_general(): array
         // Optional contact card data (Personal + Business). Each tab keeps
         // the same shape so the VCF generator can swap between them.
         'about_personal' => [
-            'enabled' => false,
-            'name'    => '',
-            'phone'   => '',
-            'email'   => '',
-            'website' => '',
-            'address' => '',
+            'enabled'     => false,
+            'show_inline' => false,
+            'name'        => '',
+            'phone'       => '',
+            'email'       => '',
+            'website'     => '',
+            'address'     => '',
         ],
         'about_business' => [
-            'enabled' => false,
-            'name'    => '',
-            'phone'   => '',
-            'email'   => '',
-            'website' => '',
-            'address' => '',
+            'enabled'     => false,
+            'show_inline' => false,
+            'name'        => '',
+            'phone'       => '',
+            'email'       => '',
+            'website'     => '',
+            'address'     => '',
         ],
     ];
 }
@@ -1052,12 +1054,13 @@ function lfp_sanitize_contact(string $scope): array
 {
     $prefix = 'about_' . $scope . '_';
     return [
-        'enabled' => isset($_POST[$prefix . 'enabled']),
-        'name'    => trim((string) ($_POST[$prefix . 'name']    ?? '')),
-        'phone'   => trim((string) ($_POST[$prefix . 'phone']   ?? '')),
-        'email'   => trim((string) ($_POST[$prefix . 'email']   ?? '')),
-        'website' => trim((string) ($_POST[$prefix . 'website'] ?? '')),
-        'address' => trim((string) ($_POST[$prefix . 'address'] ?? '')),
+        'enabled'     => isset($_POST[$prefix . 'enabled']),
+        'show_inline' => isset($_POST[$prefix . 'show_inline']),
+        'name'        => trim((string) ($_POST[$prefix . 'name']    ?? '')),
+        'phone'       => trim((string) ($_POST[$prefix . 'phone']   ?? '')),
+        'email'       => trim((string) ($_POST[$prefix . 'email']   ?? '')),
+        'website'     => trim((string) ($_POST[$prefix . 'website'] ?? '')),
+        'address'     => trim((string) ($_POST[$prefix . 'address'] ?? '')),
     ];
 }
 

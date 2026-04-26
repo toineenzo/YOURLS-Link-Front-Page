@@ -126,11 +126,16 @@
             wrap.appendChild(clear);
             wrap.appendChild(input);
 
-            // If a sibling .lfp-image-input has its own [data-lfp-image-clear]
-            // button, pull it INTO our wrapper so the small × sits to the
-            // right of the file picker UI rather than wrapping to a new line.
+            // If a sibling .lfp-image-input has its own image-action buttons
+            // (favicon / clear), pull them INTO our wrapper so they sit to
+            // the right of the file picker UI rather than wrapping to a new
+            // line. Order: favicon first, then clear (rightmost).
             const imageWrap = wrap.parentElement?.closest('.lfp-image-input');
             if (imageWrap) {
+                const imgFavicon = imageWrap.querySelector('[data-lfp-image-favicon]');
+                if (imgFavicon && imgFavicon.parentElement !== wrap) {
+                    wrap.appendChild(imgFavicon);
+                }
                 const imgClear = imageWrap.querySelector('[data-lfp-image-clear]');
                 if (imgClear && imgClear.parentElement !== wrap) {
                     wrap.appendChild(imgClear);
@@ -271,6 +276,30 @@
                 thumb.style.backgroundImage = '';
                 fileInput.dispatchEvent(new Event('change'));
             });
+        }
+
+        const faviconBtn = node.querySelector('[data-lfp-image-favicon]');
+        if (faviconBtn && !isCategory) {
+            faviconBtn.addEventListener('click', () => {
+                let target = '';
+                if (item.source === 'url') {
+                    target = item.url || '';
+                } else {
+                    const data = linkMap[item.keyword];
+                    target = data?.url || '';
+                }
+                const fav = faviconFor(target);
+                if (!fav) {
+                    alert('Set a destination URL or pick a YOURLS shortlink first.');
+                    return;
+                }
+                item.image = fav;
+                urlInput.value = fav;
+                thumb.style.backgroundImage = cssUrl(fav);
+            });
+        } else if (faviconBtn) {
+            // Categories don't have a destination — hide the favicon button.
+            faviconBtn.remove();
         }
 
         toggleBtn.addEventListener('click', () => {

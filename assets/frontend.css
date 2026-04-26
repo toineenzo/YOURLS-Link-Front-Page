@@ -162,6 +162,60 @@ body.has-lfp-bg::after {
     gap: 10px;
 }
 
+.lfp-contact-info-wrap {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 6px;
+}
+
+.lfp-contact-info {
+    flex: 1 1 240px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 16px;
+    background: color-mix(in srgb, var(--lfp-card) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--lfp-fg) 8%, transparent);
+    border-radius: var(--lfp-radius);
+    text-align: left;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    font-size: 0.9rem;
+}
+
+.lfp-contact-info dt {
+    color: var(--lfp-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    align-self: center;
+}
+
+.lfp-contact-info dd {
+    margin: 0;
+    color: var(--lfp-fg);
+    overflow-wrap: anywhere;
+}
+
+.lfp-contact-info dd a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted color-mix(in srgb, var(--lfp-accent) 60%, transparent);
+}
+
+.lfp-contact-info dd a:hover {
+    color: var(--lfp-accent);
+}
+
+.lfp-contact-info .lfp-contact-name {
+    font-weight: 600;
+    color: var(--lfp-fg);
+}
+
 .lfp-contact-buttons {
     display: flex;
     flex-wrap: wrap;

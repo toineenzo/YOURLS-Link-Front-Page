@@ -218,7 +218,35 @@ HTML;
             $business = is_array($general['about_business'] ?? null) ? $general['about_business'] : [];
             $has_personal = !empty($personal['enabled']) && lfp_build_vcard($personal) !== null;
             $has_business = !empty($business['enabled']) && lfp_build_vcard($business, $business['name'] ?? '') !== null;
-            if ($has_personal || $has_business): ?>
+
+            $render_contact_inline = static function (array $c, string $heading): string {
+                $rows = [];
+                $name    = trim((string) ($c['name']    ?? ''));
+                $phone   = trim((string) ($c['phone']   ?? ''));
+                $email   = trim((string) ($c['email']   ?? ''));
+                $website = trim((string) ($c['website'] ?? ''));
+                $address = trim((string) ($c['address'] ?? ''));
+
+                $tel  = preg_replace('/[^\d+]/', '', $phone);
+                if ($name !== '')    $rows[] = '<dt>'    . yourls_esc_html($heading) . '</dt><dd class="lfp-contact-name">' . yourls_esc_html($name) . '</dd>';
+                if ($phone !== '')   $rows[] = '<dt>Phone</dt><dd>'   . '<a href="tel:'    . yourls_esc_attr($tel)     . '">' . yourls_esc_html($phone)   . '</a></dd>';
+                if ($email !== '')   $rows[] = '<dt>Email</dt><dd>'   . '<a href="mailto:' . yourls_esc_attr($email)   . '">' . yourls_esc_html($email)   . '</a></dd>';
+                if ($website !== '') $rows[] = '<dt>Website</dt><dd>' . '<a href="'        . yourls_esc_attr($website) . '" target="_blank" rel="noopener">' . yourls_esc_html($website) . '</a></dd>';
+                if ($address !== '') $rows[] = '<dt>Address</dt><dd>' . nl2br(yourls_esc_html($address), false) . '</dd>';
+                if (!$rows) return '';
+                return '<dl class="lfp-contact-info">' . implode('', $rows) . '</dl>';
+            };
+
+            $personal_inline = !empty($personal['show_inline']) ? $render_contact_inline($personal, 'Personal') : '';
+            $business_inline = !empty($business['show_inline']) ? $render_contact_inline($business, 'Business') : '';
+            if ($personal_inline !== '' || $business_inline !== ''): ?>
+                <div class="lfp-contact-info-wrap">
+                    <?php echo $personal_inline; ?>
+                    <?php echo $business_inline; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($has_personal || $has_business): ?>
                 <div class="lfp-contact-buttons">
                     <?php if ($has_personal): ?>
                         <a class="lfp-contact-btn" href="<?php echo yourls_esc_attr(YOURLS_SITE . '/contact.vcf?type=personal'); ?>" download>
