@@ -11,7 +11,10 @@ async function waitForYourls() {
     try {
       const r = await ctx.get('/admin/install.php', { maxRedirects: 0 });
       const status = r.status();
-      if (status === 200 || status === 302) {
+      // 200 / 302 once YOURLS is running. 503 is what YOURLS returns from the
+      // installer page before the database tables exist — the install flow
+      // we kick off below still works against it.
+      if (status === 200 || status === 302 || status === 503) {
         await ctx.dispose();
         return;
       }
