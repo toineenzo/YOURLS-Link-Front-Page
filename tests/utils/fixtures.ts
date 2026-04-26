@@ -100,7 +100,9 @@ export { expect };
 /**
  * Pre-create a YOURLS shortlink via the standard admin form at
  * /admin/index.php. The form is JS-driven (AJAX add) so we wait for the new
- * row to appear in the link table.
+ * row to appear in the link table. The `title` parameter is honoured only
+ * when the running YOURLS build exposes a title input — 1.10.2 doesn't, the
+ * server scrapes the destination's <title> instead.
  */
 export async function createYourlsShortlink(
   page: Page,
@@ -112,7 +114,10 @@ export async function createYourlsShortlink(
   await page.locator('#add-url').fill(opts.url);
   await page.locator('#add-keyword').fill(opts.keyword);
   if (opts.title !== undefined) {
-    await page.locator('#add-title').fill(opts.title);
+    const titleField = page.locator('#add-title');
+    if (await titleField.count()) {
+      await titleField.fill(opts.title);
+    }
   }
 
   await page.locator('#add-button').click();
