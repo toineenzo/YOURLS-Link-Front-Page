@@ -15,10 +15,12 @@ services:
       start_period: 10s
 
   yourls:
-    # Pin to a known-good upstream tag — the floating `latest` was shipping
-    # a build whose PHP handler reset connections immediately after Apache
-    # start on Ubuntu 24 runners.
-    image: yourls:1.10
+    # Build a YOURLS-on-PHP-8.4 image locally — the upstream `yourls:*` images
+    # are now bundling PHP 8.5 which causes the request handler to reset
+    # connections immediately after Apache start. Building from php:8.4-apache
+    # gives us a stable, deterministic environment.
+    build:
+      context: ./yourls-image
     restart: unless-stopped
     depends_on:
       db:
